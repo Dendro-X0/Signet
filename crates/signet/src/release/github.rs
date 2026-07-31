@@ -30,11 +30,11 @@ pub fn detect_github_repo(explicit: Option<&str>, config_repo: &str, cwd: &Path)
     if let Some(repo) = explicit {
         let repo = repo.trim();
         if !repo.is_empty() {
-            return Ok(normalize_repo(repo)?);
+            return normalize_repo(repo);
         }
     }
     if !config_repo.trim().is_empty() {
-        return Ok(normalize_repo(config_repo)?);
+        return normalize_repo(config_repo);
     }
     let output = Command::new("git")
         .args(["remote", "get-url", "origin"])

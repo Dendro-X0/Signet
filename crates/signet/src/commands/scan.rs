@@ -55,9 +55,9 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
         cfg.platforms.linux = s.linux;
         cfg.write(&config_path)?;
         console::blank();
-        console::ok_line(&format!(
-            "updated platforms in signet.toml (use --force to also replace name/tauri_root)"
-        ));
+        console::ok_line(
+            "updated platforms in signet.toml (use --force to also replace name/tauri_root)",
+        );
     } else if config_path.exists() && force {
         let mut cfg = Config::load(&config_path)?;
         cfg.project.name = s.project_name.clone();

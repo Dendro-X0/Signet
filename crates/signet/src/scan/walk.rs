@@ -47,7 +47,7 @@ pub fn scan_repository(root: &Path) -> anyhow::Result<ScanReport> {
 }
 
 fn detect_projects(
-    root: &Path,
+    _root: &Path,
     dir: &Path,
     depth: usize,
     out: &mut Vec<DetectedProject>,
@@ -115,17 +115,16 @@ fn detect_projects(
     }
 
     // Android native / Capacitor
-    if dir.join("build.gradle").is_file() || dir.join("build.gradle.kts").is_file() {
-        if dir.join("src/main/AndroidManifest.xml").is_file()
-            || dir.join("app/src/main/AndroidManifest.xml").is_file()
-        {
-            out.push(DetectedProject {
-                kind: ProjectKind::AndroidNative,
-                path: dir.to_path_buf(),
-                name: None,
-                detail: "Android Gradle project".into(),
-            });
-        }
+    if (dir.join("build.gradle").is_file() || dir.join("build.gradle.kts").is_file())
+        && (dir.join("src/main/AndroidManifest.xml").is_file()
+            || dir.join("app/src/main/AndroidManifest.xml").is_file())
+    {
+        out.push(DetectedProject {
+            kind: ProjectKind::AndroidNative,
+            path: dir.to_path_buf(),
+            name: None,
+            detail: "Android Gradle project".into(),
+        });
     }
 
     // iOS
@@ -151,13 +150,13 @@ fn detect_projects(
         if name == "target" {
             continue;
         }
-        detect_projects(root, &path, depth + 1, out)?;
+        detect_projects(_root, &path, depth + 1, out)?;
     }
     Ok(())
 }
 
 fn walk_installers(
-    root: &Path,
+    _root: &Path,
     dir: &Path,
     depth: usize,
     out: &mut Vec<DetectedInstaller>,
@@ -220,7 +219,7 @@ fn walk_installers(
                 }
                 continue;
             }
-            walk_installers(root, &path, depth + 1, out)?;
+            walk_installers(_root, &path, depth + 1, out)?;
             continue;
         }
 
@@ -359,7 +358,7 @@ fn push_installer(
 }
 
 fn should_skip_dir(name: &str) -> bool {
-    SKIP_DIRS.iter().any(|s| *s == name)
+    SKIP_DIRS.contains(&name)
         || (name.starts_with('.') && name != ".signet" && name != ".selfsign")
 }
 
