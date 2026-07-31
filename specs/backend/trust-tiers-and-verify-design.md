@@ -155,11 +155,13 @@ resolve paths → load expected fingerprint → load SHA256SUMS
 
 ### Acceptance (Phase 7)
 
-- [ ] `signet verify` on a fixture with matching sums exits 0.
-- [ ] Tampered file exits 1.
-- [ ] Missing TRUST + missing sums with no artifacts exits 2.
-- [ ] Unit tests for `verify_sha256sums` and fingerprint parse.
-- [ ] Help text does not suggest installing Root certs.
+- [x] `signet verify` on a fixture with matching sums exits 0.
+- [x] Tampered file exits 1.
+- [x] Missing TRUST + missing sums with no artifacts exits 2.
+- [x] Unit tests for `verify_sha256sums` and fingerprint parse.
+- [x] Help text does not suggest installing Root certs.
+
+**Implemented:** `commands/verify.rs`, checksum verify helpers, TRUST fingerprint parse. `--require-sig` soft-warns until Phase 8.
 
 ### Proof plan
 

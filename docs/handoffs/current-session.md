@@ -1,35 +1,35 @@
 # Current session handoff
 
 **Updated:** 2026-07-31  
-**Band:** Phase 6 implemented; Phase 7 next
+**Band:** Phases 6–7 implemented; Phase 8 next
 
 ## Next atomic step
 
-Implement **Phase 7 — `signet verify`** from [`specs/backend/trust-tiers-and-verify-design.md`](../../specs/backend/trust-tiers-and-verify-design.md):
+Implement **Phase 8 — Checksum signing** from [`specs/backend/checksum-signing-design.md`](../../specs/backend/checksum-signing-design.md):
 
-1. Add `commands/verify.rs` + clap wiring.
-2. Parse fingerprint from TRUST.md; verify SHA256SUMS via `sign/checksum`.
-3. Exit codes 0/1/2; soft-warn on `--require-sig` until Phase 8.
-4. Do **not** start Electron/Android adapters or Phase 8 unless asked.
+1. `signet sums-key create/show` + minisign under `.signet/sums/`
+2. Sign `SHA256SUMS` → `SHA256SUMS.minisig` from build/release
+3. Wire `signet verify` hard `--require-sig` (exit 3)
+4. Do **not** start Electron/Android unless asked
 
 **PAUSED / CANCELLED:** none  
-**Blocked for coding:** Phases 9–12 stubs; Phase 10–11 blocked on earlier phases.
+**Blocked for coding:** Phases 9–12 stubs
 
 ## Canonical owners
 
 | Work | Owner |
 |------|--------|
-| TRUST template / tiers | `crates/signet/src/trust_kit.rs`, `trust_tier.rs` |
-| Verify CLI | `crates/signet/src/commands/verify.rs` (Phase 7) |
-| Checksums | `crates/signet/src/sign/checksum.rs` |
+| TRUST / tiers | `trust_kit.rs`, `trust_tier.rs` |
+| Verify | `commands/verify.rs`, `sign/checksum.rs` |
+| Checksum signing | Phase 8 — `sums_sig` (new) |
 
-## Phase 6 proof (done)
+## Phase 7 proof (done)
 
-- L1: `trust_kit` / `trust_tier` unit tests (tier + Root anti-pattern)
-- L2: `cargo test -p signet`
-- L3: `cargo run -p signet -- trust` / `doctor` (trust-tier check)
+- L1: checksum + fingerprint parse unit tests
+- L2: `cargo test -p signet` (23 ok)
+- L3: fixture verify exit 0 / tamper exit 1 / empty exit 2
 
 ## Recently completed
 
-- Phase 6: trust tiers in TRUST.md, `[trust]` config, doctor `trust-tier`
-- Specs + roadmap for Phases 6–12
+- Phase 6 trust tiers
+- Phase 7 `signet verify`

@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::commands::{build, doctor, identity, init, release, scan, trust};
+use crate::commands::{build, doctor, identity, init, release, scan, trust, verify};
 
 /// Identity, sign, explain, and release self-signed desktop and mobile apps.
 ///
@@ -28,4 +28,6 @@ pub enum Command {
     Doctor(doctor::Args),
     /// Scan the repo for installable apps and suggest signing config
     Scan(scan::Args),
+    /// Verify fingerprints and SHA256SUMS for downloaded artifacts
+    Verify(verify::Args),
 }

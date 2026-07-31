@@ -33,15 +33,38 @@ fn run() -> anyhow::Result<ExitCode> {
     let cli = Cli::parse();
 
     match cli.command {
-        None => tui::run_hub()?,
-        Some(Command::Init(args)) => commands::init::run(args)?,
-        Some(Command::Identity(args)) => commands::identity::run(args)?,
-        Some(Command::Build(args)) => commands::build::run(args)?,
-        Some(Command::Trust(args)) => commands::trust::run(args)?,
-        Some(Command::Release(args)) => commands::release::run(args)?,
-        Some(Command::Doctor(args)) => commands::doctor::run(args)?,
-        Some(Command::Scan(args)) => commands::scan::run(args)?,
+        None => {
+            tui::run_hub()?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Init(args)) => {
+            commands::init::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Identity(args)) => {
+            commands::identity::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Build(args)) => {
+            commands::build::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Trust(args)) => {
+            commands::trust::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Release(args)) => {
+            commands::release::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Doctor(args)) => {
+            commands::doctor::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Scan(args)) => {
+            commands::scan::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Verify(args)) => Ok(commands::verify::run(args)),
     }
-
-    Ok(ExitCode::Success)
 }

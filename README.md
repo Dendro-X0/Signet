@@ -52,7 +52,7 @@ signet release --tag v0.2.0 --dry-run
 | `init` | Write `signet.toml` + `.signet/` |
 | `identity` | Create / import / list / show signing identity |
 | `trust` | Emit `TRUST.md` (safe to commit) |
-| `build` | Build + sign (Tauri first) |
+| `verify` | Fingerprint + SHA256SUMS checks |
 | `release` | Checksums + GitHub Release publish |
 
 Legacy `selfsign.toml` / `.selfsign/` are still detected if present.
@@ -72,6 +72,7 @@ Private keys live under gitignored `.signet/` — never in `TRUST.md` or git.
 | [START-HERE.md](START-HERE.md) | Agent / contributor boot |
 | [docs/product.md](docs/product.md) | Product thesis |
 | [docs/trust-model.md](docs/trust-model.md) | Integrity vs reputation, tiers |
+| [docs/verify.md](docs/verify.md) | `signet verify` |
 | [docs/roadmap.md](docs/roadmap.md) | Phases + spec gate |
 | [specs/backend/README.md](specs/backend/README.md) | Design contracts (Phases 6+) |
 | [docs/scan.md](docs/scan.md) | Repo scan |

@@ -166,6 +166,56 @@ Private material stays under the project's gitignored `.signet/` directory.
     )
 }
 
+/// Normalize a SHA-256 fingerprint for comparison (strip colons/spaces, lowercase).
+pub fn normalize_fingerprint(fp: &str) -> String {
+    fp.chars()
+        .filter(|c| c.is_ascii_hexdigit())
+        .map(|c| c.to_ascii_lowercase())
+        .collect()
+}
+
+/// Extract SHA-256 fingerprint from a TRUST.md body (Signet table format).
+pub fn parse_fingerprint(trust_md: &str) -> Option<String> {
+    for line in trust_md.lines() {
+        let line = line.trim();
+        if !line.contains("fingerprint") && !line.contains("Fingerprint") {
+            continue;
+        }
+        // Table: | SHA-256 fingerprint | `AA:BB:...` |
+        if let Some(start) = line.find('`') {
+            let rest = &line[start + 1..];
+            if let Some(end) = rest.find('`') {
+                let raw = &rest[..end];
+                let norm = normalize_fingerprint(raw);
+                if norm.len() == 64 {
+                    return Some(raw.to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Extract primary tier id from TRUST.md when present.
+pub fn parse_tier_id(trust_md: &str) -> Option<String> {
+    for line in trust_md.lines() {
+        let line = line.trim();
+        if !line.contains("Primary tier") {
+            continue;
+        }
+        if let Some(start) = line.find('`') {
+            let rest = &line[start + 1..];
+            if let Some(end) = rest.find('`') {
+                let id = rest[..end].trim();
+                if !id.is_empty() {
+                    return Some(id.to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -229,5 +279,20 @@ mod tests {
         assert!(md.contains("checksum_only"));
         assert!(md.contains("Beta channel only"));
         assert!(md.contains("### Maintainer notes"));
+    }
+
+    #[test]
+    fn parse_fingerprint_from_rendered_trust() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().join("identity");
+        let rec = sample_identity(&root);
+        let cfg = Config::example("trust-demo", ".");
+        let md = render_trust_md(&cfg, &rec);
+        let parsed = parse_fingerprint(&md).expect("fingerprint");
+        assert_eq!(
+            normalize_fingerprint(&parsed),
+            normalize_fingerprint(&rec.meta.fingerprint_sha256)
+        );
+        assert_eq!(parse_tier_id(&md).as_deref(), Some("self_signed_host"));
     }
 }

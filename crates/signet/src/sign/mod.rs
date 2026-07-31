@@ -15,7 +15,7 @@ use std::path::PathBuf;
 
 use crate::identity::IdentityRecord;
 
-pub use checksum::{write_sha256sums, write_sha256sums_named};
+pub use checksum::{verify_sha256sums, write_sha256sums, write_sha256sums_named, ChecksumResult};
 pub use discover::{
     discover_artifacts, host_signable, resolve_src_tauri, ArtifactKind, DiscoveredArtifact,
 };

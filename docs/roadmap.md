@@ -35,9 +35,9 @@ cargo run -p signet -- doctor
 
 **Spec:** [trust-tiers-and-verify-design.md](../specs/backend/trust-tiers-and-verify-design.md)
 
-- [ ] `signet verify` (fingerprint + SHA256SUMS)
-- [ ] Exit codes 0/1/2; JSON report
-- [ ] Unit + fixture proof (L1–L3 in spec)
+- [x] `signet verify` (fingerprint + SHA256SUMS)
+- [x] Exit codes 0/1/2; JSON report
+- [x] Unit + fixture proof (L1–L3 in spec)
 
 **Exit:** Agents can fail a CI job on checksum/fingerprint mismatch without custom scripts.
 

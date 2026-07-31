@@ -13,7 +13,7 @@ Implementation contracts for Signet. **Public narrative** lives under [`docs/`](
 
 | Spec | Phase | Depth | Status |
 |------|-------|-------|--------|
-| [trust-tiers-and-verify-design.md](trust-tiers-and-verify-design.md) | 6–7 | Deep | Phase 6 implemented; Phase 7 ready |
+| [trust-tiers-and-verify-design.md](trust-tiers-and-verify-design.md) | 6–7 | Deep | Phases 6–7 implemented |
 | [checksum-signing-design.md](checksum-signing-design.md) | 8 | Deep | ready |
 | [artifact-contract-design.md](artifact-contract-design.md) | 9 | Thin | stub |
 | [electron-adapter-design.md](electron-adapter-design.md) | 10 | Thin | stub — blocked on Phase 9 |

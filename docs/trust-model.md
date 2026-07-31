@@ -42,7 +42,7 @@ Primary tier is reported in `TRUST.md`, doctor, and (planned) `signet verify`. S
 ## What users should do
 
 1. Compare the **SHA-256 fingerprint** in `TRUST.md` with `signet identity show`.
-2. Verify downloads with `SHA256SUMS` (and signed sums when Phase 8 ships) via `signet verify` (Phase 7).
+2. Verify downloads with `SHA256SUMS` via `signet verify` (and signed sums when Phase 8 ships).
 3. Treat OS warnings as expected for self-signed desktop apps unless you graduate to CA/notarization.
 
 ## Related
