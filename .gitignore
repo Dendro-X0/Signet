@@ -1,0 +1,17 @@
+# Local
+/target/
+**/*.rs.bk
+.idea/
+.vscode/
+*.swp
+
+# Secrets (never commit)
+.selfsign/
+
+# Local dogfood config for this tooling repo (optional)
+# Uncomment if you do not want to track a root selfsign.toml:
+# /selfsign.toml
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,29 @@
+[package]
+name = "selfsign"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI + TUI to identity, sign, explain, and release self-signed Tauri apps"
+readme = "../../README.md"
+
+[[bin]]
+name = "selfsign"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+crossterm.workspace = true
+hex.workspace = true
+ratatui.workspace = true
+rcgen.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tempfile = "3"
+thiserror.workspace = true
+time.workspace = true
+toml.workspace = true
+ureq.workspace = true
+which.workspace = true
+x509-parser.workspace = true
