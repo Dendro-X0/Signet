@@ -2,27 +2,29 @@
 
 **Read [README.md](README.md) first**, then this file for contributor/agent detail.
 
-**Binary:** `selfsign`  
+**Product:** Signet  
+**Binary:** `signet`  
 **Stack:** Rust CLI + TUI (ratatui)  
-**Status:** v0.1.0 — see [CHANGELOG.md](CHANGELOG.md)
+**Status:** v0.2.0 — see [CHANGELOG.md](CHANGELOG.md)  
+**Repo:** [github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)
 
 ## What this is
 
-A developer/agent-friendly CLI that makes **self-signed, cross-platform Tauri distribution** repeatable: identity → build/sign → trust docs → release.
+A developer/agent-friendly CLI for **identity → sign → trust docs → release** of self-signed apps across desktop and mobile frameworks. Tauri is the deepest path today; `scan` already sees Electron / Android / iOS, and more adapters follow.
 
 Self-signing is **not** a substitute for paid platform developer programs. It is the practical path for independent and non-profit OSS: legitimate local trust, clear install guidance, and fewer one-off signing rituals.
 
 ## Quick start
 
 ```bash
-cargo run -p selfsign -- doctor
-cargo run -p selfsign                 # TUI hub + Guided setup
+cargo run -p signet -- doctor
+cargo run -p signet                 # TUI hub + Guided setup
 # or scripted:
-cargo run -p selfsign -- init --name my-app --path ./my-app
-cargo run -p selfsign -- identity create --config ./my-app/selfsign.toml
-cargo run -p selfsign -- trust --config ./my-app/selfsign.toml
-cargo run -p selfsign -- build --config ./my-app/selfsign.toml
-cargo run -p selfsign -- release --tag v0.1.0 --dry-run --config ./my-app/selfsign.toml
+cargo run -p signet -- init --name my-app --path ./my-app
+cargo run -p signet -- identity create --config ./my-app/signet.toml
+cargo run -p signet -- trust --config ./my-app/signet.toml
+cargo run -p signet -- build --config ./my-app/signet.toml
+cargo run -p signet -- release --tag v0.2.0 --dry-run --config ./my-app/signet.toml
 ```
 
 ## Read next
@@ -40,13 +42,14 @@ cargo run -p selfsign -- release --tag v0.1.0 --dry-run --config ./my-app/selfsi
 | Decision | Choice |
 |----------|--------|
 | Language | Rust |
-| Binary name | `selfsign` |
+| Product / binary | Signet / `signet` |
 | Primary UX | CLI first; guided TUI for humans |
+| Scope | Desktop + mobile; multi-framework (Tauri first) |
 | Release | GitHub Releases (`gh` or token API) |
-| Current phase | v0.1.0 released |
+| Current phase | v0.2.0 rebrand + multi-framework thesis |
 
 ## How to work this repo
 
 - Prefer small, reviewable increments.
 - Keep docs synchronized with implemented behavior (not aspirational claims).
-- Agents: use subcommands; humans can open the TUI with bare `selfsign`.
+- Agents: use subcommands; humans can open the TUI with bare `signet`.

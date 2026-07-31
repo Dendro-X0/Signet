@@ -1,29 +1,23 @@
-# Identity & trust (Phase 2)
+# Identity + trust
 
-## Identity
-
-`selfsign` stores self-signed **code-signing** X.509 certificates (ECDSA P-256 by default) under the gitignored `.selfsign/identity/` tree.
+Signet stores self-signed **code-signing** X.509 certificates (ECDSA P-256 by default) under the gitignored `.signet/identity/` tree.
 
 | Action | Command |
 |--------|---------|
-| Create | `selfsign identity create` |
-| Import PEM | `selfsign identity import --cert … --key …` |
-| List | `selfsign identity list` (`*` = active) |
-| Show | `selfsign identity show` |
-| Switch active | `selfsign identity use <name>` |
+| Create | `signet identity create` |
+| Import PEM | `signet identity import --cert … --key …` |
+| List | `signet identity list` (`*` = active) |
+| Show | `signet identity show` |
+| Switch active | `signet identity use <name>` |
 
-Fingerprint = SHA-256 of the certificate DER, colon-separated uppercase hex.
+## TRUST.md
 
-## Trust kit
+`signet trust` writes `TRUST.md` (default: project root) with:
 
-`selfsign trust` writes `TRUST.md` (default: project root) with:
+- Certificate subject / validity (public)
+- Fingerprint for user verification
+- Honest install notes (SmartScreen / Gatekeeper)
 
-- Publisher table (CN, org, fingerprint, validity)
-- Verify steps
-- Honest Windows / macOS / Linux warning notes (SmartScreen, Gatekeeper, checksums)
+Never include private keys.
 
-It refuses to embed private key material.
-
-## Platform note
-
-Phase 2 produces PEM identity material. Phase 3 (`selfsign build`) signs host artifacts with that identity — see [`signing.md`](signing.md).
+Identity material feeds `signet build` signing — see [`signing.md`](signing.md).

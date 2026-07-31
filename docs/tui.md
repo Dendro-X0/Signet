@@ -1,10 +1,10 @@
-# TUI (Phase 5)
+# TUI
 
-Running `selfsign` with no subcommand opens the interactive hub (TTY required).
+Running `signet` with no subcommand opens the interactive hub (TTY required).
 
 ## Layout
 
-1. **Header** — brand
+1. **Header** — Signet brand
 2. **Project status** — config / identity / trust / artifacts + recommended next step
 3. **Actions** — guided setup + each CLI surface
 4. **Footer** — keybindings
@@ -29,7 +29,7 @@ Each action leaves the alternate screen, prompts on the normal terminal, then ca
 
 CLI human output (scan, doctor, guided flows) shares `ui::console`:
 
-- `┌─ selfsign · …` banners
+- `┌─ Signet · …` banners
 - section titles + rule lines
 - aligned `key = value` and status columns
 - numbered next-steps with `→` reasons

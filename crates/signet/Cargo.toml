@@ -1,0 +1,30 @@
+[package]
+name = "signet"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Signet — identity, sign, explain, and release self-signed desktop and mobile apps"
+readme = "../../README.md"
+repository.workspace = true
+
+[[bin]]
+name = "signet"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+crossterm.workspace = true
+hex.workspace = true
+ratatui.workspace = true
+rcgen.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tempfile = "3"
+thiserror.workspace = true
+time.workspace = true
+toml.workspace = true
+ureq.workspace = true
+which.workspace = true
+x509-parser.workspace = true

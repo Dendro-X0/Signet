@@ -1,8 +1,23 @@
 # Changelog
 
+## 0.2.0 — 2026-07-31
+
+Rebrand to **Signet**. Product scope expands beyond Tauri-only: identity, signing, trust, and release for self-signed **desktop and mobile** apps across frameworks (Tauri deepest today; Electron / mobile adapters next).
+
+### Changed
+
+- Binary and crate: `signet` (was `selfsign`)
+- Config / secrets: `signet.toml` + `.signet/` (legacy `selfsign.toml` / `.selfsign/` still detected)
+- Docs and TUI copy reflect multi-framework thesis
+- Repository: [github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)
+
+### Notes
+
+- `signet build` remains Tauri-first; other frameworks are scan/roadmap until adapters land.
+
 ## 0.1.0 — 2026-07-31
 
-First public release of `selfsign`.
+First public release as `selfsign`.
 
 ### Added
 
@@ -16,4 +31,4 @@ First public release of `selfsign`.
 ### Notes
 
 - Self-signed builds may still trigger SmartScreen / Gatekeeper warnings.
-- Mobile store signing is detected by scan but not performed by selfsign.
+- Mobile store signing is detected by scan but not performed by the tool.

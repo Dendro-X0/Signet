@@ -6,10 +6,12 @@
 *.swp
 
 # Secrets (never commit)
+.signet/
 .selfsign/
 
 # Local dogfood config for this tooling repo (optional)
-# Uncomment if you do not want to track a root selfsign.toml:
+# Uncomment if you do not want to track a root signet.toml:
+# /signet.toml
 # /selfsign.toml
 
 # OS

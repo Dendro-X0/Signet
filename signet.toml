@@ -1,0 +1,18 @@
+# Signet project config (safe to commit)
+# Private keys live under secrets_dir — see docs/secrets-layout.md
+
+secrets_dir = ".signet"
+
+[project]
+name = "Signet"
+tauri_root = "."
+
+[platforms]
+windows = true
+macos = false
+linux = false
+
+[release]
+github = true
+repo = "Dendro-X0/Signet"
+attach_trust = true
