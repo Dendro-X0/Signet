@@ -5,7 +5,7 @@ use clap::Args as ClapArgs;
 
 use crate::identity::load_active;
 use crate::project::ProjectCtx;
-use crate::trust_kit::render_trust_md;
+use crate::trust_kit::render_trust_md_at;
 
 #[derive(Debug, ClapArgs)]
 pub struct Args {
@@ -30,7 +30,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         .out
         .unwrap_or_else(|| ctx.root.join("TRUST.md"));
 
-    let md = render_trust_md(&ctx.config, &identity);
+    let md = render_trust_md_at(&ctx.config, &identity, &ctx.root);
     if md.contains("BEGIN PRIVATE KEY") || md.contains(&identity.key_pem) {
         anyhow::bail!("internal error: trust kit attempted to embed private key material");
     }

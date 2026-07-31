@@ -1,12 +1,40 @@
 //! Generate honest, committable TRUST.md from the active identity.
 
+use std::path::Path;
+
 use crate::config::Config;
 use crate::identity::IdentityRecord;
+use crate::trust_tier::{resolve_primary_tier, TierHints};
 
+#[cfg_attr(not(test), allow(dead_code))]
 pub fn render_trust_md(config: &Config, identity: &IdentityRecord) -> String {
+    render_trust_md_with_hints(config, identity, TierHints {
+        has_active_identity: true,
+        has_sha256sums: false,
+        has_sums_signature: false,
+    })
+}
+
+/// Like [`render_trust_md`], but uses filesystem hints for inferred tier.
+pub fn render_trust_md_at(
+    config: &Config,
+    identity: &IdentityRecord,
+    project_root: &Path,
+) -> String {
+    render_trust_md_with_hints(config, identity, TierHints::probe(project_root))
+}
+
+fn render_trust_md_with_hints(
+    config: &Config,
+    identity: &IdentityRecord,
+    hints: TierHints,
+) -> String {
     let app = &config.project.name;
     let meta = &identity.meta;
     let fp = &meta.fingerprint_sha256;
+    let tier = resolve_primary_tier(config, hints);
+    let tier_id = tier.as_str();
+    let tier_meaning = tier.meaning();
 
     let mut platforms = Vec::new();
     if config.platforms.windows {
@@ -22,6 +50,18 @@ pub fn render_trust_md(config: &Config, identity: &IdentityRecord) -> String {
         "Windows, macOS, Linux".to_string()
     } else {
         platforms.join(", ")
+    };
+
+    let notes_block = if config.trust.notes.is_empty() {
+        String::new()
+    } else {
+        let mut s = String::from("\n### Maintainer notes\n\n");
+        for note in &config.trust.notes {
+            s.push_str("- ");
+            s.push_str(note);
+            s.push('\n');
+        }
+        s
     };
 
     format!(
@@ -54,6 +94,18 @@ signet identity show
 
 Never trust a build whose fingerprint does not match.
 
+## Trust tier
+
+| Field | Value |
+|-------|-------|
+| Primary tier | `{tier_id}` |
+
+{tier_meaning}
+
+This integrity tier **does not imply** OS or store reputation (SmartScreen, Gatekeeper,
+Play App Signing, or Apple notarization). See [docs/trust-model.md](docs/trust-model.md)
+in the Signet project for the full tier table.
+{notes_block}
 ## Verify a downloaded artifact
 
 1. Download the installer / bundle and the published checksums (when available).
@@ -61,7 +113,13 @@ Never trust a build whose fingerprint does not match.
 3. After install (or on the binary), confirm the signing certificate fingerprint matches `{fp}` when platform tooling allows.
 4. If the OS warns that the publisher is unknown, that can still be a legitimate self-signed build — use the fingerprint, not the absence of a warning, as your check.
 
+(When available, prefer `signet verify` to check fingerprints and SHA256SUMS in one step.)
+
 ## Platform notes ({platforms})
+
+Do **not** install this publisher certificate into Trusted Root (or equivalent) on end-user
+PCs. That is unsafe advice and Signet will never recommend it. Developer machines and
+enterprise MDM are different contexts — still never tell public users to trust your root.
 
 ### Windows
 
@@ -85,6 +143,7 @@ Never trust a build whose fingerprint does not match.
 - Private keys
 - Passwords or PFX passphrases
 - CI secrets
+- Instructions for end users to install certificates into Trusted Root
 
 Private material stays under the project's gitignored `.signet/` directory.
 "#,
@@ -99,22 +158,24 @@ Private material stays under the project's gitignored `.signet/` directory.
         not_before = meta.not_before,
         not_after = meta.not_after,
         algo = meta.key_algorithm,
+        tier_id = tier_id,
+        tier_meaning = tier_meaning,
+        notes_block = notes_block,
+        platforms = platforms,
+        app = app,
     )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::Config;
+    use crate::config::{Config, Trust};
     use crate::identity::{create_identity, CreateOptions};
     use tempfile::tempdir;
 
-    #[test]
-    fn trust_contains_fingerprint_not_key() {
-        let dir = tempdir().unwrap();
-        let root = dir.path().join("identity");
-        let rec = create_identity(
-            &root,
+    fn sample_identity(dir: &Path) -> IdentityRecord {
+        create_identity(
+            dir,
             &CreateOptions {
                 name: "default".into(),
                 common_name: "Trust Demo".into(),
@@ -123,7 +184,14 @@ mod tests {
                 force: false,
             },
         )
-        .unwrap();
+        .unwrap()
+    }
+
+    #[test]
+    fn trust_contains_fingerprint_not_key() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().join("identity");
+        let rec = sample_identity(&root);
         let cfg = Config::example("trust-demo", ".");
         let md = render_trust_md(&cfg, &rec);
         assert!(md.contains(&rec.meta.fingerprint_sha256));
@@ -131,5 +199,35 @@ mod tests {
         assert!(!md.contains("BEGIN PRIVATE KEY"));
         assert!(md.contains("SmartScreen"));
         assert!(md.contains("Gatekeeper"));
+    }
+
+    #[test]
+    fn trust_contains_tier_and_root_anti_pattern() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().join("identity");
+        let rec = sample_identity(&root);
+        let cfg = Config::example("trust-demo", ".");
+        let md = render_trust_md(&cfg, &rec);
+        assert!(md.contains("self_signed_host"));
+        assert!(md.contains("## Trust tier"));
+        assert!(md.contains("Trusted Root"));
+        assert!(md.contains("does not imply"));
+        assert!(md.contains("signet verify"));
+    }
+
+    #[test]
+    fn declared_tier_and_notes_appear() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().join("identity");
+        let rec = sample_identity(&root);
+        let mut cfg = Config::example("trust-demo", ".");
+        cfg.trust = Trust {
+            declared_tier: Some("checksum_only".into()),
+            notes: vec!["Beta channel only".into()],
+        };
+        let md = render_trust_md(&cfg, &rec);
+        assert!(md.contains("checksum_only"));
+        assert!(md.contains("Beta channel only"));
+        assert!(md.contains("### Maintainer notes"));
     }
 }

@@ -25,9 +25,9 @@ cargo run -p signet -- doctor
 **Spec:** [trust-tiers-and-verify-design.md](../specs/backend/trust-tiers-and-verify-design.md) (Phase 6 section)  
 **Public doc:** [trust-model.md](trust-model.md)
 
-- [ ] Tier ids in `TRUST.md` + doctor
-- [ ] Root-install anti-pattern in generated trust copy
-- [ ] Align docs with integrity vs reputation layers
+- [x] Tier ids in `TRUST.md` + doctor
+- [x] Root-install anti-pattern in generated trust copy
+- [x] Align docs with integrity vs reputation layers
 
 **Exit:** A reader of `TRUST.md` can name the tier and know self-sign ≠ OS reputation.
 

@@ -117,6 +117,8 @@ fn gather_checks() -> Vec<Check> {
         },
     });
 
+    checks.push(trust_tier_check(has_config, identity_ok));
+
     let gh = which("gh").is_ok();
     let token = std::env::var("GH_TOKEN")
         .or_else(|_| std::env::var("GITHUB_TOKEN"))
@@ -137,6 +139,55 @@ fn gather_checks() -> Vec<Check> {
 
     checks.extend(platform_checks());
     checks
+}
+
+fn trust_tier_check(has_config: bool, identity_ok: bool) -> Check {
+    use crate::config::{resolve_config_path, Config};
+    use crate::trust_tier::{resolve_primary_tier, TierHints};
+
+    let root = std::path::Path::new(".");
+    let hints = TierHints {
+        has_active_identity: identity_ok,
+        has_sha256sums: root.join("SHA256SUMS").is_file(),
+        has_sums_signature: root.join("SHA256SUMS.minisig").is_file()
+            || root.join("SHA256SUMS.asc").is_file(),
+    };
+
+    let (tier, source) = if has_config {
+        match Config::load(resolve_config_path(None)) {
+            Ok(cfg) => {
+                let declared = cfg
+                    .trust
+                    .declared_tier
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .is_some();
+                let tier = resolve_primary_tier(&cfg, hints);
+                let source = if declared { "declared" } else { "inferred" };
+                (tier, source)
+            }
+            Err(_) => (
+                resolve_primary_tier(&Config::default(), hints),
+                "inferred (config unreadable)",
+            ),
+        }
+    } else {
+        (
+            resolve_primary_tier(&Config::default(), hints),
+            "inferred (no config)",
+        )
+    };
+
+    // Informational only — self_signed_host never fails the doctor run.
+    Check {
+        name: "trust-tier".into(),
+        ok: true,
+        severity: Severity::Optional,
+        detail: format!(
+            "{tier} ({source}) — integrity label, not OS reputation; see docs/trust-model.md"
+        ),
+    }
 }
 
 fn platform_checks() -> Vec<Check> {

@@ -76,9 +76,11 @@ Add sections (order):
 
 ### Acceptance (Phase 6)
 
-- [ ] Regenerated `TRUST.md` contains tier id and Root anti-pattern.
-- [ ] `docs/trust-model.md` matches tier table.
-- [ ] Doctor prints tier without failing the run solely for `self_signed_host`.
+- [x] Regenerated `TRUST.md` contains tier id and Root anti-pattern.
+- [x] `docs/trust-model.md` matches tier table.
+- [x] Doctor prints tier without failing the run solely for `self_signed_host`.
+
+**Implemented:** `trust_tier.rs`, `[trust]` in config, `trust_kit` template, doctor `trust-tier` check.
 
 ---
 

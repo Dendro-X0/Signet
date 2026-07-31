@@ -10,6 +10,7 @@ mod release;
 mod scan;
 mod sign;
 mod trust_kit;
+mod trust_tier;
 mod tui;
 mod ui;
 

@@ -20,6 +20,11 @@ github = true
 repo = ""                 # optional owner/name; else git remote / --repo
 attach_trust = true
 
+# Optional — does not change signing behavior
+# [trust]
+# declared_tier = "self_signed_host"
+# notes = ["Beta channel only"]
+
 secrets_dir = ".signet"
 ```
 
@@ -31,4 +36,6 @@ secrets_dir = ".signet"
 | `release.github` | Enable GitHub Releases in `signet release` |
 | `release.repo` | Optional `owner/name` override |
 | `release.attach_trust` | Attach `TRUST.md` when present |
+| `trust.declared_tier` | Optional tier id override (see [trust-model.md](trust-model.md)) |
+| `trust.notes` | Extra notes in the TRUST.md Trust tier section |
 | `secrets_dir` | Relative path for private material (gitignored) |

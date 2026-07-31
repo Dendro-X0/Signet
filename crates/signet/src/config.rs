@@ -30,6 +30,9 @@ pub struct Config {
     /// Relative path to the secrets directory (gitignored). Default: `.signet`
     #[serde(default = "default_secrets_dir")]
     pub secrets_dir: String,
+    /// Optional trust-tier declaration and notes for TRUST.md / doctor.
+    #[serde(default)]
+    pub trust: Trust,
 }
 
 fn default_secrets_dir() -> String {
@@ -71,6 +74,17 @@ pub struct Release {
     pub attach_trust: bool,
 }
 
+/// Declared trust intent. Does not change signing behavior.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct Trust {
+    /// Optional tier id (see docs/trust-model.md). When set, overrides inference.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declared_tier: Option<String>,
+    /// Extra notes appended to the Trust tier section of TRUST.md.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notes: Vec<String>,
+}
+
 impl Default for Config {
     fn default() -> Self {
         Self {
@@ -89,6 +103,7 @@ impl Default for Config {
                 attach_trust: true,
             },
             secrets_dir: default_secrets_dir(),
+            trust: Trust::default(),
         }
     }
 }

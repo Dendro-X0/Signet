@@ -1,39 +1,35 @@
 # Current session handoff
 
 **Updated:** 2026-07-31  
-**Band:** Specs complete for Phases 6–8 (deep) and 9–11 (stubs); **no implementation started**
+**Band:** Phase 6 implemented; Phase 7 next
 
 ## Next atomic step
 
-Implement **Phase 6 — Trust clarity** from [`specs/backend/trust-tiers-and-verify-design.md`](../../specs/backend/trust-tiers-and-verify-design.md):
+Implement **Phase 7 — `signet verify`** from [`specs/backend/trust-tiers-and-verify-design.md`](../../specs/backend/trust-tiers-and-verify-design.md):
 
-1. Extend `trust_kit::render_trust_md` with trust tier section + Root anti-pattern.
-2. Optional `[trust]` config fields as specified.
-3. Doctor informational `trust-tier` check.
-4. Do **not** start Electron/Android adapters.
-5. Prefer a follow-up commit/PR for Phase 7 (`signet verify`) immediately after Phase 6 acceptance.
+1. Add `commands/verify.rs` + clap wiring.
+2. Parse fingerprint from TRUST.md; verify SHA256SUMS via `sign/checksum`.
+3. Exit codes 0/1/2; soft-warn on `--require-sig` until Phase 8.
+4. Do **not** start Electron/Android adapters or Phase 8 unless asked.
 
 **PAUSED / CANCELLED:** none  
-**Blocked for coding:** Phases 9–12 stubs; Phase 10–11 explicitly blocked on earlier phases.
+**Blocked for coding:** Phases 9–12 stubs; Phase 10–11 blocked on earlier phases.
 
-## Canonical owners (upcoming)
+## Canonical owners
 
 | Work | Owner |
 |------|--------|
-| TRUST template / tiers | `crates/signet/src/trust_kit.rs` |
-| Verify CLI | `crates/signet/src/commands/verify.rs` (new, Phase 7) |
+| TRUST template / tiers | `crates/signet/src/trust_kit.rs`, `trust_tier.rs` |
+| Verify CLI | `crates/signet/src/commands/verify.rs` (Phase 7) |
 | Checksums | `crates/signet/src/sign/checksum.rs` |
 
-## Proof before claiming Phase 6 done
+## Phase 6 proof (done)
 
-- L1: unit test that rendered TRUST contains tier id and Root anti-pattern string
+- L1: `trust_kit` / `trust_tier` unit tests (tier + Root anti-pattern)
 - L2: `cargo test -p signet`
-- L3: `cargo run -p signet -- trust` on a dogfood config; inspect `TRUST.md`
+- L3: `cargo run -p signet -- trust` / `doctor` (trust-tier check)
 
 ## Recently completed
 
-- Roadmap rewritten with Phases 6–12 + later
-- `docs/trust-model.md` published
-- Deep designs: trust/verify, checksum signing
-- Thin stubs: artifact contract, Electron, Android
-- Boot docs point at `specs/backend/` and this handoff
+- Phase 6: trust tiers in TRUST.md, `[trust]` config, doctor `trust-tier`
+- Specs + roadmap for Phases 6–12
