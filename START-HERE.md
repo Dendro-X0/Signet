@@ -5,7 +5,7 @@
 **Product:** Signet  
 **Binary:** `signet`  
 **Stack:** Rust CLI + TUI (ratatui)  
-**Status:** v0.2.0 — see [CHANGELOG.md](CHANGELOG.md)  
+**Status:** v0.3.0 — see [CHANGELOG.md](CHANGELOG.md)  
 **Repo:** [github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)
 
 ## What this is

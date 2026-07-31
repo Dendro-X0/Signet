@@ -1,0 +1,24 @@
+# CI
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test
+        run: cargo test -p signet
+      - name: Clippy (linux)
+        if: runner.os == 'Linux'
+        run: cargo clippy -p signet -- -D warnings

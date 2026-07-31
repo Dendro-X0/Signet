@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 — 2026-07-31
+
+CLI distribution and integrity verify path.
+
+### Added
+
+- `signet verify` — fingerprint + SHA256SUMS checks (exit codes for CI)
+- Trust tiers in `TRUST.md` + doctor `trust-tier` (`[trust]` config)
+- One-command installers (`install.sh` / `install.ps1`)
+- `signet self status|update|uninstall` + TUI Update / Uninstall Signet
+- GitHub Actions: `ci.yml` (test) and `release-cli.yml` (multi-platform binaries on tag)
+
+### Notes
+
+- Installer-managed installs live under `~/.signet-cli/` or `%LOCALAPPDATA%\Signet\`
+- Project `.signet/` dirs are never removed by CLI uninstall
+
 ## 0.2.0 — 2026-07-31
 
 Rebrand to **Signet**. Product scope expands beyond Tauri-only: identity, signing, trust, and release for self-signed **desktop and mobile** apps across frameworks (Tauri deepest today; Electron / mobile adapters next).

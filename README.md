@@ -10,27 +10,54 @@ Self-signing is **not** a substitute for paid Apple / Microsoft / Google develop
 
 ## Install
 
-**One-command (recommended)** — after a tagged GitHub Release with CLI assets exists:
+Pick your OS. After install, open the TUI with `signet` to **Update Signet** or **Uninstall Signet**, or use `signet self update` / `signet self uninstall --yes`.
 
-```bash
-# macOS / Linux
-curl -LsSf https://github.com/Dendro-X0/Signet/releases/latest/download/install.sh | sh
-```
+### Windows
 
 ```powershell
-# Windows
 irm https://github.com/Dendro-X0/Signet/releases/latest/download/install.ps1 | iex
 ```
 
-Then update or uninstall from the TUI (`signet` → **Update Signet** / **Uninstall Signet**) or:
+Installs to `%LOCALAPPDATA%\Signet\bin` and adds it to your user `PATH`.
+
+Direct binary (optional): [signet-x86_64-pc-windows-msvc.exe](https://github.com/Dendro-X0/Signet/releases/latest/download/signet-x86_64-pc-windows-msvc.exe)
+
+### macOS
 
 ```bash
+curl -LsSf https://github.com/Dendro-X0/Signet/releases/latest/download/install.sh | sh
+```
+
+Works on Apple Silicon and Intel. Add `~/.signet-cli/bin` to your `PATH` if the installer prints that hint.
+
+Direct binaries (optional):
+
+- Apple Silicon: [signet-aarch64-apple-darwin](https://github.com/Dendro-X0/Signet/releases/latest/download/signet-aarch64-apple-darwin)
+- Intel: [signet-x86_64-apple-darwin](https://github.com/Dendro-X0/Signet/releases/latest/download/signet-x86_64-apple-darwin)
+
+### Linux
+
+```bash
+curl -LsSf https://github.com/Dendro-X0/Signet/releases/latest/download/install.sh | sh
+```
+
+Supports x86_64 and aarch64. Add `~/.signet-cli/bin` to your `PATH` if prompted.
+
+Direct binaries (optional):
+
+- x86_64: [signet-x86_64-unknown-linux-gnu](https://github.com/Dendro-X0/Signet/releases/latest/download/signet-x86_64-unknown-linux-gnu)
+- aarch64: [signet-aarch64-unknown-linux-gnu](https://github.com/Dendro-X0/Signet/releases/latest/download/signet-aarch64-unknown-linux-gnu)
+
+### Manage
+
+```bash
+signet --version
 signet self status
 signet self update
 signet self uninstall --yes
 ```
 
-**From source** (contributors):
+### From source (contributors)
 
 ```bash
 cargo install --path crates/signet
@@ -38,7 +65,7 @@ cargo install --path crates/signet
 cargo build --release -p signet
 ```
 
-Requires a Rust toolchain for source installs. Platform signing needs host tools (`signtool` + OpenSSL on Windows, `codesign` on macOS, OpenSSL on Linux). Run `signet doctor` to check.
+Requires a Rust toolchain. Platform **app** signing (not the CLI installer) needs host tools (`signtool` + OpenSSL on Windows, `codesign` on macOS, OpenSSL on Linux). Run `signet doctor` to check.
 
 ## Quick start
 
