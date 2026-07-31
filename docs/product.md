@@ -39,6 +39,7 @@ Binary: `signet`. Scriptable for CI and agents.
 | `signet doctor` | Host tooling / prereqs |
 | `signet scan` | Detect frameworks + installers; suggest config |
 | `signet verify` | Verify fingerprints + SHA256SUMS (Phase 7) |
+| `signet self` | Update / uninstall installer-managed CLI |
 | `signet` (no args) | TUI hub |
 
 ### TUI

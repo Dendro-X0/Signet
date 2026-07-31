@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::commands::{build, doctor, identity, init, release, scan, trust, verify};
+use crate::commands::{build, doctor, identity, init, release, scan, self_cmd, trust, verify};
 
 /// Identity, sign, explain, and release self-signed desktop and mobile apps.
 ///
@@ -30,4 +30,7 @@ pub enum Command {
     Scan(scan::Args),
     /// Verify fingerprints and SHA256SUMS for downloaded artifacts
     Verify(verify::Args),
+    /// Manage this Signet CLI install (update / uninstall)
+    #[command(name = "self")]
+    SelfCmd(self_cmd::Args),
 }

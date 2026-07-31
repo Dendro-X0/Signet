@@ -49,7 +49,7 @@ cargo run -p signet -- release --tag v0.2.0 --dry-run --config ./my-app/signet.t
 | Release | GitHub Releases (`gh` or token API) |
 | Near-term | Integrity first (trust tiers → verify → checksum signing) before adapters |
 | Specs | Hybrid: `docs/` public + `specs/backend/` contracts |
-| Current phase | Phases 6–7 done; next = Phase 8 checksum signing |
+| Current phase | Dist CLI self-update done; next = Phase 8 checksum signing |
 
 ## How to work this repo
 

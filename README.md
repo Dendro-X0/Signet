@@ -10,13 +10,35 @@ Self-signing is **not** a substitute for paid Apple / Microsoft / Google develop
 
 ## Install
 
+**One-command (recommended)** — after a tagged GitHub Release with CLI assets exists:
+
+```bash
+# macOS / Linux
+curl -LsSf https://github.com/Dendro-X0/Signet/releases/latest/download/install.sh | sh
+```
+
+```powershell
+# Windows
+irm https://github.com/Dendro-X0/Signet/releases/latest/download/install.ps1 | iex
+```
+
+Then update or uninstall from the TUI (`signet` → **Update Signet** / **Uninstall Signet**) or:
+
+```bash
+signet self status
+signet self update
+signet self uninstall --yes
+```
+
+**From source** (contributors):
+
 ```bash
 cargo install --path crates/signet
 # or:
 cargo build --release -p signet
 ```
 
-Requires a Rust toolchain. Platform signing needs host tools (`signtool` + OpenSSL on Windows, `codesign` on macOS, OpenSSL on Linux). Run `signet doctor` to check.
+Requires a Rust toolchain for source installs. Platform signing needs host tools (`signtool` + OpenSSL on Windows, `codesign` on macOS, OpenSSL on Linux). Run `signet doctor` to check.
 
 ## Quick start
 
@@ -53,6 +75,7 @@ signet release --tag v0.2.0 --dry-run
 | `identity` | Create / import / list / show signing identity |
 | `trust` | Emit `TRUST.md` (safe to commit) |
 | `verify` | Fingerprint + SHA256SUMS checks |
+| `self` | CLI install status / update / uninstall |
 | `release` | Checksums + GitHub Release publish |
 
 Legacy `selfsign.toml` / `.selfsign/` are still detected if present.
@@ -73,6 +96,7 @@ Private keys live under gitignored `.signet/` — never in `TRUST.md` or git.
 | [docs/product.md](docs/product.md) | Product thesis |
 | [docs/trust-model.md](docs/trust-model.md) | Integrity vs reputation, tiers |
 | [docs/verify.md](docs/verify.md) | `signet verify` |
+| [docs/install.md](docs/install.md) | One-command install + self update |
 | [docs/roadmap.md](docs/roadmap.md) | Phases + spec gate |
 | [specs/backend/README.md](specs/backend/README.md) | Design contracts (Phases 6+) |
 | [docs/scan.md](docs/scan.md) | Repo scan |

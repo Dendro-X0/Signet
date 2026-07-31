@@ -17,7 +17,7 @@ Implementation contracts for Signet. **Public narrative** lives under [`docs/`](
 | [checksum-signing-design.md](checksum-signing-design.md) | 8 | Deep | ready |
 | [artifact-contract-design.md](artifact-contract-design.md) | 9 | Thin | stub |
 | [electron-adapter-design.md](electron-adapter-design.md) | 10 | Thin | stub — blocked on Phase 9 |
-| [android-signing-design.md](android-signing-design.md) | 11 | Thin | stub — blocked on Phases 6–9 |
+| [self-update-design.md](self-update-design.md) | Dist | Deep | implemented |
 
 ## Status legend
 

@@ -41,7 +41,19 @@ cargo run -p signet -- doctor
 
 **Exit:** Agents can fail a CI job on checksum/fingerprint mismatch without custom scripts.
 
+## Distribution — CLI self-install / update / uninstall
+
+**Spec:** [self-update-design.md](../specs/backend/self-update-design.md) · **User doc:** [install.md](install.md)
+
+- [x] One-command installers (`install.sh` / `install.ps1`)
+- [x] `signet self status|update|uninstall`
+- [x] TUI Update / Uninstall Signet
+- [x] Tag workflow `release-cli.yml` for binaries + SHA256SUMS
+
+**Exit:** Users can install with one command and manage the CLI from the hub without cargo.
+
 ## Phase 8 — Checksum signing
+
 
 **Spec:** [checksum-signing-design.md](../specs/backend/checksum-signing-design.md)
 

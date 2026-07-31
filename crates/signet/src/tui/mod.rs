@@ -71,6 +71,21 @@ const ITEMS: &[HubItem] = &[
         hint: "Checksums + GitHub Release (guided)",
     },
     HubItem {
+        id: "self-status",
+        label: "CLI status",
+        hint: "How this Signet binary was installed",
+    },
+    HubItem {
+        id: "self-update",
+        label: "Update Signet",
+        hint: "Download latest CLI from GitHub Releases",
+    },
+    HubItem {
+        id: "self-uninstall",
+        label: "Uninstall Signet",
+        hint: "Remove installer-managed CLI (not project .signet/)",
+    },
+    HubItem {
         id: "quit",
         label: "Quit",
         hint: "Exit Signet",
@@ -254,7 +269,7 @@ fn draw_footer(frame: &mut Frame, area: Rect) {
         Span::styled("1-9 ", accent()),
         Span::raw("jump  "),
         Span::styled("q ", accent()),
-        Span::raw("quit · same engines as CLI flags"),
+        Span::raw("quit · digits wrap past 9 via arrows"),
     ]))
     .block(Block::default().borders(Borders::ALL));
     frame.render_widget(widget, area);
@@ -284,6 +299,9 @@ fn dispatch(id: &str) -> anyhow::Result<()> {
         "trust" => flows::run_trust(),
         "build" => flows::guided_build(),
         "release" => flows::guided_release(),
+        "self-status" => flows::run_self_status(),
+        "self-update" => flows::run_self_update(),
+        "self-uninstall" => flows::run_self_uninstall(),
         _ => Ok(()),
     }
 }

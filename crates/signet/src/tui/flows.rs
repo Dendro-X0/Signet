@@ -328,3 +328,48 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
     console::ok_line("Guided setup finished. Prefer CLI flags in CI; use the hub when exploring.");
     Ok(())
 }
+
+pub fn run_self_status() -> anyhow::Result<()> {
+    commands::self_cmd::status_public()
+}
+
+pub fn run_self_update() -> anyhow::Result<()> {
+    console::banner("Update Signet");
+    let st = crate::self_manage::current_status();
+    console::note(&st.detail);
+    if !st.managed {
+        console::note("Install via the README one-liner to enable self-update.");
+        if !confirm("try update with --force anyway?", false)? {
+            return Ok(());
+        }
+        return commands::self_cmd::run(commands::self_cmd::Args {
+            command: commands::self_cmd::SelfCommand::Update {
+                check: false,
+                force: true,
+            },
+        });
+    }
+    if !confirm("download and install the latest release?", true)? {
+        skip_line("skipped");
+        return Ok(());
+    }
+    commands::self_cmd::update_default()
+}
+
+pub fn run_self_uninstall() -> anyhow::Result<()> {
+    console::banner("Uninstall Signet");
+    let st = crate::self_manage::current_status();
+    if !st.managed {
+        anyhow::bail!(
+            "this copy is not installer-managed — cannot uninstall from TUI ({})",
+            st.detail
+        );
+    }
+    console::note(&format!("will remove {}", st.binary.display()));
+    console::note("Project `.signet/` directories are not deleted.");
+    if !confirm("uninstall the Signet CLI from this machine?", false)? {
+        skip_line("cancelled");
+        return Ok(());
+    }
+    commands::self_cmd::uninstall_confirmed()
+}

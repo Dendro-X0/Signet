@@ -8,6 +8,7 @@ mod identity;
 mod project;
 mod release;
 mod scan;
+mod self_manage;
 mod sign;
 mod trust_kit;
 mod trust_tier;
@@ -66,5 +67,9 @@ fn run() -> anyhow::Result<ExitCode> {
             Ok(ExitCode::Success)
         }
         Some(Command::Verify(args)) => Ok(commands::verify::run(args)),
+        Some(Command::SelfCmd(args)) => {
+            commands::self_cmd::run(args)?;
+            Ok(ExitCode::Success)
+        }
     }
 }
