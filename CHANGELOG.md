@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-07-31
+
+### Fixed
+
+- `release-cli` builds Intel macOS via cross-compile on `macos-latest` (avoids stuck `macos-13` runners)
+
 ## 0.3.0 — 2026-07-31
 
 CLI distribution and integrity verify path.

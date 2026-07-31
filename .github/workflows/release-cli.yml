@@ -31,7 +31,8 @@ jobs:
             target: aarch64-apple-darwin
             artifact: signet-aarch64-apple-darwin
             bin: signet
-          - os: macos-13
+          # Cross-compile Intel macOS from Apple Silicon runners (macos-13 queue is unreliable)
+          - os: macos-latest
             target: x86_64-apple-darwin
             artifact: signet-x86_64-apple-darwin
             bin: signet
