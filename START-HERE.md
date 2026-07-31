@@ -30,12 +30,13 @@ cargo run -p signet -- release --tag v0.2.0 --dry-run --config ./my-app/signet.t
 ## Read next
 
 1. [`docs/product.md`](docs/product.md)
-2. [`docs/tui.md`](docs/tui.md) — hub & guided flows
-3. [`docs/scan.md`](docs/scan.md) — repo installer self-check
-4. [`docs/identity.md`](docs/identity.md)
-5. [`docs/signing.md`](docs/signing.md)
-6. [`docs/release.md`](docs/release.md)
-7. [`docs/roadmap.md`](docs/roadmap.md)
+2. [`docs/trust-model.md`](docs/trust-model.md) — integrity vs reputation
+3. [`docs/roadmap.md`](docs/roadmap.md) — phases + spec gate
+4. [`specs/backend/README.md`](specs/backend/README.md) — design contracts (**read before coding Phases 6+**)
+5. [`docs/handoffs/current-session.md`](docs/handoffs/current-session.md) — next atomic step
+6. [`docs/tui.md`](docs/tui.md) — hub & guided flows
+7. [`docs/scan.md`](docs/scan.md) — repo installer self-check
+8. [`docs/identity.md`](docs/identity.md) / [`docs/signing.md`](docs/signing.md) / [`docs/release.md`](docs/release.md)
 
 ## Decisions locked
 
@@ -46,10 +47,13 @@ cargo run -p signet -- release --tag v0.2.0 --dry-run --config ./my-app/signet.t
 | Primary UX | CLI first; guided TUI for humans |
 | Scope | Desktop + mobile; multi-framework (Tauri first) |
 | Release | GitHub Releases (`gh` or token API) |
-| Current phase | v0.2.0 rebrand + multi-framework thesis |
+| Near-term | Integrity first (trust tiers → verify → checksum signing) before adapters |
+| Specs | Hybrid: `docs/` public + `specs/backend/` contracts |
+| Current phase | Specs ready for Phase 6–7; implementation not started |
 
 ## How to work this repo
 
 - Prefer small, reviewable increments.
 - Keep docs synchronized with implemented behavior (not aspirational claims).
+- **Phases 6+:** design status must be `ready` (not `stub`) before code; follow the handoff atomic step.
 - Agents: use subcommands; humans can open the TUI with bare `signet`.

@@ -38,6 +38,7 @@ Binary: `signet`. Scriptable for CI and agents.
 | `signet release` | Checksums + publish (e.g. GitHub Releases) |
 | `signet doctor` | Host tooling / prereqs |
 | `signet scan` | Detect frameworks + installers; suggest config |
+| `signet verify` | Planned (Phase 7) — fingerprint + checksum verification |
 | `signet` (no args) | TUI hub |
 
 ### TUI
@@ -69,6 +70,9 @@ Android and iOS projects and artifacts are discovered by `scan`. Store signing h
 ## Trust model
 
 Signet must never imply store-equivalent trust from self-signing alone. It should always produce fingerprints, checksums, honest install docs, and clear exit codes.
+
+Integrity vs reputation, trust tiers, and anti-patterns: **[`docs/trust-model.md`](trust-model.md)**.  
+Phase designs (verify, checksum signing, adapters): **[`specs/backend/`](../specs/backend/)**.
 
 ## Config & secrets
 

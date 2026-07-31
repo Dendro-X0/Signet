@@ -71,12 +71,14 @@ Private keys live under gitignored `.signet/` — never in `TRUST.md` or git.
 |-----|--------|
 | [START-HERE.md](START-HERE.md) | Agent / contributor boot |
 | [docs/product.md](docs/product.md) | Product thesis |
+| [docs/trust-model.md](docs/trust-model.md) | Integrity vs reputation, tiers |
+| [docs/roadmap.md](docs/roadmap.md) | Phases + spec gate |
+| [specs/backend/README.md](specs/backend/README.md) | Design contracts (Phases 6+) |
 | [docs/scan.md](docs/scan.md) | Repo scan |
 | [docs/tui.md](docs/tui.md) | Hub & guided flows |
 | [docs/identity.md](docs/identity.md) | Identity + trust kit |
 | [docs/signing.md](docs/signing.md) | Platform signing |
 | [docs/release.md](docs/release.md) | GitHub Releases |
-| [docs/roadmap.md](docs/roadmap.md) | Phases |
 | [CHANGELOG.md](CHANGELOG.md) | Releases |
 
 ## Development
