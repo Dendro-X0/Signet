@@ -82,6 +82,8 @@ pub struct SuggestedConfig {
     pub tauri_root: String,
     /// Suggested `[project].framework` (e.g. tauri, electron, cli).
     pub framework: String,
+    /// Detected project version (no leading `v`), when known.
+    pub version: Option<String>,
     pub windows: bool,
     pub macos: bool,
     pub linux: bool,
@@ -169,6 +171,9 @@ pub fn print_human(report: &ScanReport) {
     console::kv(W, "project.name", &format!("{:?}", s.project_name));
     console::kv(W, "tauri_root", &format!("{:?}", s.tauri_root));
     console::kv(W, "framework", &format!("{:?}", s.framework));
+    if let Some(ref ver) = s.version {
+        console::kv(W, "version", &format!("{ver:?}"));
+    }
     console::kv(
         W,
         "platforms",
@@ -304,6 +309,9 @@ pub fn finalize_report(
         .map(|p| framework_id_for_kind(p.kind).to_string())
         .unwrap_or_else(|| "tauri".into());
 
+    let version = crate::version_detect::detect_project_version(&root);
+    let release_tag = crate::version_detect::default_release_tag(&root);
+
     let mut windows = installers.iter().any(|i| i.platform == Platform::Windows);
     let mut macos = installers.iter().any(|i| i.platform == Platform::Macos);
     let mut linux = installers.iter().any(|i| i.platform == Platform::Linux);
@@ -420,6 +428,10 @@ pub fn finalize_report(
             command: "signet build".into(),
             why: "cargo build --release and sign the host binary".into(),
         });
+        next_steps.push(NextStep {
+            command: format!("signet release --tag {release_tag} --dry-run"),
+            why: "prepare GitHub Release assets for the host binary".into(),
+        });
     } else if !installers
         .iter()
         .any(|i| matches!(i.platform, Platform::Windows | Platform::Macos | Platform::Linux))
@@ -434,7 +446,7 @@ pub fn finalize_report(
             why: "sign the installers already on disk".into(),
         });
         next_steps.push(NextStep {
-            command: "signet release --tag v0.1.0 --dry-run".into(),
+            command: format!("signet release --tag {release_tag} --dry-run"),
             why: "prepare GitHub Release assets".into(),
         });
     }
@@ -451,6 +463,7 @@ pub fn finalize_report(
             project_name,
             tauri_root,
             framework,
+            version,
             windows,
             macos,
             linux,

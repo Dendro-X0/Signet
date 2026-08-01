@@ -288,6 +288,7 @@ pub fn guided_identity() -> anyhow::Result<()> {
 
 pub fn guided_build() -> anyhow::Result<()> {
     console::banner("Sign · build");
+    note_framework_mismatch(".")?;
     let mode = prompt_choice(
         "Build mode",
         &[
@@ -334,7 +335,8 @@ pub fn guided_build() -> anyhow::Result<()> {
 
 pub fn guided_release() -> anyhow::Result<()> {
     console::banner("Prove · release");
-    let tag = prompt_line("git tag", "v0.1.0")?;
+    let default_tag = crate::version_detect::default_release_tag(std::path::Path::new("."));
+    let tag = prompt_line("git tag", &default_tag)?;
     let repo = prompt_line("GitHub repo owner/name (empty = detect)", "")?;
     let mode = prompt_choice(
         "Publish mode",
@@ -527,7 +529,8 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
     // --- Prove: release dry-run optional ---
     step_active(step_n, total, "Prove · release dry-run (optional)");
     if confirm("prepare a release dry-run?", false)? {
-        let tag = prompt_line("git tag", "v0.1.0")?;
+        let default_tag = crate::version_detect::default_release_tag(std::path::Path::new("."));
+        let tag = prompt_line("git tag", &default_tag)?;
         let repo = prompt_line("GitHub repo owner/name (empty = detect)", "")?;
         commands::release::run(commands::release::Args {
             config: None,
@@ -592,6 +595,30 @@ fn update_framework_in_config(suggested: Option<&str>) -> anyhow::Result<()> {
     cfg.project.build_command = build_command;
     cfg.write(&path)?;
     console::ok_line(&format!("updated {}", path.display()));
+    Ok(())
+}
+
+/// Warn when signet.toml framework disagrees with scan (does not rewrite config).
+fn note_framework_mismatch(root: &str) -> anyhow::Result<()> {
+    let Ok(ctx) = ProjectCtx::load(None) else {
+        return Ok(());
+    };
+    let Ok(report) = scan_repository(std::path::Path::new(root)) else {
+        return Ok(());
+    };
+    let Some(suggested) =
+        preferred_framework_from_projects(&report.root, &report.projects)
+    else {
+        return Ok(());
+    };
+    let configured = ctx.config.project.framework.as_str();
+    if crate::version_detect::frameworks_equivalent(configured, suggested) {
+        return Ok(());
+    }
+    console::note(&format!(
+        "config framework={configured} but scan suggests {suggested} — \
+         change via Init / edit signet.toml if build discovers the wrong artifacts"
+    ));
     Ok(())
 }
 

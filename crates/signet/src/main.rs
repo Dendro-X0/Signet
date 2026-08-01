@@ -19,6 +19,7 @@ mod trust_kit;
 mod trust_tier;
 mod tui;
 mod ui;
+mod version_detect;
 
 use clap::Parser;
 use cli::{Cli, Command};

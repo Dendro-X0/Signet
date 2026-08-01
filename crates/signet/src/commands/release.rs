@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::process::Command;
 
 use clap::Args as ClapArgs;
 
@@ -71,7 +70,7 @@ pub struct Args {
 
 pub fn run(args: Args) -> anyhow::Result<()> {
     let ctx = ProjectCtx::load(args.config.as_deref()).map_err(|e| {
-        anyhow::anyhow!("{e}\nhint: run `signet init` in your Tauri app directory first")
+        anyhow::anyhow!("{e}\nhint: run `signet init` in your project directory first")
     })?;
 
     if !ctx.config.release.github && !args.dry_run {
@@ -106,10 +105,13 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
 
     let identity = load_active(&ctx.identity_root()).ok();
-    let tag = match args.tag.clone().or_else(detect_tag_hint) {
-        Some(t) => t,
-        None if args.dry_run => "v0.0.0-dry-run".into(),
-        None => anyhow::bail!("missing --tag (e.g. --tag v1.0.0)"),
+    let suggested = crate::version_detect::default_release_tag(&ctx.root);
+    let tag = match &args.tag {
+        Some(t) => t.clone(),
+        None => {
+            println!("using tag '{suggested}' (from project version / git; pass --tag to override)");
+            suggested
+        }
     };
     let title = args.title.clone().unwrap_or_else(|| tag.clone());
     let trust_attached = files.iter().any(|f| f.asset_name == "TRUST.md");
@@ -153,20 +155,4 @@ pub fn run(args: Args) -> anyhow::Result<()> {
 
     println!("published via {} — {}", result.method, result.url);
     Ok(())
-}
-
-fn detect_tag_hint() -> Option<String> {
-    let out = Command::new("git")
-        .args(["describe", "--tags", "--abbrev=0"])
-        .output()
-        .ok()?;
-    if !out.status.success() {
-        return None;
-    }
-    let tag = String::from_utf8_lossy(&out.stdout).trim().to_string();
-    if tag.is_empty() {
-        None
-    } else {
-        Some(tag)
-    }
 }
