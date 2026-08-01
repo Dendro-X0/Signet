@@ -4,6 +4,16 @@
 
 It does **not** evaluate SmartScreen, Gatekeeper, or store reputation. It never recommends installing certificates into Trusted Root.
 
+For **host signature presence** (Authenticode / codesign / APK / detached `.sig`), use:
+
+```bash
+signet inspect --file path/to/setup.exe --file path/to/app.AppImage
+signet inspect --file app.apk --json
+signet inspect --file setup.exe --strict   # exit 1 if unsigned/error
+```
+
+`inspect` reports target **platform** from the artifact kind and best-effort `signed` / `unsigned` / `adhoc` / `unknown`. Signed ≠ OS reputation.
+
 ## Usage
 
 ```bash
@@ -34,3 +44,4 @@ Public key resolution for minisign (first match): `--minisign-pub`, then TRUST.m
 - [secrets-layout.md](secrets-layout.md) — `signet sums-key`
 - Spec: [`specs/backend/trust-tiers-and-verify-design.md`](../specs/backend/trust-tiers-and-verify-design.md)
 - Spec: [`specs/backend/checksum-signing-design.md`](../specs/backend/checksum-signing-design.md)
+- Spec: [`specs/backend/signature-inspect-design.md`](../specs/backend/signature-inspect-design.md)

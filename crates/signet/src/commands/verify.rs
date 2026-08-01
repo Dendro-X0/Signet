@@ -129,7 +129,7 @@ fn run_inner(args: Args) -> anyhow::Result<ExitCode> {
         if let Some(fp) = parse_fingerprint(body) {
             fingerprint_expected = Some(fp);
             fingerprint_source = Some("TRUST.md".into());
-            // Host PE/codesign inspect deferred — informational only.
+            // Host signature presence: use `signet inspect --file …` (not implied by TRUST.md alone).
             fingerprint_ok = Some(true);
         }
     }

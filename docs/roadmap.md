@@ -104,9 +104,11 @@ cargo run -p signet -- doctor
 
 ## Later
 
-- Flutter / React Native / Capacitor adapters
+- [x] Host signature inspect (`signet inspect`) — signed/unsigned/adhoc/unknown per artifact platform
+- [x] Flutter / React Native / Expo / Capacitor adapters (`docs/frameworks.md`)
 - Optional desktop GUI
 - Update channels beyond checksums + GitHub Releases
+- .NET / other desktop ecosystems (not started)
 
 ## Working rules
 

@@ -9,8 +9,8 @@ Non-secret project configuration. Written by `signet init`. Legacy `selfsign.tom
 [project]
 name = "my-app"
 tauri_root = "."          # app root (src-tauri parent for Tauri; package.json dir for Electron)
-framework = "tauri"       # adapter: tauri | electron | android | ios
-# build_command = ""      # Electron: npm run dist; Android: gradlew; iOS: required for build (no scheme guess)
+framework = "tauri"       # tauri | electron | android | ios | flutter | react-native | expo | capacitor
+# build_command = ""      # required for flutter/rn/expo/capacitor/ios build (see docs/frameworks.md)
 
 
 [platforms]
@@ -51,7 +51,7 @@ secrets_dir = ".signet"
 |-------|---------|
 | `project.name` | Display / release name |
 | `project.tauri_root` | App root relative to config (Tauri: dir with `src-tauri`; Electron: `package.json` dir) |
-| `project.framework` | Adapter id: `tauri` (default), `electron`, `android`, or `ios` |
+| `project.framework` | Adapter id: `tauri`, `electron`, `android`, `ios`, `flutter`, `react-native`/`rn`, `expo`, `capacitor` |
 | `project.build_command` | Optional build argv (required for iOS `signet build` without `--skip-build`) |
 | `platforms.*` | Which OS targets this project intends to ship |
 | `release.github` | Enable GitHub Releases in `signet release` |

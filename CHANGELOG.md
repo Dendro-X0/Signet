@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Hybrid adapters: `framework = flutter|react-native|expo|capacitor` (+ `rn` alias), `docs/frameworks.md`, scan detection
+- `signet inspect` — best-effort signed/unsigned/adhoc/unknown report per artifact platform (`docs/verify.md`)
+
 ## 0.4.0 — 2026-07-31
 
 Framework adapters, checksum signing, and reputation graduation helpers.

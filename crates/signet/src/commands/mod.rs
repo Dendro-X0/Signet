@@ -4,6 +4,7 @@ pub mod doctor;
 pub mod graduate;
 pub mod identity;
 pub mod init;
+pub mod inspect;
 pub mod ios;
 pub mod release;
 pub mod scan;

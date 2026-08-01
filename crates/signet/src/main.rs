@@ -14,6 +14,7 @@ mod artifact;
 mod android;
 mod ios;
 mod graduate;
+mod inspect;
 mod trust_kit;
 mod trust_tier;
 mod tui;
@@ -86,6 +87,7 @@ fn run() -> anyhow::Result<ExitCode> {
             commands::scan::run(args)?;
             Ok(ExitCode::Success)
         }
+        Some(Command::Inspect(args)) => Ok(commands::inspect::run(args)),
         Some(Command::Verify(args)) => Ok(commands::verify::run(args)),
         Some(Command::SelfCmd(args)) => {
             commands::self_cmd::run(args)?;

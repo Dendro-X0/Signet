@@ -97,18 +97,93 @@ fn detect_projects(
 
     // Electron
     let pkg = dir.join("package.json");
-    if pkg.is_file() {
-        if let Ok(text) = fs::read_to_string(&pkg) {
-            if text.contains("\"electron\"")
-                || text.contains("electron-builder")
-                || text.contains("electron-forge")
+    let mut pkg_text = String::new();
+    let has_pkg = if pkg.is_file() {
+        match fs::read_to_string(&pkg) {
+            Ok(t) => {
+                pkg_text = t;
+                true
+            }
+            Err(_) => false,
+        }
+    } else {
+        false
+    };
+
+    // Expo before React Native (expo apps also list react-native)
+    if has_pkg && (pkg_text.contains("\"expo\"") || pkg_text.contains("\"expo-")) {
+        let name = json_string_field(&pkg_text, "name");
+        out.push(DetectedProject {
+            kind: ProjectKind::Expo,
+            path: dir.to_path_buf(),
+            name,
+            detail: "Expo markers in package.json".into(),
+        });
+    } else if has_pkg
+        && (pkg_text.contains("\"react-native\"") || pkg_text.contains("react-native/"))
+    {
+        let name = json_string_field(&pkg_text, "name");
+        out.push(DetectedProject {
+            kind: ProjectKind::ReactNative,
+            path: dir.to_path_buf(),
+            name,
+            detail: "React Native markers in package.json".into(),
+        });
+    }
+
+    if has_pkg
+        && (pkg_text.contains("\"electron\"")
+            || pkg_text.contains("electron-builder")
+            || pkg_text.contains("electron-forge"))
+    {
+        let name = json_string_field(&pkg_text, "name");
+        out.push(DetectedProject {
+            kind: ProjectKind::Electron,
+            path: dir.to_path_buf(),
+            name,
+            detail: "Electron packaging markers in package.json".into(),
+        });
+    }
+
+    // Capacitor
+    let cap_config = dir.join("capacitor.config.ts").is_file()
+        || dir.join("capacitor.config.json").is_file()
+        || dir.join("capacitor.config.js").is_file();
+    if cap_config
+        || (has_pkg
+            && (pkg_text.contains("@capacitor/core") || pkg_text.contains("\"@capacitor/")))
+    {
+        let name = if has_pkg {
+            json_string_field(&pkg_text, "name")
+        } else {
+            None
+        };
+        out.push(DetectedProject {
+            kind: ProjectKind::Capacitor,
+            path: dir.to_path_buf(),
+            name,
+            detail: "Capacitor project markers".into(),
+        });
+    }
+
+    // Flutter
+    let pubspec = dir.join("pubspec.yaml");
+    if pubspec.is_file() {
+        if let Ok(text) = fs::read_to_string(&pubspec) {
+            if text.contains("flutter:")
+                || text.contains("sdk: flutter")
+                || text.contains("sdk:flutter")
             {
-                let name = json_string_field(&text, "name");
+                let name = text.lines().find_map(|l| {
+                    let t = l.trim();
+                    t.strip_prefix("name:")
+                        .map(|v| v.trim().trim_matches('"').to_string())
+                });
                 out.push(DetectedProject {
-                    kind: ProjectKind::Electron,
+                    kind: ProjectKind::Flutter,
                     path: dir.to_path_buf(),
                     name,
-                    detail: "Electron packaging markers in package.json".into(),
+                    detail: "Flutter pubspec.yaml".into(),
                 });
             }
         }

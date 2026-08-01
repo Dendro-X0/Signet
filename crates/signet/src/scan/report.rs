@@ -31,6 +31,10 @@ pub enum ProjectKind {
     Electron,
     AndroidNative,
     IosNative,
+    Flutter,
+    ReactNative,
+    Expo,
+    Capacitor,
 }
 
 impl ProjectKind {
@@ -40,6 +44,10 @@ impl ProjectKind {
             Self::Electron => "electron",
             Self::AndroidNative => "android",
             Self::IosNative => "ios",
+            Self::Flutter => "flutter",
+            Self::ReactNative => "react_native",
+            Self::Expo => "expo",
+            Self::Capacitor => "capacitor",
         }
     }
 }
@@ -267,6 +275,21 @@ pub fn finalize_report(
         notes.push(
             "Electron app detected — set [project].framework = \"electron\" in signet.toml, \
              then `signet build` (or --skip-build) to sign/checksum installers under dist/out/release."
+                .into(),
+        );
+    }
+    if projects.iter().any(|p| {
+        matches!(
+            p.kind,
+            ProjectKind::Flutter
+                | ProjectKind::ReactNative
+                | ProjectKind::Expo
+                | ProjectKind::Capacitor
+        )
+    }) {
+        notes.push(
+            "Hybrid framework detected — set framework to flutter|react-native|expo|capacitor, \
+             set build_command, see docs/frameworks.md. APK: signet android sign; IPA: signet ios package."
                 .into(),
         );
     }

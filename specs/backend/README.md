@@ -20,6 +20,8 @@ Implementation contracts for Signet. **Public narrative** lives under [`docs/`](
 | [android-signing-design.md](android-signing-design.md) | 11 | Deep | implemented |
 | [ios-signing-design.md](ios-signing-design.md) | 12 | Deep | implemented |
 | [graduation-helpers-design.md](graduation-helpers-design.md) | Later | Deep | implemented |
+| [signature-inspect-design.md](signature-inspect-design.md) | Later | Deep | implemented |
+| [hybrid-framework-adapters-design.md](hybrid-framework-adapters-design.md) | Later | Deep | implemented |
 | [self-update-design.md](self-update-design.md) | Dist | Deep | implemented |
 
 ## Status legend

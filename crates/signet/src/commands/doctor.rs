@@ -121,6 +121,7 @@ fn gather_checks() -> Vec<Check> {
     checks.push(sums_minisign_key_check(has_config));
     checks.push(gpg_check_if_configured(has_config));
     checks.push(electron_npm_check(has_config));
+    checks.push(hybrid_tool_check(has_config));
     checks.extend(android_tool_checks(has_config));
     checks.extend(ios_tool_checks(has_config));
 
@@ -280,6 +281,53 @@ fn electron_npm_check(has_config: bool) -> Check {
             "found (needed for Electron `signet build` unless --skip-build)".into()
         } else {
             "not found — install Node.js/npm or use --skip-build / custom build_command".into()
+        },
+    }
+}
+
+fn hybrid_tool_check(has_config: bool) -> Check {
+    use crate::config::{resolve_config_path, Config};
+
+    let fw = if has_config {
+        Config::load(resolve_config_path(None))
+            .map(|c| c.project.framework.trim().to_ascii_lowercase())
+            .unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    match fw.as_str() {
+        "flutter" => {
+            let ok = which("flutter").is_ok();
+            Check {
+                name: "flutter-sdk".into(),
+                ok,
+                severity: Severity::Optional,
+                detail: if ok {
+                    "found (needed for `signet build` unless --skip-build)".into()
+                } else {
+                    "not found — install Flutter SDK or pass --skip-build".into()
+                },
+            }
+        }
+        "react-native" | "rn" | "expo" | "capacitor" => {
+            let ok = which("npm").is_ok() || which("npx").is_ok();
+            Check {
+                name: "hybrid-npm".into(),
+                ok,
+                severity: Severity::Optional,
+                detail: if ok {
+                    format!("found (framework={fw}; set build_command — see docs/frameworks.md)")
+                } else {
+                    "not found — install Node.js/npm or use --skip-build".into()
+                },
+            }
+        }
+        _ => Check {
+            name: "hybrid-tools".into(),
+            ok: true,
+            severity: Severity::Optional,
+            detail: "not required (framework is not flutter/rn/expo/capacitor)".into(),
         },
     }
 }

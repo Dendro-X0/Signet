@@ -64,9 +64,11 @@ Android and iOS projects and artifacts are discovered by `scan`. Store signing h
 
 | Framework | Scan | Build+sign adapter |
 |-----------|------|--------------------|
-| Tauri | Yes | Yes (current) |
-| Electron | Yes | Planned |
-| Flutter / RN / Capacitor / native | Partial / planned | Planned |
+| Tauri | Yes | Yes |
+| Electron | Yes | Yes |
+| Android / iOS helpers | Yes | Yes (keystore / IPA package) |
+| Flutter / RN / Expo / Capacitor | Yes | Yes (discover + required `build_command`; APK/IPA via android/ios helpers) |
+| .NET / others | No | Planned |
 
 ## Trust model
 

@@ -125,7 +125,7 @@ Private keys live under gitignored `.signet/` — never in `TRUST.md` or git.
 | [START-HERE.md](START-HERE.md) | Agent / contributor boot |
 | [docs/product.md](docs/product.md) | Product thesis |
 | [docs/trust-model.md](docs/trust-model.md) | Integrity vs reputation, tiers |
-| [docs/verify.md](docs/verify.md) | `signet verify` |
+| [docs/verify.md](docs/verify.md) | `signet verify` + `signet inspect` |
 | [docs/install.md](docs/install.md) | One-command install + self update |
 | [docs/roadmap.md](docs/roadmap.md) | Phases + spec gate |
 | [specs/backend/README.md](specs/backend/README.md) | Design contracts (Phases 6+) |
@@ -136,6 +136,7 @@ Private keys live under gitignored `.signet/` — never in `TRUST.md` or git.
 | [docs/android.md](docs/android.md) | Android keystore + Play honesty |
 | [docs/ios.md](docs/ios.md) | iOS IPA package + free-provisioning honesty |
 | [docs/graduation.md](docs/graduation.md) | OV / Azure Trusted Signing / Apple notarization helpers |
+| [docs/frameworks.md](docs/frameworks.md) | Flutter / RN / Expo / Capacitor adapters |
 | [docs/release.md](docs/release.md) | GitHub Releases |
 | [CHANGELOG.md](CHANGELOG.md) | Releases |
 

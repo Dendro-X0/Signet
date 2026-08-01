@@ -8,6 +8,8 @@
 
 **iOS:** set `framework = "ios"` or use `signet ios package`. See [ios.md](ios.md) — free provisioning ~7 days; packaging ≠ App Store trust. Build requires explicit `build_command` (no scheme guessing).
 
+**Hybrid (Flutter / RN / Expo / Capacitor):** set `framework` + required `build_command`. See [frameworks.md](frameworks.md).
+
 **Graduation (OV / Azure / notarize):** explicit helpers — not part of default `signet build`. See [graduation.md](graduation.md) and `signet graduate notes`.
 
 ## Usage

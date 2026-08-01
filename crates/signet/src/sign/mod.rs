@@ -23,7 +23,7 @@ pub use sums_sig::{
     create_sums_key, maybe_sign_sums, parse_minisign_pub_from_trust, read_public_key_text,
     verify_sums_gpg, verify_sums_minisign, SumsKeyPaths,
 };
-pub use tools::{find_openssl, find_signtool, find_tauri_cli};
+pub use tools::{find_codesign, find_openssl, find_signtool, find_tauri_cli};
 
 pub use crate::artifact::{host_signable, ArtifactKind, DiscoveredArtifact};
 
