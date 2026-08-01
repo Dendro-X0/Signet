@@ -1,7 +1,7 @@
 # Design: demo kit + dogfood + public cut (Phases 15–16)
 
 **Phases:** 15 (demo kit), 16 (dogfood + public cut)  
-**Status:** ready (Phase 15 implemented; Phase 16 open)  
+**Status:** ready (Phase 15 implemented; Phase 16 open — see also [v0.5-release-roadmap.md](v0.5-release-roadmap.md))  
 **Depends on:** Phase 13 narrative, Phase 14 golden path (for “one demo” claim)  
 **Owners:** `examples/` (or `demo/`), scripts, `CHANGELOG`, release tag, optional `docs/demo.md`  
 **Plan alignment:** recordable GIF/video path; real-app proof before calling the version “official.”

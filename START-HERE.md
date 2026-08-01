@@ -5,7 +5,7 @@
 **Product:** Signet  
 **Binary:** `signet`  
 **Stack:** Rust CLI + TUI (ratatui)  
-**Status:** v0.4.0 engine; **public release program** Phases 13–16 next — see [docs/roadmap.md](docs/roadmap.md)  
+**Status:** v0.4.0 tagged; `main` tracking **v0.5.0** preview cut (Phase 16) — see [docs/roadmap.md](docs/roadmap.md) · [specs/backend/v0.5-release-roadmap.md](specs/backend/v0.5-release-roadmap.md)  
 **Repo:** [github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)
 
 ## What this is
@@ -16,9 +16,10 @@ Self-signing is **not** a substitute for paid platform developer programs. Signe
 
 ## Public release (contributor queue)
 
-1. [specs/backend/public-release-readiness-design.md](specs/backend/public-release-readiness-design.md) — program  
-2. Phase 13 docs → 14 golden path → 15 demo kit → 16 dogfood + tag  
-3. Handoff: [docs/handoffs/current-session.md](docs/handoffs/current-session.md)
+1. [specs/backend/v0.5-release-roadmap.md](specs/backend/v0.5-release-roadmap.md) — **v0.5.0 cut** (current)  
+2. [specs/backend/public-release-readiness-design.md](specs/backend/public-release-readiness-design.md) — program (Phases 13–15 done)  
+3. Phase 16: dogfood notes → CHANGELOG / version / tag `v0.5.0`  
+4. Handoff: [docs/handoffs/current-session.md](docs/handoffs/current-session.md)
 
 ## Quick start
 

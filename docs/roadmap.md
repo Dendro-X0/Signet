@@ -107,13 +107,23 @@ cargo run -p signet -- doctor
 - [x] Host signature inspect (`signet inspect`) — signed/unsigned/adhoc/unknown per artifact platform
 - [x] Flutter / React Native / Expo / Capacitor adapters (`docs/frameworks.md`)
 
-## Public release program (next)
+## v0.5.0 — Public preview cut
 
-**Program spec:** [public-release-readiness-design.md](../specs/backend/public-release-readiness-design.md)
+**Roadmap spec:** [v0.5-release-roadmap.md](../specs/backend/v0.5-release-roadmap.md)  
+**Program:** [public-release-readiness-design.md](../specs/backend/public-release-readiness-design.md)  
+**Cut detail:** [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Cut
 
 Goal: easy setup, dual path (self-sign **or** official facilitation), low learning curve (one demo), signing+verification-first packaging — **before** more frameworks/GUI.
 
-### Phase 13 — Product narrative & dual-path docs
+```text
+v0.4.0 → (main since 0.4.0) → Phase 16 cut → v0.5.0 preview → 0.5.x → v1.0.0
+```
+
+### Already on main (credit toward 0.5.0)
+
+Public-release Phases **13 → 14 → 15** are done (order was frozen; only Phase 16 remains).
+
+#### Phase 13 — Product narrative & dual-path docs
 
 **Spec:** [public-release-readiness-design.md](../specs/backend/public-release-readiness-design.md) §13
 
@@ -122,9 +132,7 @@ Goal: easy setup, dual path (self-sign **or** official facilitation), low learni
 - [x] Dual-path: self-signed vs OV/Azure/notarize/Play honesty
 - [x] Remove stale “Tauri-only / adapters later” claims where false
 
-**Exit:** A new visitor understands what Signet does and does not claim in one screen.
-
-### Phase 14 — Golden-path onboarding
+#### Phase 14 — Golden-path onboarding
 
 **Spec:** [golden-path-onboarding-design.md](../specs/backend/golden-path-onboarding-design.md)
 
@@ -133,9 +141,7 @@ Goal: easy setup, dual path (self-sign **or** official facilitation), low learni
 - [x] Guided ends with verify/inspect Check
 - [x] Hub exposes Verify / Inspect (+ graduate hint)
 
-**Exit:** First signed artifact + check in one guided sitting.
-
-### Phase 15 — Demo kit
+#### Phase 15 — Demo kit
 
 **Spec:** [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Demo
 
@@ -143,19 +149,39 @@ Goal: easy setup, dual path (self-sign **or** official facilitation), low learni
 - [x] `docs/demo.md` recording guide
 - [x] README links the demo
 
-**Exit:** Maintainer can record GIF/video from a fixed script.
+#### Engine & UX since v0.4.0
 
-### Phase 16 — Dogfood + public cut
+- [x] Host signature inspect (`signet inspect`) — also listed under Later (engine)
+- [x] Flutter / React Native / Expo / Capacitor adapters (`docs/frameworks.md`)
+- [x] CLI / Rust workspace detection (`framework = "cli"`); prefer root over nested `demo/` / fixtures ([project-kind-detection-design.md](../specs/backend/project-kind-detection-design.md))
+- [x] Guided init auto-suggests detected framework
+- [x] TUI hub + console: shared cyan panels and TTY-aware color hierarchy
 
-**Spec:** [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Cut
+### Phase 16 — Cut to v0.5.0
 
-- [ ] Real-app dogfood notes (`docs/dogfood/…`)
-- [ ] Version bump + CHANGELOG; tag **v0.5.0** (preview) or **v1.0.0** (full gate)
-- [ ] `release-cli` green; spot-check install + verify on release assets
+**Specs:** [v0.5-release-roadmap.md](../specs/backend/v0.5-release-roadmap.md) · [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Cut
 
-**Exit:** Public tag matches the “official enough to demo” bar.
+- [ ] Real-app dogfood notes (`docs/dogfood/<app>-notes.md`) — **partial OK** for preview
+- [ ] CHANGELOG Unreleased → `## 0.5.0` (include CLI detect + TUI polish)
+- [ ] Workspace version bump `0.4.0` → `0.5.0`; START-HERE / README status
+- [ ] `cargo test -p signet` + clippy `-D warnings`
+- [ ] Tag **v0.5.0** → `release-cli` green
+- [ ] Spot-check install + `signet verify` against release `SHA256SUMS`
+- [ ] Release body: dual-path + demo link
 
-## Beyond public cut
+**Exit:** Public preview tag matches the “official enough to demo” bar.  
+**Blocked for coding:** maintainer dogfood notes (process + tag).
+
+### After tag — 0.5.x → v1.0.0
+
+| Band | Focus | Exit |
+|------|--------|------|
+| **0.5.x** | Complete dogfood; friction fixes from notes; publish demo recording; unmanaged-cargo install honesty if needed | Successful Sign→Prove→Check on ≥1 real app documented |
+| **v1.0.0** | Phase 16 acceptance fully checked; narrative stable; no “preview” framing | Tag per full gate in cut specs |
+
+## Beyond v1.0
+
+Deferred — do not pull into the 0.5.0 cut:
 
 - Optional desktop GUI
 - Homebrew / winget
@@ -169,4 +195,5 @@ Goal: easy setup, dual path (self-sign **or** official facilitation), low learni
 1. No README “supported” claim until build/sign for that path exists in-repo. Scan-only = awareness.
 2. Never instruct end users to install certificates into Trusted Root.
 3. One open implementation band at a time unless the handoff says otherwise — see [`docs/handoffs/current-session.md`](handoffs/current-session.md).
-4. Public-release program order is frozen: **13 → 14 → 15 → 16** (see program spec).
+4. Public-release program order is frozen: **13 → 14 → 15 → 16** (13–15 done; **16** is the open cut band).
+5. Version policy: **v0.5.0** = preview (partial dogfood OK); **v1.0.0** = full dogfood + stable narrative — see [v0.5-release-roadmap.md](../specs/backend/v0.5-release-roadmap.md).
