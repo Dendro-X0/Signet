@@ -8,6 +8,7 @@ Implementation contracts for Signet. **Public narrative** lives under [`docs/`](
 2. Read the design for that phase — status must be `ready` or `approved`.
 3. Do **not** implement a later phase before earlier integrity phases (6 → 7 → 8) unless the maintainer explicitly overrides the handoff.
 4. After implementation, update this index status and [`docs/handoffs/current-session.md`](../../docs/handoffs/current-session.md).
+5. **Public release program:** implement Phases **13 → 14 → 15 → 16** in order ([public-release-readiness-design.md](public-release-readiness-design.md)). Do not start Beyond (GUI/.NET/…) until 16 exits unless the handoff overrides.
 
 ## Index
 
@@ -22,6 +23,9 @@ Implementation contracts for Signet. **Public narrative** lives under [`docs/`](
 | [graduation-helpers-design.md](graduation-helpers-design.md) | Later | Deep | implemented |
 | [signature-inspect-design.md](signature-inspect-design.md) | Later | Deep | implemented |
 | [hybrid-framework-adapters-design.md](hybrid-framework-adapters-design.md) | Later | Deep | implemented |
+| [public-release-readiness-design.md](public-release-readiness-design.md) | 13–16 | Deep | ready |
+| [golden-path-onboarding-design.md](golden-path-onboarding-design.md) | 14 | Deep | ready |
+| [demo-and-dogfood-design.md](demo-and-dogfood-design.md) | 15–16 | Deep | ready |
 | [self-update-design.md](self-update-design.md) | Dist | Deep | implemented |
 
 ## Status legend

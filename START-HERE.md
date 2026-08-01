@@ -5,14 +5,20 @@
 **Product:** Signet  
 **Binary:** `signet`  
 **Stack:** Rust CLI + TUI (ratatui)  
-**Status:** v0.4.0 — see [CHANGELOG.md](CHANGELOG.md)  
+**Status:** v0.4.0 engine; **public release program** Phases 13–16 next — see [docs/roadmap.md](docs/roadmap.md)  
 **Repo:** [github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)
 
 ## What this is
 
-A developer/agent-friendly CLI for **identity → sign → trust docs → release** of self-signed apps across desktop and mobile frameworks. Tauri is the deepest path today; `scan` already sees Electron / Android / iOS, and more adapters follow.
+A developer/agent-friendly CLI for **Sign → Prove → Check**: identity and signing (self-signed or official helpers), trust/checksums, and verify/inspect — across desktop and mobile frameworks.
 
-Self-signing is **not** a substitute for paid platform developer programs. It is the practical path for independent and non-profit OSS: legitimate local trust, clear install guidance, and fewer one-off signing rituals.
+Self-signing is **not** a substitute for paid platform developer programs. Signet optimizes for independent and non-profit OSS: repeatable local trust, honest install guidance, and agent-friendly automation.
+
+## Public release (contributor queue)
+
+1. [specs/backend/public-release-readiness-design.md](specs/backend/public-release-readiness-design.md) — program  
+2. Phase 13 docs → 14 golden path → 15 demo kit → 16 dogfood + tag  
+3. Handoff: [docs/handoffs/current-session.md](docs/handoffs/current-session.md)
 
 ## Quick start
 

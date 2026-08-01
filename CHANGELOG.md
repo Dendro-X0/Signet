@@ -4,6 +4,7 @@
 
 ### Added
 
+- Public release program: Phases 13–16 (narrative → golden path → demo kit → dogfood/cut); specs under `specs/backend/public-release-*.md` / `golden-path-*` / `demo-and-dogfood-*`
 - Hybrid adapters: `framework = flutter|react-native|expo|capacitor` (+ `rn` alias), `docs/frameworks.md`, scan detection
 - `signet inspect` — best-effort signed/unsigned/adhoc/unknown report per artifact platform (`docs/verify.md`)
 

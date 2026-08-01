@@ -102,16 +102,71 @@ cargo run -p signet -- doctor
 - [x] `signet graduate notes|ov-sign|azure-sign|notarize|staple`
 - [x] Optional `[graduation]` config; doctor / TRUST / scan hooks
 
-## Later
+## Later (engine — done)
 
 - [x] Host signature inspect (`signet inspect`) — signed/unsigned/adhoc/unknown per artifact platform
 - [x] Flutter / React Native / Expo / Capacitor adapters (`docs/frameworks.md`)
+
+## Public release program (next)
+
+**Program spec:** [public-release-readiness-design.md](../specs/backend/public-release-readiness-design.md)
+
+Goal: easy setup, dual path (self-sign **or** official facilitation), low learning curve (one demo), signing+verification-first packaging — **before** more frameworks/GUI.
+
+### Phase 13 — Product narrative & dual-path docs
+
+**Spec:** [public-release-readiness-design.md](../specs/backend/public-release-readiness-design.md) §13
+
+- [ ] README 2-minute story; Sign → Prove → Check
+- [ ] Align `product.md` with shipped commands (inspect, graduate, hybrid)
+- [ ] Dual-path: self-signed vs OV/Azure/notarize/Play honesty
+- [ ] Remove stale “Tauri-only / adapters later” claims where false
+
+**Exit:** A new visitor understands what Signet does and does not claim in one screen.
+
+### Phase 14 — Golden-path onboarding
+
+**Spec:** [golden-path-onboarding-design.md](../specs/backend/golden-path-onboarding-design.md)
+
+- [ ] TUI Guided setup uses Sign / Prove / Check
+- [ ] Framework pick from scan + `build_command` when required
+- [ ] Guided ends with verify/inspect Check
+- [ ] Hub exposes Verify / Inspect (+ graduate hint)
+
+**Exit:** First signed artifact + check in one guided sitting.
+
+### Phase 15 — Demo kit
+
+**Spec:** [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Demo
+
+- [ ] `demo/` fixture + happy-path scripts
+- [ ] `docs/demo.md` recording guide
+- [ ] README links the demo
+
+**Exit:** Maintainer can record GIF/video from a fixed script.
+
+### Phase 16 — Dogfood + public cut
+
+**Spec:** [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Cut
+
+- [ ] Real-app dogfood notes (`docs/dogfood/…`)
+- [ ] Version bump + CHANGELOG; tag **v0.5.0** (preview) or **v1.0.0** (full gate)
+- [ ] `release-cli` green; spot-check install + verify on release assets
+
+**Exit:** Public tag matches the “official enough to demo” bar.
+
+## Beyond public cut
+
 - Optional desktop GUI
+- Homebrew / winget
+- Host-sign / notarize Signet CLI itself (or document checksum-only honesty)
+- .NET / other desktop ecosystems
 - Update channels beyond checksums + GitHub Releases
-- .NET / other desktop ecosystems (not started)
+- Deeper EAS / Play / App Store Connect automation
 
 ## Working rules
 
 1. No README “supported” claim until build/sign for that path exists in-repo. Scan-only = awareness.
 2. Never instruct end users to install certificates into Trusted Root.
 3. One open implementation band at a time unless the handoff says otherwise — see [`docs/handoffs/current-session.md`](handoffs/current-session.md).
+4. Public-release program order is frozen: **13 → 14 → 15 → 16** (see program spec).
