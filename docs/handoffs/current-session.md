@@ -1,11 +1,11 @@
 # Current session handoff
 
 **Updated:** 2026-07-31  
-**Band:** Graduation helpers (OV / Azure / notarize) implemented; Phases 6–12 + graduation complete — **Later** band next
+**Band:** v0.4.0 cut (Phases 8–12 + graduation); **Later** band next
 
 ## Next atomic step
 
-Pick from **Later** in [`docs/roadmap.md`](../roadmap.md) when ready (Flutter/RN/Capacitor, GUI, update channels) — write/elevate a design under `specs/backend/` before coding. Or dogfood Signet on Miro/Deco/KnotTrace.
+Confirm `release-cli` for tag `v0.4.0` finishes green on GitHub. Then pick from **Later** in [`docs/roadmap.md`](../roadmap.md) (Flutter/RN/Capacitor, GUI, update channels) — design under `specs/backend/` first — or dogfood Signet on Miro/Deco/KnotTrace.
 
 **PAUSED / CANCELLED:** none  
 **Blocked for coding:** none for Phases 6–12 + graduation (done)

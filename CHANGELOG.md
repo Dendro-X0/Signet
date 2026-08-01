@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.0 — 2026-07-31
+
+Framework adapters, checksum signing, and reputation graduation helpers.
+
 ### Added
 
 - Graduation helpers: `signet graduate notes|ov-sign|azure-sign|notarize|staple`, `docs/graduation.md`, `[graduation]` config
