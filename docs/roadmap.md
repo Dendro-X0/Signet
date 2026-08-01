@@ -165,7 +165,8 @@ Public-release Phases **13 → 14 → 15** are done (order was frozen; only Phas
 - [x] CHANGELOG Unreleased → `## 0.5.0` (include CLI detect + TUI polish)
 - [x] Workspace version bump `0.4.0` → `0.5.0`; START-HERE / README status
 - [x] `cargo test -p signet` + clippy `-D warnings`
-- [ ] Tag **v0.5.0** → `release-cli` green
+- [x] Tag **v0.5.0** pushed (`519c0d0`)
+- [ ] `release-cli` green for `v0.5.0`
 - [ ] Spot-check install + `signet verify` against release `SHA256SUMS`
 - [ ] Release body: dual-path + demo link
 
