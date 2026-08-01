@@ -8,10 +8,10 @@ use crate::config::Config;
 use crate::error::ExitCode;
 use crate::identity;
 use crate::project::ProjectCtx;
-use crate::scan::{scan_repository, ProjectKind};
+use crate::scan::scan_repository;
 use crate::tui::framework_pick::{
-    build_command_hint, index_of_framework, preferred_framework_from_kinds, requires_build_command,
-    FRAMEWORK_OPTIONS,
+    build_command_hint, index_of_framework, preferred_framework_from_projects,
+    requires_build_command, FRAMEWORK_OPTIONS,
 };
 use crate::tui::prompts::{confirm, prompt_choice, prompt_line};
 use crate::tui::status::ProjectStatus;
@@ -126,9 +126,58 @@ pub fn guided_init() -> anyhow::Result<()> {
             return Ok(());
         }
     }
-    let name = prompt_line("app name", status.app_name.as_deref().unwrap_or("my-app"))?;
-    let tauri_root = prompt_line("app root (tauri_root)", ".")?;
-    let (framework, build_command) = prompt_framework_and_build_cmd(None)?;
+
+    console::section("detect");
+    let report = scan_repository(std::path::Path::new("."))?;
+    let suggested = &report.suggested;
+    if report.projects.is_empty() {
+        console::muted("no project markers found — you can pick a framework manually");
+    } else {
+        for p in report.projects.iter().take(5) {
+            let rel = p
+                .path
+                .strip_prefix(&report.root)
+                .map(|r| {
+                    let s = r.to_string_lossy().replace('\\', "/");
+                    if s.is_empty() {
+                        ".".into()
+                    } else {
+                        s
+                    }
+                })
+                .unwrap_or_else(|_| p.path.display().to_string());
+            console::bullet(&format!(
+                "[{}] {} — {}",
+                p.kind.as_str(),
+                rel,
+                p.detail
+            ));
+        }
+        if report.projects.len() > 5 {
+            console::muted(&format!(
+                "{} more omitted — run Scan for full report",
+                report.projects.len() - 5
+            ));
+        }
+    }
+    console::note(&format!(
+        "suggested: framework={}  root={}  name={}",
+        suggested.framework, suggested.tauri_root, suggested.project_name
+    ));
+    if suggested.framework == "cli" {
+        console::note(
+            "this looks like a CLI / tooling repo, not an installable desktop or mobile app",
+        );
+    }
+
+    let default_name = status
+        .app_name
+        .as_deref()
+        .unwrap_or(suggested.project_name.as_str());
+    let name = prompt_line("app name", default_name)?;
+    let tauri_root = prompt_line("app root (tauri_root)", &suggested.tauri_root)?;
+    let (framework, build_command) =
+        prompt_framework_and_build_cmd(Some(suggested.framework.as_str()))?;
     commands::init::run(commands::init::Args {
         name,
         tauri_root,
@@ -142,15 +191,28 @@ pub fn guided_init() -> anyhow::Result<()> {
 fn prompt_framework_and_build_cmd(
     suggested: Option<&str>,
 ) -> anyhow::Result<(String, String)> {
+    if let Some(fw) = suggested {
+        let label = FRAMEWORK_OPTIONS
+            .iter()
+            .find(|(id, _)| *id == fw)
+            .map(|(_, l)| *l)
+            .unwrap_or(fw);
+        console::note(&format!("detected framework: {label} ({fw})"));
+        if confirm(&format!("use framework={fw}?"), true)? {
+            return prompt_build_command_for(fw);
+        }
+    }
     let labels: Vec<&str> = FRAMEWORK_OPTIONS.iter().map(|(_, l)| *l).collect();
-    let default_idx = suggested
-        .map(index_of_framework)
-        .unwrap_or(0);
+    let default_idx = suggested.map(index_of_framework).unwrap_or(0);
     let choice = prompt_choice("Framework adapter", &labels, default_idx)?;
     let framework = FRAMEWORK_OPTIONS[choice].0.to_string();
+    prompt_build_command_for(&framework)
+}
+
+fn prompt_build_command_for(framework: &str) -> anyhow::Result<(String, String)> {
     let mut build_command = String::new();
-    if requires_build_command(&framework) {
-        console::note(build_command_hint(&framework));
+    if requires_build_command(framework) {
+        console::note(build_command_hint(framework));
         build_command = prompt_line(
             "build_command (required for this framework; empty only if you will --skip-build)",
             "",
@@ -159,12 +221,12 @@ fn prompt_framework_and_build_cmd(
             console::note("empty build_command — use Build → Sign only (--skip-build) later");
         }
     } else {
-        console::note(build_command_hint(&framework));
+        console::note(build_command_hint(framework));
         if confirm("set a custom build_command?", false)? {
             build_command = prompt_line("build_command", "")?;
         }
     }
-    Ok((framework, build_command))
+    Ok((framework.to_string(), build_command))
 }
 
 pub fn guided_identity() -> anyhow::Result<()> {
@@ -350,16 +412,8 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
         if confirm("scan the repo for projects/installers?", true)? {
             let report = scan_repository(std::path::Path::new("."))?;
             crate::scan::print_human(&report);
-            let kinds: Vec<ProjectKind> = report.projects.iter().map(|p| p.kind).collect();
-            suggested_fw = preferred_framework_from_kinds(&kinds).map(|s| s.to_string());
-            if let Some(p) = report.projects.first() {
-                if let Ok(rel) = p.path.strip_prefix(&report.root) {
-                    let s = rel.to_string_lossy().replace('\\', "/");
-                    if !s.is_empty() {
-                        suggested_root = s;
-                    }
-                }
-            }
+            suggested_fw = Some(report.suggested.framework.clone());
+            suggested_root = report.suggested.tauri_root.clone();
             if let Some(ref fw) = suggested_fw {
                 console::note(&format!("suggested framework: {fw}"));
             }
@@ -370,8 +424,10 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
         step(step_n, total, "Scan · find app + framework", true);
         skip_line("scan already completed — continuing wizard");
         if let Ok(report) = scan_repository(std::path::Path::new(".")) {
-            let kinds: Vec<ProjectKind> = report.projects.iter().map(|p| p.kind).collect();
-            suggested_fw = preferred_framework_from_kinds(&kinds).map(|s| s.to_string());
+            suggested_fw =
+                preferred_framework_from_projects(&report.root, &report.projects)
+                    .map(|s| s.to_string());
+            suggested_root = report.suggested.tauri_root.clone();
         }
     }
     step_n += 1;

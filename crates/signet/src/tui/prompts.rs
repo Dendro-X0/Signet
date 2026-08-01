@@ -1,15 +1,14 @@
-use std::io::{self, Write};
+use std::io;
 
 use crate::ui::console;
 
 /// Prompt for a line; empty input keeps `default`.
 pub fn prompt_line(label: &str, default: &str) -> io::Result<String> {
     if default.is_empty() {
-        print!("  {label}: ");
+        console::write_prompt(label, None)?;
     } else {
-        print!("  {label} [{default}]: ");
+        console::write_prompt(label, Some(default))?;
     }
-    io::stdout().flush()?;
     let mut buf = String::new();
     io::stdin().read_line(&mut buf)?;
     let trimmed = buf.trim();
@@ -23,8 +22,7 @@ pub fn prompt_line(label: &str, default: &str) -> io::Result<String> {
 /// y/N or Y/n style confirm. `default_yes` controls empty answer.
 pub fn confirm(label: &str, default_yes: bool) -> io::Result<bool> {
     let hint = if default_yes { "Y/n" } else { "y/N" };
-    print!("  {label} [{hint}]: ");
-    io::stdout().flush()?;
+    console::write_prompt(label, Some(hint))?;
     let mut buf = String::new();
     io::stdin().read_line(&mut buf)?;
     let t = buf.trim().to_ascii_lowercase();
@@ -38,8 +36,7 @@ pub fn confirm(label: &str, default_yes: bool) -> io::Result<bool> {
 pub fn prompt_choice(label: &str, options: &[&str], default_idx: usize) -> io::Result<usize> {
     console::section(label);
     for (i, opt) in options.iter().enumerate() {
-        let mark = if i == default_idx { "▸" } else { " " };
-        println!("  {mark} {}. {opt}", i + 1);
+        console::choice_row(i == default_idx, i + 1, opt);
     }
     let default = (default_idx + 1).to_string();
     let answer = prompt_line("choice", &default)?;

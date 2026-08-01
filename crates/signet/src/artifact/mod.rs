@@ -3,6 +3,7 @@
 mod adapter;
 mod android;
 mod capacitor;
+mod cli;
 mod electron;
 mod expo;
 mod flutter;
@@ -16,6 +17,7 @@ mod walk_outputs;
 pub use adapter::{select_adapter, BuildOpts, FrameworkAdapter};
 pub use android::AndroidAdapter;
 pub use capacitor::CapacitorAdapter;
+pub use cli::CliAdapter;
 pub use electron::ElectronAdapter;
 pub use expo::ExpoAdapter;
 pub use flutter::FlutterAdapter;
@@ -38,6 +40,7 @@ fn _contract_surface() {
     let _ = std::any::type_name::<ReactNativeAdapter>();
     let _ = std::any::type_name::<ExpoAdapter>();
     let _ = std::any::type_name::<CapacitorAdapter>();
+    let _ = std::any::type_name::<CliAdapter>();
     let _ = std::any::type_name::<dyn FrameworkAdapter>();
     let _ = artifacts_json(&[]);
 }

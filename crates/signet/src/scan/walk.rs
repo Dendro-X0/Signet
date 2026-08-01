@@ -212,6 +212,16 @@ fn detect_projects(
         });
     }
 
+    // Rust CLI / workspace — only when this directory has no UI-app stack markers.
+    let has_ui_here = out.iter().any(|p| {
+        p.path == dir && p.kind.is_installable_app()
+    });
+    if !has_ui_here {
+        if let Some(cli) = detect_rust_cli(dir) {
+            out.push(cli);
+        }
+    }
+
     for entry in fs::read_dir(dir)?.flatten() {
         let path = entry.path();
         if !path.is_dir() {
@@ -484,6 +494,74 @@ fn json_string_field(text: &str, key: &str) -> Option<String> {
     }
 }
 
+/// Detect a Rust binary package or workspace root (tooling / CLI, not a UI app).
+fn detect_rust_cli(dir: &Path) -> Option<DetectedProject> {
+    let cargo = dir.join("Cargo.toml");
+    if !cargo.is_file() {
+        return None;
+    }
+    let text = fs::read_to_string(&cargo).ok()?;
+    let is_workspace = text.contains("[workspace]");
+    let is_package = text.contains("[package]");
+    let has_bin_section = text.contains("[[bin]]");
+    let has_main = dir.join("src/main.rs").is_file();
+    let lib_only = dir.join("src/lib.rs").is_file() && !has_main && !has_bin_section;
+
+    if is_workspace && !is_package {
+        let name = cargo_toml_string_field(&text, "name")
+            .or_else(|| {
+                dir.file_name()
+                    .and_then(|s| s.to_str())
+                    .map(|s| s.to_string())
+            });
+        return Some(DetectedProject {
+            kind: ProjectKind::RustCli,
+            path: dir.to_path_buf(),
+            name,
+            detail: "Rust workspace (CLI / tooling — not an installable UI app)".into(),
+        });
+    }
+
+    if is_package && (has_main || has_bin_section) && !lib_only {
+        let name = cargo_toml_string_field(&text, "name");
+        return Some(DetectedProject {
+            kind: ProjectKind::RustCli,
+            path: dir.to_path_buf(),
+            name,
+            detail: "Rust binary package (CLI / tooling)".into(),
+        });
+    }
+
+    None
+}
+
+fn cargo_toml_string_field(text: &str, key: &str) -> Option<String> {
+    // Prefer [package] name= over [workspace.package]
+    let mut in_package = false;
+    for line in text.lines() {
+        let t = line.trim();
+        if t.starts_with('[') {
+            in_package = t == "[package]" || t.starts_with("[package.");
+            continue;
+        }
+        if !in_package {
+            continue;
+        }
+        let Some(rest) = t.strip_prefix(&format!("{key}")) else {
+            continue;
+        };
+        let rest = rest.trim_start();
+        let Some(rest) = rest.strip_prefix('=') else {
+            continue;
+        };
+        let val = rest.trim().trim_matches('"').trim_matches('\'').to_string();
+        if !val.is_empty() {
+            return Some(val);
+        }
+    }
+    None
+}
+
 fn nested_json_string(text: &str, parent: &str, key: &str) -> Option<String> {
     let parent_needle = format!("\"{parent}\"");
     let idx = text.find(&parent_needle)?;
@@ -567,5 +645,92 @@ mod tests {
             .installers
             .iter()
             .any(|i| i.path.ends_with("Real-setup.exe")));
+    }
+
+    #[test]
+    fn prefers_rust_workspace_over_nested_demo_electron() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(
+            root.join("Cargo.toml"),
+            r#"[workspace]
+members = ["crates/tool"]
+"#,
+        )
+        .unwrap();
+        fs::create_dir_all(root.join("crates/tool/src")).unwrap();
+        fs::write(
+            root.join("crates/tool/Cargo.toml"),
+            r#"[package]
+name = "tool"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "tool"
+path = "src/main.rs"
+"#,
+        )
+        .unwrap();
+        fs::write(root.join("crates/tool/src/main.rs"), "fn main() {}").unwrap();
+
+        let fixture = root.join("demo/fixture");
+        fs::create_dir_all(&fixture).unwrap();
+        fs::write(
+            fixture.join("package.json"),
+            r#"{ "name": "demo-electron", "devDependencies": { "electron": "33.0.0" } }"#,
+        )
+        .unwrap();
+
+        let report = scan_repository(root).unwrap();
+        assert!(
+            report
+                .projects
+                .iter()
+                .any(|p| p.kind == ProjectKind::RustCli),
+            "expected RustCli detection"
+        );
+        assert!(
+            report
+                .projects
+                .iter()
+                .any(|p| p.kind == ProjectKind::Electron),
+            "expected nested Electron still visible"
+        );
+        assert_eq!(report.suggested.framework, "cli");
+        assert!(
+            report
+                .suggested
+                .notes
+                .iter()
+                .any(|n| n.to_ascii_lowercase().contains("cli")),
+            "expected CLI honesty note"
+        );
+    }
+
+    #[test]
+    fn detects_tauri_over_nested_cli() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join("src-tauri")).unwrap();
+        fs::write(
+            root.join("src-tauri/tauri.conf.json"),
+            r#"{ "productName": "Desk" }"#,
+        )
+        .unwrap();
+        fs::create_dir_all(root.join("tools/cli/src")).unwrap();
+        fs::write(
+            root.join("tools/cli/Cargo.toml"),
+            r#"[package]
+name = "helper"
+version = "0.1.0"
+edition = "2021"
+"#,
+        )
+        .unwrap();
+        fs::write(root.join("tools/cli/src/main.rs"), "fn main() {}").unwrap();
+
+        let report = scan_repository(root).unwrap();
+        assert_eq!(report.suggested.framework, "tauri");
     }
 }

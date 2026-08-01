@@ -28,6 +28,20 @@ signet inspect --file path.apk
 | `expo` | `dist`, android/ios outputs | local EAS / export; **cloud EAS is external** — download then `--skip-build` |
 | `capacitor` | `android/app/build/outputs`, `ios/App/build`, `dist` | `npx cap sync` + native pack scripts |
 
+## Rust CLI / binary (`framework = "cli"`)
+
+For Cargo workspaces and binary crates that are **not** installable UI apps (this Signet repo is an example):
+
+```toml
+[project]
+name = "signet"
+framework = "cli"
+tauri_root = "."          # workspace or package root
+# build_command = ""      # optional — defaults to cargo build --release
+```
+
+`signet scan` / guided init prefer a root Rust workspace over nested `demo/` / `fixture` Electron samples. Discover looks under `target/<profile>/` (including the workspace `target/` when `tauri_root` is a member crate).
+
 ## Honesty
 
 - Setting `framework` does **not** enable Play App Signing or App Store upload.

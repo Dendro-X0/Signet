@@ -7,6 +7,7 @@ use crate::project::ProjectCtx;
 
 use super::android::AndroidAdapter;
 use super::capacitor::CapacitorAdapter;
+use super::cli::CliAdapter;
 use super::electron::ElectronAdapter;
 use super::expo::ExpoAdapter;
 use super::flutter::FlutterAdapter;
@@ -58,9 +59,10 @@ pub fn select_adapter(config: &Config) -> anyhow::Result<Box<dyn FrameworkAdapte
         "react-native" | "rn" => Ok(Box::new(ReactNativeAdapter)),
         "expo" => Ok(Box::new(ExpoAdapter)),
         "capacitor" => Ok(Box::new(CapacitorAdapter)),
+        "cli" | "rust" | "rust-cli" => Ok(Box::new(CliAdapter)),
         other => anyhow::bail!(
             "framework '{other}' is not supported yet — supported: tauri, electron, android, ios, \
-             flutter, react-native (rn), expo, capacitor (see docs/frameworks.md)"
+             flutter, react-native (rn), expo, capacitor, cli (see docs/frameworks.md)"
         ),
     }
 }
@@ -122,6 +124,15 @@ mod tests {
         assert_eq!(select_adapter(&cfg).unwrap().id(), "expo");
         cfg.project.framework = "capacitor".into();
         assert_eq!(select_adapter(&cfg).unwrap().id(), "capacitor");
+    }
+
+    #[test]
+    fn selects_cli() {
+        let mut cfg = Config::example("app", ".");
+        cfg.project.framework = "cli".into();
+        assert_eq!(select_adapter(&cfg).unwrap().id(), "cli");
+        cfg.project.framework = "rust-cli".into();
+        assert_eq!(select_adapter(&cfg).unwrap().id(), "cli");
     }
 
     #[test]

@@ -62,6 +62,7 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
         let mut cfg = Config::load(&config_path)?;
         cfg.project.name = s.project_name.clone();
         cfg.project.tauri_root = s.tauri_root.clone();
+        cfg.project.framework = s.framework.clone();
         cfg.platforms.windows = s.windows;
         cfg.platforms.macos = s.macos;
         cfg.platforms.linux = s.linux;
@@ -70,6 +71,7 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
         console::ok_line("rewrote project + platforms in signet.toml");
     } else {
         let mut cfg = Config::example(&s.project_name, &s.tauri_root);
+        cfg.project.framework = s.framework.clone();
         cfg.platforms.windows = s.windows;
         cfg.platforms.macos = s.macos;
         cfg.platforms.linux = s.linux;

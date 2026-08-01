@@ -3,5 +3,7 @@
 mod report;
 mod walk;
 
-pub use report::{print_human, ProjectKind, ScanReport};
+pub use report::{
+    framework_id_for_kind, preferred_project, print_human, DetectedProject, ProjectKind, ScanReport,
+};
 pub use walk::scan_repository;

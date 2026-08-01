@@ -1,6 +1,8 @@
 //! Map scan project kinds → `project.framework` + build_command policy (Phase 14).
 
-use crate::scan::ProjectKind;
+use std::path::Path;
+
+use crate::scan::{framework_id_for_kind, preferred_project, DetectedProject};
 
 /// Framework ids offered in guided pick (stable order).
 pub const FRAMEWORK_OPTIONS: &[(&str, &str)] = &[
@@ -12,24 +14,21 @@ pub const FRAMEWORK_OPTIONS: &[(&str, &str)] = &[
     ("capacitor", "Capacitor"),
     ("android", "Android (APK)"),
     ("ios", "iOS"),
+    ("cli", "Rust CLI / binary"),
 ];
 
-/// Map a detected project kind to a config framework id.
-pub fn framework_for_kind(kind: ProjectKind) -> Option<&'static str> {
-    match kind {
-        ProjectKind::Tauri => Some("tauri"),
-        ProjectKind::Electron => Some("electron"),
-        ProjectKind::Flutter => Some("flutter"),
-        ProjectKind::ReactNative => Some("react-native"),
-        ProjectKind::Expo => Some("expo"),
-        ProjectKind::Capacitor => Some("capacitor"),
-        ProjectKind::AndroidNative => Some("android"),
-        ProjectKind::IosNative => Some("ios"),
-    }
+/// Prefer shallow / non-demo detections (same ranking as `signet scan`).
+pub fn preferred_framework_from_projects(
+    root: &Path,
+    projects: &[DetectedProject],
+) -> Option<&'static str> {
+    preferred_project(root, projects).map(|p| framework_id_for_kind(p.kind))
 }
 
-/// Prefer desktop/hybrid kinds when several are detected.
-pub fn preferred_framework_from_kinds(kinds: &[ProjectKind]) -> Option<&'static str> {
+/// Prefer desktop/hybrid kinds when several are detected (kinds-only; no path ranking).
+#[cfg(test)]
+fn preferred_framework_from_kinds(kinds: &[crate::scan::ProjectKind]) -> Option<&'static str> {
+    use crate::scan::ProjectKind;
     const ORDER: &[ProjectKind] = &[
         ProjectKind::Tauri,
         ProjectKind::Electron,
@@ -39,10 +38,11 @@ pub fn preferred_framework_from_kinds(kinds: &[ProjectKind]) -> Option<&'static 
         ProjectKind::Capacitor,
         ProjectKind::AndroidNative,
         ProjectKind::IosNative,
+        ProjectKind::RustCli,
     ];
     for want in ORDER {
         if kinds.contains(want) {
-            return framework_for_kind(*want);
+            return Some(framework_id_for_kind(*want));
         }
     }
     None
@@ -65,16 +65,17 @@ pub fn build_command_hint(framework: &str) -> &'static str {
         "ios" => "xcodebuild -scheme App -configuration Release …",
         "electron" => "optional — empty defaults to: npm run dist",
         "android" => "optional — e.g. gradlew.bat assembleRelease",
+        "cli" | "rust" | "rust-cli" => "optional — empty defaults to: cargo build --release",
         _ => "optional for Tauri (uses tauri build)",
     }
 }
 
 pub fn index_of_framework(framework: &str) -> usize {
     let fw = framework.trim().to_ascii_lowercase();
-    let fw = if fw == "rn" {
-        "react-native"
-    } else {
-        fw.as_str()
+    let fw = match fw.as_str() {
+        "rn" => "react-native",
+        "rust" | "rust-cli" => "cli",
+        other => other,
     };
     FRAMEWORK_OPTIONS
         .iter()
@@ -85,11 +86,14 @@ pub fn index_of_framework(framework: &str) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scan::{DetectedProject, ProjectKind};
+    use std::path::PathBuf;
 
     #[test]
     fn maps_kinds() {
-        assert_eq!(framework_for_kind(ProjectKind::Flutter), Some("flutter"));
-        assert_eq!(framework_for_kind(ProjectKind::Expo), Some("expo"));
+        assert_eq!(framework_id_for_kind(ProjectKind::Flutter), "flutter");
+        assert_eq!(framework_id_for_kind(ProjectKind::Expo), "expo");
+        assert_eq!(framework_id_for_kind(ProjectKind::RustCli), "cli");
     }
 
     #[test]
@@ -105,15 +109,40 @@ mod tests {
     }
 
     #[test]
+    fn prefers_cli_over_demo_electron_by_path() {
+        let root = PathBuf::from("/repo");
+        let projects = vec![
+            DetectedProject {
+                kind: ProjectKind::RustCli,
+                path: root.clone(),
+                name: Some("Signet".into()),
+                detail: "workspace".into(),
+            },
+            DetectedProject {
+                kind: ProjectKind::Electron,
+                path: root.join("demo/fixture"),
+                name: Some("fixture".into()),
+                detail: "electron".into(),
+            },
+        ];
+        assert_eq!(
+            preferred_framework_from_projects(&root, &projects),
+            Some("cli")
+        );
+    }
+
+    #[test]
     fn build_command_required_for_hybrid() {
         assert!(requires_build_command("flutter"));
         assert!(requires_build_command("ios"));
         assert!(!requires_build_command("tauri"));
         assert!(!requires_build_command("electron"));
+        assert!(!requires_build_command("cli"));
     }
 
     #[test]
     fn index_rn_alias() {
         assert_eq!(index_of_framework("rn"), index_of_framework("react-native"));
+        assert_eq!(index_of_framework("rust-cli"), index_of_framework("cli"));
     }
 }

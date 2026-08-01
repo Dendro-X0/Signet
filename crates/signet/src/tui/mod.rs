@@ -16,12 +16,12 @@ use crossterm::ExecutableCommand;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap};
+use ratatui::widgets::{Clear, List, ListItem, ListState, Paragraph, Wrap};
 use ratatui::Frame;
 use ratatui::Terminal;
 
 use status::ProjectStatus;
-use theme::{accent, dim, title_style};
+use theme::{accent, dim, ok, panel, title_style, warn};
 
 #[derive(Clone, Copy)]
 struct HubItem {
@@ -164,7 +164,7 @@ pub fn run_hub() -> anyhow::Result<()> {
                 flash = None;
                 let cmd_result = dispatch(id);
                 match &cmd_result {
-                    Ok(()) => println!("\n✓ done"),
+                    Ok(()) => crate::ui::console::ok_line("done"),
                     Err(err) => eprintln!("\n✗ {err}"),
                 }
                 pause_return();
@@ -217,39 +217,50 @@ fn draw_hub(frame: &mut Frame, state: &mut ListState, status: &ProjectStatus, fl
 fn draw_header(frame: &mut Frame, area: Rect) {
     let line = Line::from(vec![
         Span::styled(" Signet ", title_style()),
-        Span::styled("· Sign → Prove → Check", dim()),
+        Span::styled("· ", dim()),
+        Span::styled("Sign", accent()),
+        Span::styled(" → ", dim()),
+        Span::styled("Prove", accent()),
+        Span::styled(" → ", dim()),
+        Span::styled("Check", accent()),
     ]);
-    let widget = Paragraph::new(line).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_style(accent())
-            .title(Span::styled(" hub ", accent())),
-    );
+    let widget = Paragraph::new(line).block(panel("hub"));
     frame.render_widget(widget, area);
 }
 
 fn draw_status(frame: &mut Frame, area: Rect, status: &ProjectStatus, flash: Option<&str>) {
-    let marks = |ok: bool| if ok { "✓" } else { "·" };
+    let mark = |ready: bool| -> Span<'static> {
+        if ready {
+            Span::styled("✓", ok())
+        } else {
+            Span::styled("·", dim())
+        }
+    };
+    let label = |text: &'static str| Span::styled(text, dim());
     let line1 = Line::from(vec![
-        Span::raw(format!(
-            " {} config  {} identity  {} trust  {} artifacts",
-            marks(status.has_config),
-            marks(status.has_identity),
-            marks(status.has_trust),
-            marks(status.has_artifacts),
-        )),
+        Span::raw(" "),
+        mark(status.has_config),
+        label(" config  "),
+        mark(status.has_identity),
+        label(" identity  "),
+        mark(status.has_trust),
+        label(" trust  "),
+        mark(status.has_artifacts),
+        label(" artifacts"),
     ]);
-    let line2 = Line::from(vec![
-        Span::styled(" next ", accent()),
-        Span::raw(status.next_hint()),
-    ]);
+    let mut next_spans = vec![Span::styled(" next ", accent())];
+    next_spans.extend(phase_hint_spans(&status.next_hint()));
+    let line2 = Line::from(next_spans);
     let mut lines = vec![line1, line2];
     if let Some(msg) = flash {
-        lines.push(Line::from(Span::styled(format!(" {msg}"), dim())));
+        lines.push(Line::from(vec![
+            Span::raw(" "),
+            Span::styled(msg.to_string(), warn()),
+        ]));
     }
     let widget = Paragraph::new(lines)
         .wrap(Wrap { trim: true })
-        .block(Block::default().borders(Borders::ALL).title(" project "));
+        .block(panel("project"));
     frame.render_widget(widget, area);
 }
 
@@ -276,22 +287,58 @@ fn draw_menu(frame: &mut Frame, area: Rect, state: &mut ListState, status: &Proj
         .map(|(idx, item)| {
             // Star sits after the number so ▸ / digits stay uncrowded: " 5. ★  …"
             let star = if item.id == recommended { "★" } else { " " };
+            let star_style = if item.id == recommended {
+                accent()
+            } else {
+                dim()
+            };
             let label = format!("{:<width$}", item.label, width = label_width);
             let hint = truncate_hint(item.hint, hint_budget);
-            ListItem::new(Line::from(vec![
-                Span::styled(format!(" {:>2}. {star}  ", idx + 1), dim()),
+            let mut spans = vec![
+                Span::styled(format!(" {:>2}. ", idx + 1), dim()),
+                Span::styled(format!("{star}  "), star_style),
                 Span::styled(label, title_style()),
                 Span::raw("  "),
-                Span::styled(hint, dim()),
-            ]))
+            ];
+            spans.extend(phase_hint_spans(&hint));
+            ListItem::new(Line::from(spans))
         })
         .collect();
 
     let list = List::new(items)
-        .block(Block::default().borders(Borders::ALL).title(" actions "))
+        .block(panel("actions"))
         .highlight_style(theme::highlight())
         .highlight_symbol("▸ ");
     frame.render_stateful_widget(list, area, state);
+}
+
+/// Highlight Sign / Prove / Check phase words; leave the rest dim.
+fn phase_hint_spans(hint: &str) -> Vec<Span<'static>> {
+    const PHASES: &[&str] = &["Official Sign", "Sign", "Prove", "Check"];
+    let mut out = Vec::new();
+    let mut rest = hint.to_string();
+    // Emit owned spans so ListItem lifetimes stay simple.
+    while !rest.is_empty() {
+        let mut hit: Option<(usize, &str)> = None;
+        for phase in PHASES {
+            if let Some(i) = rest.find(phase) {
+                match hit {
+                    Some((best, _)) if i >= best => {}
+                    _ => hit = Some((i, *phase)),
+                }
+            }
+        }
+        let Some((i, phase)) = hit else {
+            out.push(Span::styled(rest, dim()));
+            break;
+        };
+        if i > 0 {
+            out.push(Span::styled(rest[..i].to_string(), dim()));
+        }
+        out.push(Span::styled(phase.to_string(), accent()));
+        rest = rest[i + phase.len()..].to_string();
+    }
+    out
 }
 
 fn truncate_hint(hint: &str, max_chars: usize) -> String {
@@ -332,20 +379,28 @@ mod tests {
         assert_eq!(truncate_hint("hi", 10), "hi");
         assert_eq!(truncate_hint("x", 0), "");
     }
+
+    #[test]
+    fn phase_hint_highlights_sign_prove_check() {
+        let spans = phase_hint_spans("Sign · build + sign");
+        assert!(spans.iter().any(|s| s.content == "Sign"));
+        let spans = phase_hint_spans("Official Sign · OV");
+        assert_eq!(spans[0].content, "Official Sign");
+    }
 }
 
 fn draw_footer(frame: &mut Frame, area: Rect) {
     let widget = Paragraph::new(Line::from(vec![
         Span::styled(" ↑↓/jk ", accent()),
-        Span::raw("move  "),
+        Span::styled("move  ", dim()),
         Span::styled("enter ", accent()),
-        Span::raw("run  "),
+        Span::styled("run  ", dim()),
         Span::styled("1-9 ", accent()),
-        Span::raw("jump  "),
+        Span::styled("jump  ", dim()),
         Span::styled("q ", accent()),
-        Span::raw("quit · digits wrap past 9 via arrows"),
+        Span::styled("quit · digits wrap past 9 via arrows", dim()),
     ]))
-    .block(Block::default().borders(Borders::ALL));
+    .block(panel("keys"));
     frame.render_widget(widget, area);
 }
 

@@ -9,8 +9,9 @@ Non-secret project configuration. Written by `signet init`. Legacy `selfsign.tom
 [project]
 name = "my-app"
 tauri_root = "."          # app root (src-tauri parent for Tauri; package.json dir for Electron)
-framework = "tauri"       # tauri | electron | android | ios | flutter | react-native | expo | capacitor
+framework = "tauri"       # tauri | electron | android | ios | flutter | react-native | expo | capacitor | cli
 # build_command = ""      # required for flutter/rn/expo/capacitor/ios build (see docs/frameworks.md)
+                          # cli defaults to: cargo build --release
 
 
 [platforms]

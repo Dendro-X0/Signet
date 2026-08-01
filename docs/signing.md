@@ -10,6 +10,8 @@
 
 **Hybrid (Flutter / RN / Expo / Capacitor):** set `framework` + required `build_command`. See [frameworks.md](frameworks.md).
 
+**Rust CLI:** set `framework = "cli"` (auto-detected for Cargo workspaces / binary crates). Default build is `cargo build --release`; Signet signs the host binary under `target/<profile>/`.
+
 **Graduation (OV / Azure / notarize):** explicit helpers — not part of default `signet build`. See [graduation.md](graduation.md) and `signet graduate notes`.
 
 ## Usage
