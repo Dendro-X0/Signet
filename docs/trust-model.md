@@ -20,7 +20,16 @@ host sign, signed sums                    Play App Signing, Apple programs
 | `play_managed` | Play App Signing for distribution | Local keystore is the Play signing key |
 | `unknown` | Not enough evidence | Safe to install |
 
-Primary tier is reported in `TRUST.md`, doctor, and (planned) `signet verify`. See [`specs/backend/trust-tiers-and-verify-design.md`](../specs/backend/trust-tiers-and-verify-design.md).
+Primary tier is reported in `TRUST.md`, doctor, and `signet verify`. See [`specs/backend/trust-tiers-and-verify-design.md`](../specs/backend/trust-tiers-and-verify-design.md).
+
+## Dual path (Sign)
+
+| Path | Integrity | Reputation |
+|------|-----------|------------|
+| Self-signed (default) | Signet identity + host/APK helpers | OS warnings expected |
+| Official / paid | OV / Azure / Developer ID + notarize via [`graduation.md`](graduation.md) | Still not a guarantee of silence |
+
+**Check** downloads with [`verify.md`](verify.md) (`signet verify` + `signet inspect`).
 
 ## Platform honesty
 
@@ -42,13 +51,15 @@ Primary tier is reported in `TRUST.md`, doctor, and (planned) `signet verify`. S
 ## What users should do
 
 1. Compare the **SHA-256 fingerprint** in `TRUST.md` with `signet identity show`.
-2. Verify downloads with `SHA256SUMS` via `signet verify` (and signed sums when Phase 8 ships).
+2. Verify downloads with `SHA256SUMS` via `signet verify` (and `signet verify --require-sig` when minisig/asc is published).
 3. Treat OS warnings as expected for self-signed desktop apps unless you graduate to CA/notarization (`signet graduate` — [graduation.md](graduation.md)).
+4. Use `signet inspect --file …` to see whether an artifact looks host-signed.
 
 ## Related
 
-- [`product.md`](product.md) — thesis and surfaces
+- [`product.md`](product.md) — thesis and Sign → Prove → Check
 - [`identity.md`](identity.md) — identity commands
 - [`signing.md`](signing.md) — host signing
+- [`verify.md`](verify.md) — verify + inspect
 - [`graduation.md`](graduation.md) — OV / Azure / notarization helpers
 - [`roadmap.md`](roadmap.md) — phased delivery

@@ -1,5 +1,7 @@
 # Verify
 
+**Check** job in Signet’s Sign → Prove → Check model ([product.md](product.md)).
+
 `signet verify` checks integrity for a project tree or explicit artifacts: TRUST.md fingerprint (informational / CLI cross-check), `SHA256SUMS` hashes, and community signatures (`SHA256SUMS.minisig` / `.asc`).
 
 It does **not** evaluate SmartScreen, Gatekeeper, or store reputation. It never recommends installing certificates into Trusted Root.

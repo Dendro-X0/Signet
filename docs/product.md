@@ -9,19 +9,35 @@ Shipping a desktop or mobile app still collides with **signing and install trust
 - Self-signing works, but knowledge is fragmented, easy to get wrong, and hostile to agents/scripts.
 - Teams use many stacks (Tauri, Electron, Flutter, React Native, Capacitor, native) — the trust problem repeats each time.
 
-Maintainers want a **single, boring workflow** that produces signed artifacts plus an honest trust story users can follow.
+Maintainers want a **single, boring workflow** that produces signed artifacts plus an honest trust story users can follow — and a clear ladder when they graduate to official CA / Apple / Azure tooling.
 
 ## Thesis
 
-**Signet** owns the **certificate/identity lifecycle, platform signing hooks, trust documentation, and release packaging** for self-signed apps — starting with Tauri desktop, expanding to other desktop and mobile frameworks.
+**Signet** is dedicated to **app signing and verification**:
 
-Authority stays honest: self-signed builds may still show OS warnings; store notarization / Play App Signing remain gated. The product win is **repeatability, clarity, and agent-accessible automation**—not fake “verified publisher” status.
+| Job | Meaning |
+|-----|---------|
+| **Sign** | Identity + host/mobile signing, or helpers for OV / Azure / notarize |
+| **Prove** | `TRUST.md`, `SHA256SUMS`, optional minisign/GPG, release attach |
+| **Check** | `signet verify` (integrity) + `signet inspect` (host signature presence) |
+
+Self-sign is the default Sign path. Official/paid paths are **facilitated, never faked**. The product win is **repeatability, clarity, and agent-accessible automation** — not fake “verified publisher” status.
 
 ## Who it is for
 
 - Independent developers shipping outside (or beside) app stores
 - Non-profit / OSS maintainers who prefer self-signing over paid programs where appropriate
+- Teams that later buy OV / Azure / Apple membership and still want one CLI ladder
 - Humans and coding agents driving releases from an IDE terminal
+
+## Dual path
+
+| Path | Signet role | Docs |
+|------|-------------|------|
+| Self-signed | Local identity, host sign, Android keystore, iOS IPA package helpers | [identity](identity.md), [signing](signing.md), [android](android.md), [ios](ios.md) |
+| Official / paid | Wrap OV thumbprint/PFX, Azure Trusted Signing dlib, Apple `notarytool` | [graduation](graduation.md) |
+
+Play App Signing and App Store Connect remain **external**; Signet documents honesty and does not claim store trust from local keys.
 
 ## Surfaces
 
@@ -29,54 +45,55 @@ Authority stays honest: self-signed builds may still show OS warnings; store not
 
 Binary: `signet`. Scriptable for CI and agents.
 
-| Command | Purpose |
-|---------|---------|
-| `signet init` | Project config + local signing layout |
-| `signet identity` | Create, import, list, show fingerprint |
-| `signet build` | Build + sign (Tauri today; adapters next) |
-| `signet trust` | Emit trust/install docs |
-| `signet release` | Checksums + publish (e.g. GitHub Releases) |
-| `signet doctor` | Host tooling / prereqs |
-| `signet scan` | Detect frameworks + installers; suggest config |
-| `signet verify` | Verify fingerprints + SHA256SUMS (Phase 7) |
-| `signet self` | Update / uninstall installer-managed CLI |
-| `signet` (no args) | TUI hub |
+| Job | Commands |
+|-----|----------|
+| Sign | `identity`, `build`, `android`, `ios`, `graduate` |
+| Prove | `trust`, `sums-key`, `release` |
+| Check | `verify`, `inspect` |
+| Project | `init`, `scan`, `doctor`, `self` |
+| Hub | `signet` (no args) — TUI + guided setup |
 
 ### TUI
 
-Guided flows wrapping the same CLI engines.
+Guided flows wrapping the same CLI engines (Phase 14: Sign → Prove → Check labeling).
 
 ### GUI
 
-Deferred until the CLI contract is stable.
+Deferred until the public-cut CLI/TUI contract is stable ([roadmap](roadmap.md) Beyond).
 
-## Platform goals
+## Platforms & frameworks
 
-### Desktop (v1 shipping)
+### Desktop
 
-Windows, macOS, Linux — sign installers / bundles; document SmartScreen / Gatekeeper reality.
+Windows, macOS, Linux — sign installers/bundles; document SmartScreen / Gatekeeper reality.
 
-### Mobile (detect now, deepen next)
+### Mobile
 
-Android and iOS projects and artifacts are discovered by `scan`. Store signing helpers stay honest about Apple / Google gates and land as explicit later work.
+Android keystore + APK sign; iOS IPA packaging + free-provisioning honesty. Store programs stay gated.
 
-### Frameworks
+### Framework adapters
 
-| Framework | Scan | Build+sign adapter |
-|-----------|------|--------------------|
+| Framework | Scan | Adapter |
+|-----------|------|---------|
 | Tauri | Yes | Yes |
 | Electron | Yes | Yes |
-| Android / iOS helpers | Yes | Yes (keystore / IPA package) |
-| Flutter / RN / Expo / Capacitor | Yes | Yes (discover + required `build_command`; APK/IPA via android/ios helpers) |
-| .NET / others | No | Planned |
+| Android / iOS | Yes | Yes (helpers) |
+| Flutter / RN / Expo / Capacitor | Yes | Yes (`build_command` required; see [frameworks](frameworks.md)) |
+| .NET / others | No | Beyond public cut |
 
-## Trust model
+## What Signet never does
 
-Signet must never imply store-equivalent trust from self-signing alone. It should always produce fingerprints, checksums, honest install docs, and clear exit codes.
+1. Instruct end users to install publisher certs into **Trusted Root**.
+2. Claim self-signing removes SmartScreen or Gatekeeper warnings.
+3. Put private keys, PFX passwords, or keystore passwords in `TRUST.md` or git.
+4. Mark a framework “supported” in README until build/sign for that path exists (scan-only ≠ supported).
 
-Integrity vs reputation, trust tiers, and anti-patterns: **[`docs/trust-model.md`](trust-model.md)**.  
-Verify downloads: **[`docs/verify.md`](verify.md)**.  
-Phase designs: **[`specs/backend/`](../specs/backend/)**.
+## Trust & check
+
+- Tiers + anti-patterns: **[trust-model.md](trust-model.md)**
+- Verify + inspect: **[verify.md](verify.md)**
+- Designs: **[specs/backend/](../specs/backend/)**
+- Public release program: **[roadmap.md](roadmap.md)** Phases 13–16
 
 ## Config & secrets
 
@@ -85,4 +102,4 @@ Phase designs: **[`specs/backend/`](../specs/backend/)**.
 
 ## Positioning one-liner
 
-**Signet — CLI + TUI to identity, sign, explain, and release self-signed apps across desktop and mobile frameworks.**
+**Signet — Sign → Prove → Check for self-signed and official app signing, across desktop and mobile frameworks.**

@@ -80,11 +80,11 @@ Self-sign is the default **Sign** path. Official/paid paths are **graduation** �
 
 ### Acceptance (13)
 
-- [ ] README install + quick start ≤ ~40 lines of user-facing steps before deep links.
-- [ ] `product.md` lists current commands and Sign/Prove/Check.
-- [ ] `trust-model.md` / `graduation.md` / `verify.md` cross-linked from README dual-path.
-- [ ] No stale “adapters later / Tauri only” claims where adapters exist.
-- [ ] Working rule preserved: no false “supported” for unscanned paths.
+- [x] README install + quick start ≤ ~40 lines of user-facing steps before deep links.
+- [x] `product.md` lists current commands and Sign/Prove/Check.
+- [x] `trust-model.md` / `graduation.md` / `verify.md` cross-linked from README dual-path.
+- [x] No stale “adapters later / Tauri only” claims where adapters exist.
+- [x] Working rule preserved: no false “supported” for unscanned paths.
 
 ### Proof (13)
 

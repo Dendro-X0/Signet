@@ -1,5 +1,6 @@
 # Graduation ladder (OV / Azure / notarization)
 
+Part of Signet’s **official / paid Sign path** (see [product.md](product.md) dual path).  
 Self-signed Signet builds prove **integrity**. OS reputation (SmartScreen, Gatekeeper) usually requires a **paid or program-gated** path. Signet’s `graduate` helpers wrap those tools honestly — they do **not** buy certificates, silence warnings by magic, or tell end users to install publisher certs into Trusted Root.
 
 ## Ladder

@@ -117,10 +117,10 @@ Goal: easy setup, dual path (self-sign **or** official facilitation), low learni
 
 **Spec:** [public-release-readiness-design.md](../specs/backend/public-release-readiness-design.md) §13
 
-- [ ] README 2-minute story; Sign → Prove → Check
-- [ ] Align `product.md` with shipped commands (inspect, graduate, hybrid)
-- [ ] Dual-path: self-signed vs OV/Azure/notarize/Play honesty
-- [ ] Remove stale “Tauri-only / adapters later” claims where false
+- [x] README 2-minute story; Sign → Prove → Check
+- [x] Align `product.md` with shipped commands (inspect, graduate, hybrid)
+- [x] Dual-path: self-signed vs OV/Azure/notarize/Play honesty
+- [x] Remove stale “Tauri-only / adapters later” claims where false
 
 **Exit:** A new visitor understands what Signet does and does not claim in one screen.
 
