@@ -5,7 +5,7 @@
 **Product:** Signet  
 **Binary:** `signet`  
 **Stack:** Rust CLI + TUI (ratatui)  
-**Status:** **v0.5.0** public preview tagged — see [docs/roadmap.md](docs/roadmap.md) · [CHANGELOG.md](CHANGELOG.md) · [specs/backend/v0.5-release-roadmap.md](specs/backend/v0.5-release-roadmap.md)  
+**Status:** **v0.5.1** — see [docs/roadmap.md](docs/roadmap.md) · [CHANGELOG.md](CHANGELOG.md) · [docs/install.md](docs/install.md) (cargo PATH shadow)  
 **Repo:** [github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)
 
 ## What this is

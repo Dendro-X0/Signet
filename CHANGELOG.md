@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 — 2026-08-01
+
+### Fixed
+
+- Installer PATH shadow: prepend managed `bin` on Windows; warn when `~/.cargo/bin/signet` still wins
+- `signet self status` reports cargo-vs-installer shadow when a receipt exists
+- Docs: `docs/install.md` cargo vs installer troubleshooting
+
 ## 0.5.0 — 2026-08-01
 
 Public **preview** cut: Sign → Prove → Check packaging, CLI project detection, and TUI polish.

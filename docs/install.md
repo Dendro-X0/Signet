@@ -11,7 +11,40 @@ irm https://github.com/Dendro-X0/Signet/releases/latest/download/install.ps1 | i
 ```
 
 - Install root: `%LOCALAPPDATA%\Signet\`
-- Binary: `bin\signet.exe` (user PATH updated by the installer)
+- Binary: `bin\signet.exe` (user PATH updated by the installer — **prepended** so it can beat `~\.cargo\bin`)
+
+## Cargo vs installer (PATH shadow)
+
+If you previously ran `cargo install --path …` / `cargo install --git …`, **`~/.cargo/bin/signet` often wins** over the official installer. Symptoms:
+
+```text
+# installer downloaded v0.5.0 …
+signet --version
+signet 0.4.0          # still the cargo binary
+```
+
+Check:
+
+```powershell
+Get-Command signet | Format-List Source
+& "$env:LOCALAPPDATA\Signet\bin\signet.exe" --version
+```
+
+```bash
+command -v signet
+~/.signet-cli/bin/signet --version   # Unix installer root
+```
+
+Fix (pick one):
+
+```bash
+cargo uninstall signet
+# then open a new terminal and re-check: signet --version
+```
+
+Or remove/rename the cargo `signet` binary. Re-run the official installer afterward if needed — it warns when PATH still resolves elsewhere.
+
+`signet self status` reports this shadow when an installer receipt exists but the running process is from cargo.
 
 ## macOS
 

@@ -33,17 +33,40 @@ pub fn current_status() -> InstallStatus {
     if let Some(rec) = read_receipt() {
         if rec.method == InstallMethod::Installer {
             let managed = same_exe(&exe, &rec.binary_path) || is_under_install_root(&exe);
+            let detail = if managed {
+                "installer-managed — `signet self update` / `uninstall` available".into()
+            } else if is_cargo_install_path(&exe) {
+                format!(
+                    "WARNING: this process is cargo (~/.cargo/bin) while an installer \
+                     receipt exists for {} (v{}). PATH is shadowed — run `cargo uninstall signet` \
+                     or invoke the managed binary directly, then open a new terminal",
+                    rec.binary_path.display(),
+                    rec.installed_version
+                )
+            } else {
+                format!(
+                    "receipt found for {} (v{}) but this process is not that binary — PATH may be shadowed",
+                    rec.binary_path.display(),
+                    rec.installed_version
+                )
+            };
             return InstallStatus {
                 managed,
-                method: "installer".into(),
-                version: rec.installed_version.clone(),
-                binary: rec.binary_path.clone(),
-                receipt_path: Some(receipt_path),
-                detail: if managed {
-                    "installer-managed — `signet self update` / `uninstall` available".into()
+                method: if managed {
+                    "installer".into()
+                } else if is_cargo_install_path(&exe) {
+                    "cargo".into()
                 } else {
-                    "receipt found but this process is not the managed binary".into()
+                    "installer".into()
                 },
+                version: if managed {
+                    rec.installed_version.clone()
+                } else {
+                    running_version
+                },
+                binary: exe,
+                receipt_path: Some(receipt_path),
+                detail,
             };
         }
     }

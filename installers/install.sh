@@ -45,6 +45,9 @@ binary_path = "${BIN}"
 EOF
 
 echo "Installed to ${BIN}"
+if [ -x "${BIN}" ]; then
+  echo "Managed binary: $(${BIN} --version 2>/dev/null || true)"
+fi
 
 case ":${PATH}:" in
   *":${BIN_DIR}:"*) ;;
@@ -63,8 +66,40 @@ case ":${PATH}:" in
     ;;
 esac
 
-echo ""
-echo "Then run:  signet --version"
+# Prefer installer over cargo when both are present.
+export PATH="${BIN_DIR}:${PATH}"
+RESOLVED=$(command -v signet 2>/dev/null || true)
+if [ -n "${RESOLVED}" ]; then
+  # Compare real paths when possible
+  OURS="${BIN}"
+  if [ "$(uname -s)" = "Darwin" ] || [ "$(uname -s)" = "Linux" ]; then
+    OURS=$(cd "$(dirname "${BIN}")" && pwd)/$(basename "${BIN}")
+  fi
+  if [ "${RESOLVED}" != "${BIN}" ] && [ "${RESOLVED}" != "${OURS}" ]; then
+    echo ""
+    echo "WARNING: \`signet\` on PATH is not the installer binary:"
+    echo "  PATH resolves to: ${RESOLVED}"
+    echo "  Installer binary: ${BIN}"
+    case "${RESOLVED}" in
+      */.cargo/bin/*)
+        echo "  This looks like a cargo install. Fix with:"
+        echo "    cargo uninstall signet"
+        echo "  Or remove that file, then open a new terminal."
+        ;;
+      *)
+        echo "  Remove or rename the shadowed binary, or put ${BIN_DIR} earlier on PATH."
+        ;;
+    esac
+    echo "  Verify managed build:  ${BIN} --version"
+  else
+    echo ""
+    echo "Then run:  signet --version"
+  fi
+else
+  echo ""
+  echo "Then run:  signet --version   (after updating PATH)"
+fi
+
 echo "Update:    signet self update"
 echo "Uninstall: signet self uninstall --yes"
 echo "Or open:   signet   (TUI → Update / Uninstall Signet)"
