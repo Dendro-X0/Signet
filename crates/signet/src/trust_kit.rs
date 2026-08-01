@@ -83,6 +83,7 @@ fn render_trust_md_with_hints(
     });
     let minisign_block = minisign_trust_section(minisign_pub.as_deref());
     let android_block = android_trust_section(project_root.map(|r| config.secrets_path(r)).as_deref());
+    let ios_block = ios_trust_section(config);
 
     format!(
         r#"# Trust kit — {app}
@@ -125,7 +126,7 @@ Never trust a build whose fingerprint does not match.
 This integrity tier **does not imply** OS or store reputation (SmartScreen, Gatekeeper,
 Play App Signing, or Apple notarization). See [docs/trust-model.md](docs/trust-model.md)
 in the Signet project for the full tier table.
-{notes_block}{minisign_block}{android_block}
+{notes_block}{minisign_block}{android_block}{ios_block}
 ## Verify a downloaded artifact
 
 1. Download the installer / bundle and the published checksums (when available).
@@ -183,9 +184,25 @@ Private material stays under the project's gitignored `.signet/` directory.
         notes_block = notes_block,
         minisign_block = minisign_block,
         android_block = android_block,
+        ios_block = ios_block,
         platforms = platforms,
         app = app,
     )
+}
+
+fn ios_trust_section(config: &Config) -> String {
+    if !config.project.framework.eq_ignore_ascii_case("ios") {
+        return String::new();
+    }
+    r#"
+## iOS
+
+Free Apple ID **development** provisioning typically expires in about **7 days**.  
+Packaging an IPA (`signet ios package`) does **not** provide App Store, TestFlight, or notarization trust.
+
+See [docs/ios.md](docs/ios.md). Never tell end users to install developer certificates into a system trust store.
+"#
+    .to_string()
 }
 
 fn android_trust_section(secrets_dir: Option<&Path>) -> String {

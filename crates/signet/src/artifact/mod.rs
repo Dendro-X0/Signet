@@ -3,6 +3,7 @@
 mod adapter;
 mod android;
 mod electron;
+mod ios;
 mod kind;
 mod tauri;
 mod types;
@@ -10,6 +11,7 @@ mod types;
 pub use adapter::{select_adapter, BuildOpts, FrameworkAdapter};
 pub use android::AndroidAdapter;
 pub use electron::ElectronAdapter;
+pub use ios::IosAdapter;
 pub use kind::ArtifactKind;
 pub use tauri::TauriAdapter;
 pub use types::{artifacts_json, host_signable, Artifact};
@@ -22,6 +24,7 @@ fn _contract_surface() {
     let _ = std::any::type_name::<TauriAdapter>();
     let _ = std::any::type_name::<ElectronAdapter>();
     let _ = std::any::type_name::<AndroidAdapter>();
+    let _ = std::any::type_name::<IosAdapter>();
     let _ = std::any::type_name::<dyn FrameworkAdapter>();
     let _ = artifacts_json(&[]);
 }

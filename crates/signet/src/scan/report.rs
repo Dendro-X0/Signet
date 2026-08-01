@@ -249,8 +249,8 @@ pub fn finalize_report(
     );
     if android || ios {
         notes.push(
-            "Android/iOS installers were detected — for Android sideload use `signet android keystore` \
-             + docs/android.md; Play App Signing stays external. iOS is Phase 12."
+            "Mobile installers detected — Android: `signet android` + docs/android.md; \
+             iOS: `signet ios package` + docs/ios.md (free provisioning ~7 days; no App Store trust)."
                 .into(),
         );
     }

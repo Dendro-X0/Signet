@@ -102,6 +102,7 @@ signet release --tag v0.2.0 --dry-run
 | `identity` | Create / import / list / show signing identity |
 | `sums-key` | Create / show minisign key for `SHA256SUMS` |
 | `android` | Android keystore create/import/show + APK sign |
+| `ios` | Package `.app` → `.ipa` + honesty notes |
 | `trust` | Emit `TRUST.md` (safe to commit) |
 | `verify` | Fingerprint + SHA256SUMS + minisign/GPG checks |
 | `self` | CLI install status / update / uninstall |
@@ -133,6 +134,7 @@ Private keys live under gitignored `.signet/` — never in `TRUST.md` or git.
 | [docs/identity.md](docs/identity.md) | Identity + trust kit |
 | [docs/signing.md](docs/signing.md) | Platform signing |
 | [docs/android.md](docs/android.md) | Android keystore + Play honesty |
+| [docs/ios.md](docs/ios.md) | iOS IPA package + free-provisioning honesty |
 | [docs/release.md](docs/release.md) | GitHub Releases |
 | [CHANGELOG.md](CHANGELOG.md) | Releases |
 

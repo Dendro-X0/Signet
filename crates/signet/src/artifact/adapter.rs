@@ -7,6 +7,7 @@ use crate::project::ProjectCtx;
 
 use super::android::AndroidAdapter;
 use super::electron::ElectronAdapter;
+use super::ios::IosAdapter;
 use super::tauri::TauriAdapter;
 use super::Artifact;
 
@@ -48,9 +49,10 @@ pub fn select_adapter(config: &Config) -> anyhow::Result<Box<dyn FrameworkAdapte
         "tauri" => Ok(Box::new(TauriAdapter)),
         "electron" => Ok(Box::new(ElectronAdapter)),
         "android" => Ok(Box::new(AndroidAdapter)),
+        "ios" => Ok(Box::new(IosAdapter)),
         other => anyhow::bail!(
-            "framework '{other}' is not supported yet — supported: tauri, electron, android \
-             (iOS helpers are Phase 12; see docs/roadmap.md)"
+            "framework '{other}' is not supported yet — supported: tauri, electron, android, ios \
+             (see docs/roadmap.md)"
         ),
     }
 }
@@ -81,6 +83,14 @@ mod tests {
         cfg.project.framework = "android".into();
         let adapter = select_adapter(&cfg).unwrap();
         assert_eq!(adapter.id(), "android");
+    }
+
+    #[test]
+    fn selects_ios() {
+        let mut cfg = Config::example("app", ".");
+        cfg.project.framework = "ios".into();
+        let adapter = select_adapter(&cfg).unwrap();
+        assert_eq!(adapter.id(), "ios");
     }
 
     #[test]

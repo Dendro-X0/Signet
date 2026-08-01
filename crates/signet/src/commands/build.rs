@@ -111,9 +111,20 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
 
     let is_android = adapter.id() == "android";
-
     if is_android {
         return sign_android_flow(&ctx, &discovered, &checksum_paths, &sums_path, &args);
+    }
+
+    if adapter.id() == "ios" {
+        println!("note: {}", crate::ios::honesty_notes());
+        if !args.no_sign {
+            println!(
+                "signing skipped for framework=ios — use Xcode for device signing; \
+                 `signet ios package --app …` for IPA layout"
+            );
+        }
+        println!("done — see docs/ios.md");
+        return Ok(());
     }
 
     let identity = load_active(&ctx.identity_root()).map_err(|e| {

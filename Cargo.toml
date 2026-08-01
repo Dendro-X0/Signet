@@ -26,3 +26,4 @@ toml = "0.8"
 ureq = { version = "2", features = ["json"] }
 which = "7"
 x509-parser = "0.18"
+zip = { version = "2", default-features = false, features = ["deflate"] }

@@ -122,6 +122,7 @@ fn gather_checks() -> Vec<Check> {
     checks.push(gpg_check_if_configured(has_config));
     checks.push(electron_npm_check(has_config));
     checks.extend(android_tool_checks(has_config));
+    checks.extend(ios_tool_checks(has_config));
 
     let gh = which("gh").is_ok();
     let token = std::env::var("GH_TOKEN")
@@ -142,6 +143,50 @@ fn gather_checks() -> Vec<Check> {
     });
 
     checks.extend(platform_checks());
+    checks
+}
+
+fn ios_tool_checks(has_config: bool) -> Vec<Check> {
+    use crate::config::{resolve_config_path, Config};
+
+    let is_ios = has_config
+        && Config::load(resolve_config_path(None))
+            .map(|c| c.project.framework.trim().eq_ignore_ascii_case("ios"))
+            .unwrap_or(false);
+
+    let mut checks = Vec::new();
+    let on_mac = env::consts::OS == "macos";
+
+    let codesign_ok = which("codesign").is_ok();
+    checks.push(Check {
+        name: "ios-codesign".into(),
+        ok: codesign_ok || !is_ios || !on_mac,
+        severity: Severity::Optional,
+        detail: if codesign_ok {
+            "found (Apple code signing tool)".into()
+        } else if is_ios && on_mac {
+            "not found — install Xcode command-line tools".into()
+        } else if is_ios {
+            "iOS device signing tools are macOS-only; IPA zip packaging still works".into()
+        } else {
+            "not required unless framework = ios".into()
+        },
+    });
+
+    let xcodebuild_ok = which("xcodebuild").is_ok();
+    checks.push(Check {
+        name: "xcodebuild".into(),
+        ok: xcodebuild_ok || !is_ios || !on_mac,
+        severity: Severity::Optional,
+        detail: if xcodebuild_ok {
+            "found".into()
+        } else if is_ios && on_mac {
+            "not found — set build_command after installing Xcode, or use --skip-build".into()
+        } else {
+            "not required unless building iOS on this host".into()
+        },
+    });
+
     checks
 }
 

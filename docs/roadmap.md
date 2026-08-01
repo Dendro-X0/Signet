@@ -89,8 +89,10 @@ cargo run -p signet -- doctor
 
 ## Phase 12 — iOS packaging notes / IPA helpers
 
-- [ ] Design stub + honest free-provisioning (7-day) docs
-- [ ] IPA packaging helpers where feasible without claiming App Store trust
+**Spec:** [ios-signing-design.md](../specs/backend/ios-signing-design.md) · **User doc:** [ios.md](ios.md)
+
+- [x] Design + honest free-provisioning (7-day) docs
+- [x] IPA packaging helpers without claiming App Store trust
 
 ## Later
 

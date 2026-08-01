@@ -12,6 +12,7 @@ mod self_manage;
 mod sign;
 mod artifact;
 mod android;
+mod ios;
 mod trust_kit;
 mod trust_tier;
 mod tui;
@@ -54,6 +55,10 @@ fn run() -> anyhow::Result<ExitCode> {
         }
         Some(Command::Android(args)) => {
             commands::android::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Ios(args)) => {
+            commands::ios::run(args)?;
             Ok(ExitCode::Success)
         }
         Some(Command::Build(args)) => {

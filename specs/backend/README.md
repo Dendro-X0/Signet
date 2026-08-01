@@ -13,10 +13,12 @@ Implementation contracts for Signet. **Public narrative** lives under [`docs/`](
 
 | Spec | Phase | Depth | Status |
 |------|-------|-------|--------|
-| [trust-tiers-and-verify-design.md](trust-tiers-and-verify-design.md) | 6–7 | Deep | Phases 6–7 implemented |
-| [checksum-signing-design.md](checksum-signing-design.md) | 8 | Deep | ready |
-| [artifact-contract-design.md](artifact-contract-design.md) | 9 | Thin | stub |
-| [electron-adapter-design.md](electron-adapter-design.md) | 10 | Thin | stub — blocked on Phase 9 |
+| [trust-tiers-and-verify-design.md](trust-tiers-and-verify-design.md) | 6–7 | Deep | implemented |
+| [checksum-signing-design.md](checksum-signing-design.md) | 8 | Deep | implemented |
+| [artifact-contract-design.md](artifact-contract-design.md) | 9 | Deep | implemented |
+| [electron-adapter-design.md](electron-adapter-design.md) | 10 | Deep | implemented |
+| [android-signing-design.md](android-signing-design.md) | 11 | Deep | implemented |
+| [ios-signing-design.md](ios-signing-design.md) | 12 | Deep | implemented |
 | [self-update-design.md](self-update-design.md) | Dist | Deep | implemented |
 
 ## Status legend

@@ -1,12 +1,12 @@
 # Signing
 
-`signet build` selects a [`FrameworkAdapter`](../specs/backend/artifact-contract-design.md) (`project.framework`: `tauri`, `electron`, or `android`), runs the framework build (unless `--skip-build`), discovers artifacts, writes `SHA256SUMS`, and signs outputs.
+`signet build` selects a [`FrameworkAdapter`](../specs/backend/artifact-contract-design.md) (`project.framework`: `tauri`, `electron`, `android`, or `ios`), runs the framework build (unless `--skip-build`), discovers artifacts, writes `SHA256SUMS`, and signs where applicable.
 
 **Electron:** set `framework = "electron"`, optional `build_command` (default `npm run dist`). Discover looks under `dist/`, `out/`, and `release/`. Signet signs **post-bundle** installers (does not inject `win.certificateFile`).
 
 **Android:** set `framework = "android"` or use `signet android keystore|sign`. See [android.md](android.md) — local keystore ≠ Play App Signing key.
 
-iOS helpers are roadmap Phase 12.
+**iOS:** set `framework = "ios"` or use `signet ios package`. See [ios.md](ios.md) — free provisioning ~7 days; packaging ≠ App Store trust. Build requires explicit `build_command` (no scheme guessing).
 
 ## Usage
 
