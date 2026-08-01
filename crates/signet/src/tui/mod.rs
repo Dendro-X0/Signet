@@ -255,16 +255,34 @@ fn draw_status(frame: &mut Frame, area: Rect, status: &ProjectStatus, flash: Opt
 
 fn draw_menu(frame: &mut Frame, area: Rect, state: &mut ListState, status: &ProjectStatus) {
     let recommended = status.recommended_action();
+    // Pad labels to the longest name so hints never collide ("Graduate notes" / "Uninstall Signet").
+    let label_width = ITEMS
+        .iter()
+        .map(|i| i.label.chars().count())
+        .max()
+        .unwrap_or(14)
+        .max(14);
+    // Prefix: "▸ " (highlight) + " 12. ★  " ≈ leave room; clip hint to remaining columns.
+    let prefix_cols = 2usize.saturating_add(8); // highlight symbol + " NN. ★  "
+    let inner_width = area.width.saturating_sub(2) as usize; // borders
+    let hint_budget = inner_width
+        .saturating_sub(prefix_cols)
+        .saturating_sub(label_width)
+        .saturating_sub(2); // gap before hint
+
     let items: Vec<ListItem> = ITEMS
         .iter()
         .enumerate()
         .map(|(idx, item)| {
             // Star sits after the number so ▸ / digits stay uncrowded: " 5. ★  …"
             let star = if item.id == recommended { "★" } else { " " };
+            let label = format!("{:<width$}", item.label, width = label_width);
+            let hint = truncate_hint(item.hint, hint_budget);
             ListItem::new(Line::from(vec![
                 Span::styled(format!(" {:>2}. {star}  ", idx + 1), dim()),
-                Span::styled(format!("{:<14}", item.label), title_style()),
-                Span::styled(item.hint, dim()),
+                Span::styled(label, title_style()),
+                Span::raw("  "),
+                Span::styled(hint, dim()),
             ]))
         })
         .collect();
@@ -274,6 +292,46 @@ fn draw_menu(frame: &mut Frame, area: Rect, state: &mut ListState, status: &Proj
         .highlight_style(theme::highlight())
         .highlight_symbol("▸ ");
     frame.render_stateful_widget(list, area, state);
+}
+
+fn truncate_hint(hint: &str, max_chars: usize) -> String {
+    if max_chars == 0 {
+        return String::new();
+    }
+    let count = hint.chars().count();
+    if count <= max_chars {
+        return hint.to_string();
+    }
+    if max_chars <= 1 {
+        return "…".to_string();
+    }
+    let keep = max_chars - 1;
+    let mut s: String = hint.chars().take(keep).collect();
+    s.push('…');
+    s
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn label_column_fits_longest_hub_item() {
+        let w = ITEMS
+            .iter()
+            .map(|i| i.label.chars().count())
+            .max()
+            .unwrap();
+        assert!(w >= "Uninstall Signet".chars().count());
+        assert!(w >= "Graduate notes".chars().count());
+    }
+
+    #[test]
+    fn truncate_hint_adds_ellipsis() {
+        assert_eq!(truncate_hint("abcdef", 4), "abc…");
+        assert_eq!(truncate_hint("hi", 10), "hi");
+        assert_eq!(truncate_hint("x", 0), "");
+    }
 }
 
 fn draw_footer(frame: &mut Frame, area: Rect) {
