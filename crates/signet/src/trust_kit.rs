@@ -82,6 +82,7 @@ fn render_trust_md_with_hints(
         fs::read_to_string(&paths.public).ok()
     });
     let minisign_block = minisign_trust_section(minisign_pub.as_deref());
+    let android_block = android_trust_section(project_root.map(|r| config.secrets_path(r)).as_deref());
 
     format!(
         r#"# Trust kit — {app}
@@ -124,7 +125,7 @@ Never trust a build whose fingerprint does not match.
 This integrity tier **does not imply** OS or store reputation (SmartScreen, Gatekeeper,
 Play App Signing, or Apple notarization). See [docs/trust-model.md](docs/trust-model.md)
 in the Signet project for the full tier table.
-{notes_block}{minisign_block}
+{notes_block}{minisign_block}{android_block}
 ## Verify a downloaded artifact
 
 1. Download the installer / bundle and the published checksums (when available).
@@ -181,8 +182,44 @@ Private material stays under the project's gitignored `.signet/` directory.
         tier_meaning = tier_meaning,
         notes_block = notes_block,
         minisign_block = minisign_block,
+        android_block = android_block,
         platforms = platforms,
         app = app,
+    )
+}
+
+fn android_trust_section(secrets_dir: Option<&Path>) -> String {
+    let Some(secrets) = secrets_dir else {
+        return String::new();
+    };
+    use crate::android::{keystore_paths, load_meta};
+    let paths = keystore_paths(secrets);
+    if !paths.exists() {
+        return String::new();
+    }
+    let meta = match load_meta(&paths) {
+        Ok(m) => m,
+        Err(_) => return String::new(),
+    };
+    let digest = meta
+        .cert_sha256
+        .unwrap_or_else(|| "(run `signet android keystore show`)".into());
+    format!(
+        r#"
+## Android (sideload / upload key)
+
+| Field | Value |
+|-------|-------|
+| Keystore alias | `{alias}` |
+| Certificate SHA-256 | `{digest}` |
+
+This digest identifies the **local** signing cert used for sideload / F-Droid-style builds
+(or a Play **upload** key). It is **not** Google Play App Signing’s app signing key.
+
+See [docs/android.md](docs/android.md). Never install this certificate into a system trust store.
+"#,
+        alias = meta.alias,
+        digest = digest,
     )
 }
 

@@ -1,26 +1,23 @@
 # Current session handoff
 
 **Updated:** 2026-07-31  
-**Band:** Phase 9 artifact contract implemented; Phase 10 next (stub — design first)
+**Band:** Phase 11 Android helpers implemented; Phase 12 next (stub — design first)
 
 ## Next atomic step
 
-Advance **Phase 10 — Electron adapter** when ready: expand [`specs/backend/electron-adapter-design.md`](../../specs/backend/electron-adapter-design.md) from stub → ready, then implement. Blocked on Phase 9 (done).
-
-Do **not** start Android/iOS (Phases 11–12) until their designs are ready and Phase 10 is either done or explicitly waived.
+Advance **Phase 12 — iOS packaging notes / IPA helpers** when ready: write/expand an iOS design under `specs/backend/` (honest free-provisioning / no App Store trust claims), then implement narrowly.
 
 **PAUSED / CANCELLED:** none  
-**Blocked for coding:** Phases 11–12 until designs ready; Phase 10 until design elevated from stub
+**Blocked for coding:** Phase 12 until design is ready (no stub-skip)
 
 ## Canonical owners
 
 | Work | Owner |
 |------|--------|
-| Artifact contract | `artifact/` (`FrameworkAdapter`, `TauriAdapter`) |
-| Electron adapter | Phase 10 (stub) |
+| Android helpers | `android/`, `commands/android.rs`, `artifact/android.rs` |
+| iOS helpers | Phase 12 (stub) |
 
 ## Recently completed
 
-- Phase 9: shared `Artifact` + `FrameworkAdapter`; Tauri behind adapter; `project.framework`
-- Phase 8 checksum signing
-- Phase 6–7 integrity + CLI distribution
+- Phase 11: `signet android keystore|sign`, `framework = "android"`, `docs/android.md` Play honesty
+- Phases 8–10: checksum signing, artifact contract, Electron adapter

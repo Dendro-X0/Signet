@@ -249,14 +249,22 @@ pub fn finalize_report(
     );
     if android || ios {
         notes.push(
-            "Android/iOS installers were detected — store signing uses Play App Signing / Apple certificates; \
-             signet lists them for awareness and does not claim to replace those programs."
+            "Android/iOS installers were detected — for Android sideload use `signet android keystore` \
+             + docs/android.md; Play App Signing stays external. iOS is Phase 12."
+                .into(),
+        );
+    }
+    if android {
+        notes.push(
+            "Android: set framework = \"android\" for APK discover/sign, or run \
+             `signet android sign --apk …` after keystore create."
                 .into(),
         );
     }
     if projects.iter().any(|p| p.kind == ProjectKind::Electron) {
         notes.push(
-            "Electron app detected — Phase 'later' may add non-Tauri signing; treat as experimental target."
+            "Electron app detected — set [project].framework = \"electron\" in signet.toml, \
+             then `signet build` (or --skip-build) to sign/checksum installers under dist/out/release."
                 .into(),
         );
     }

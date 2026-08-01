@@ -1,8 +1,12 @@
 # Signing
 
-`signet build` selects a [`FrameworkAdapter`](../specs/backend/artifact-contract-design.md) (`project.framework`, default `tauri`), runs the framework build (unless `--skip-build`), discovers artifacts, writes `SHA256SUMS`, and signs host-matching outputs with the active identity.
+`signet build` selects a [`FrameworkAdapter`](../specs/backend/artifact-contract-design.md) (`project.framework`: `tauri`, `electron`, or `android`), runs the framework build (unless `--skip-build`), discovers artifacts, writes `SHA256SUMS`, and signs outputs.
 
-Other frameworks are detected by `scan`; dedicated adapters are roadmap work (Electron = Phase 10).
+**Electron:** set `framework = "electron"`, optional `build_command` (default `npm run dist`). Discover looks under `dist/`, `out/`, and `release/`. Signet signs **post-bundle** installers (does not inject `win.certificateFile`).
+
+**Android:** set `framework = "android"` or use `signet android keystore|sign`. See [android.md](android.md) — local keystore ≠ Play App Signing key.
+
+iOS helpers are roadmap Phase 12.
 
 ## Usage
 

@@ -8,8 +8,10 @@ Non-secret project configuration. Written by `signet init`. Legacy `selfsign.tom
 
 [project]
 name = "my-app"
-tauri_root = "."          # directory containing src-tauri (relative to this file)
-framework = "tauri"       # adapter id (tauri today; electron in Phase 10)
+tauri_root = "."          # app root (src-tauri parent for Tauri; package.json dir for Electron)
+framework = "tauri"       # adapter: tauri | electron | android
+# build_command = ""      # Electron default `npm run dist`; Android default `gradlew assembleRelease`
+
 
 [platforms]
 windows = true
@@ -37,8 +39,9 @@ secrets_dir = ".signet"
 | Field | Meaning |
 |-------|---------|
 | `project.name` | Display / release name |
-| `project.tauri_root` | Tauri app root relative to the config file (Tauri adapter) |
-| `project.framework` | Adapter id (`tauri` default; others Phase 10+) |
+| `project.tauri_root` | App root relative to config (Tauri: dir with `src-tauri`; Electron: `package.json` dir) |
+| `project.framework` | Adapter id: `tauri` (default), `electron`, or `android` |
+| `project.build_command` | Optional build argv override (Electron: `npm run dist`; Android: `gradlew assembleRelease`) |
 | `platforms.*` | Which OS targets this project intends to ship |
 | `release.github` | Enable GitHub Releases in `signet release` |
 | `release.repo` | Optional `owner/name` override |

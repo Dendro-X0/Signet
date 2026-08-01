@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use clap::Args as ClapArgs;
 
-use crate::artifact::{select_adapter, Artifact, BuildOpts};
+use crate::android::{keystore_paths, sign_apks};
+use crate::artifact::{select_adapter, Artifact, ArtifactKind, BuildOpts};
 use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::sign::{
@@ -109,6 +110,12 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    let is_android = adapter.id() == "android";
+
+    if is_android {
+        return sign_android_flow(&ctx, &discovered, &checksum_paths, &sums_path, &args);
+    }
+
     let identity = load_active(&ctx.identity_root()).map_err(|e| {
         anyhow::anyhow!("{e}\nhint: run `signet identity create` first (or pass --no-sign)")
     })?;
@@ -163,6 +170,60 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
 
     println!("done — compare fingerprints via `signet identity show` / TRUST.md");
+    Ok(())
+}
+
+fn sign_android_flow(
+    ctx: &ProjectCtx,
+    discovered: &[Artifact],
+    checksum_paths: &[PathBuf],
+    sums_path: &std::path::Path,
+    args: &Args,
+) -> anyhow::Result<()> {
+    let paths = keystore_paths(&ctx.secrets_dir());
+    let apks: Vec<PathBuf> = discovered
+        .iter()
+        .filter(|a| a.kind == ArtifactKind::Apk)
+        .map(|a| a.path.clone())
+        .collect();
+    if apks.is_empty() {
+        anyhow::bail!(
+            "no APKs to sign — pass --artifact *.apk or build an APK first\n\
+             note: AAB Play upload is documented in docs/android.md (not auto-signed as Play distribution)"
+        );
+    }
+    println!(
+        "signing {} APK(s) with android keystore ({})",
+        apks.len(),
+        paths.keystore.display()
+    );
+    println!("note: local keystore ≠ Play App Signing key — see docs/android.md");
+
+    let report = sign_apks(&paths, &apks)?;
+    for w in &report.warnings {
+        println!("warning: {w}");
+    }
+    for (p, method) in &report.signed {
+        println!("signed: {} ({method})", p.display());
+    }
+    for (p, reason) in &report.skipped {
+        println!("skipped: {} — {reason}", p.display());
+    }
+    if report.signed.is_empty() {
+        anyhow::bail!("android signing produced no successful APKs");
+    }
+
+    let mut refresh = checksum_paths.to_vec();
+    for (p, _) in &report.signed {
+        if p.is_file() && !refresh.iter().any(|x| x == p) {
+            refresh.push(p.clone());
+        }
+    }
+    if !refresh.is_empty() {
+        write_sha256sums(sums_path, &refresh)?;
+        emit_sums_sign(ctx, sums_path, args)?;
+    }
+    println!("done — compare Android cert digest via `signet android keystore show` / TRUST.md");
     Ok(())
 }
 

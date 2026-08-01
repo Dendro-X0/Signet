@@ -4,6 +4,8 @@
 
 ### Added
 
+- Phase 11 Android helpers: `signet android keystore|sign`, `framework = "android"`, `docs/android.md`
+- Phase 10 Electron adapter: `framework = "electron"`, discover `dist`/`out`/`release`, optional `build_command`
 - Phase 9 artifact contract: `artifact/` module, `FrameworkAdapter` + `TauriAdapter`, `project.framework`
 - Phase 8 checksum signing: `signet sums-key create|show`, minisign on `SHA256SUMS` → `.minisig`, optional GPG `.asc`
 - `signet build` / `release` flags: `--no-sums-sign`, `--require-sums-sign`, `--require-gpg`

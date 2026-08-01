@@ -13,6 +13,8 @@ pub enum ArtifactKind {
     LinuxRpm,
     /// Reserved — Phase 11
     Apk,
+    /// Android App Bundle (Play upload; not auto-signed as Play distribution key)
+    Aab,
     /// Reserved — Phase 12
     Ipa,
     Zip,
@@ -30,6 +32,7 @@ impl ArtifactKind {
             Self::LinuxDeb => "linux-deb",
             Self::LinuxRpm => "linux-rpm",
             Self::Apk => "android-apk",
+            Self::Aab => "android-aab",
             Self::Ipa => "ios-ipa",
             Self::Zip => "zip",
             Self::Other => "other",
@@ -44,6 +47,9 @@ impl ArtifactKind {
         }
         if name.ends_with(".apk") {
             return Some(Self::Apk);
+        }
+        if name.ends_with(".aab") {
+            return Some(Self::Aab);
         }
         if name.ends_with(".ipa") {
             return Some(Self::Ipa);

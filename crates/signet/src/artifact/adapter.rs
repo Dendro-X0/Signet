@@ -5,6 +5,8 @@ use std::path::PathBuf;
 use crate::config::Config;
 use crate::project::ProjectCtx;
 
+use super::android::AndroidAdapter;
+use super::electron::ElectronAdapter;
 use super::tauri::TauriAdapter;
 use super::Artifact;
 
@@ -44,9 +46,11 @@ pub fn select_adapter(config: &Config) -> anyhow::Result<Box<dyn FrameworkAdapte
     let fw = if fw.is_empty() { "tauri" } else { fw };
     match fw {
         "tauri" => Ok(Box::new(TauriAdapter)),
+        "electron" => Ok(Box::new(ElectronAdapter)),
+        "android" => Ok(Box::new(AndroidAdapter)),
         other => anyhow::bail!(
-            "framework '{other}' is not supported yet — Signet Phase 9 ships the Tauri adapter; \
-             Electron lands in Phase 10 (see docs/roadmap.md)"
+            "framework '{other}' is not supported yet — supported: tauri, electron, android \
+             (iOS helpers are Phase 12; see docs/roadmap.md)"
         ),
     }
 }
@@ -64,13 +68,29 @@ mod tests {
     }
 
     #[test]
-    fn unknown_framework_errors() {
+    fn selects_electron() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "electron".into();
+        let adapter = select_adapter(&cfg).unwrap();
+        assert_eq!(adapter.id(), "electron");
+    }
+
+    #[test]
+    fn selects_android() {
+        let mut cfg = Config::example("app", ".");
+        cfg.project.framework = "android".into();
+        let adapter = select_adapter(&cfg).unwrap();
+        assert_eq!(adapter.id(), "android");
+    }
+
+    #[test]
+    fn unknown_framework_errors() {
+        let mut cfg = Config::example("app", ".");
+        cfg.project.framework = "flutter".into();
         let err = match select_adapter(&cfg) {
             Ok(_) => panic!("expected error"),
             Err(e) => e.to_string(),
         };
-        assert!(err.contains("Phase 10"));
+        assert!(err.contains("not supported"));
     }
 }

@@ -120,6 +120,8 @@ fn gather_checks() -> Vec<Check> {
     checks.push(trust_tier_check(has_config, identity_ok));
     checks.push(sums_minisign_key_check(has_config));
     checks.push(gpg_check_if_configured(has_config));
+    checks.push(electron_npm_check(has_config));
+    checks.extend(android_tool_checks(has_config));
 
     let gh = which("gh").is_ok();
     let token = std::env::var("GH_TOKEN")
@@ -141,6 +143,100 @@ fn gather_checks() -> Vec<Check> {
 
     checks.extend(platform_checks());
     checks
+}
+
+fn android_tool_checks(has_config: bool) -> Vec<Check> {
+    use crate::android::{find_apksigner, find_keytool, keystore_paths};
+    use crate::config::{resolve_config_path, Config};
+
+    let is_android = has_config
+        && Config::load(resolve_config_path(None))
+            .map(|c| c.project.framework.trim().eq_ignore_ascii_case("android"))
+            .unwrap_or(false);
+
+    let mut checks = Vec::new();
+
+    let keytool_ok = find_keytool().is_some();
+    checks.push(Check {
+        name: "keytool".into(),
+        ok: keytool_ok || !is_android,
+        severity: Severity::Optional,
+        detail: if keytool_ok {
+            "found (JDK — android keystore create/import)".into()
+        } else if is_android {
+            "not found — install a JDK for `signet android keystore`".into()
+        } else {
+            "not required unless using Android helpers".into()
+        },
+    });
+
+    let apksigner_ok = find_apksigner().is_some();
+    checks.push(Check {
+        name: "apksigner".into(),
+        ok: apksigner_ok || !is_android,
+        severity: Severity::Optional,
+        detail: if apksigner_ok {
+            "found (Android SDK build-tools)".into()
+        } else if is_android {
+            "not found — install Android SDK build-tools (jarsigner fallback may work)".into()
+        } else {
+            "not required unless signing APKs".into()
+        },
+    });
+
+    let root = std::path::Path::new(".");
+    let secrets = if has_config {
+        Config::load(resolve_config_path(None))
+            .map(|c| c.secrets_path(root))
+            .unwrap_or_else(|_| root.join(".signet"))
+    } else {
+        root.join(".signet")
+    };
+    let ks = keystore_paths(&secrets);
+    checks.push(Check {
+        name: "android-keystore".into(),
+        ok: ks.exists() || !is_android,
+        severity: Severity::Optional,
+        detail: if ks.exists() {
+            format!("present at {}", ks.dir.display())
+        } else if is_android {
+            "missing — run `signet android keystore create`".into()
+        } else {
+            "not required unless framework = android".into()
+        },
+    });
+
+    checks
+}
+
+fn electron_npm_check(has_config: bool) -> Check {
+    use crate::config::{resolve_config_path, Config};
+
+    let is_electron = has_config
+        && Config::load(resolve_config_path(None))
+            .map(|c| c.project.framework.trim().eq_ignore_ascii_case("electron"))
+            .unwrap_or(false);
+
+    if !is_electron {
+        return Check {
+            name: "electron-npm".into(),
+            ok: true,
+            severity: Severity::Optional,
+            detail: "not required (framework is not electron)".into(),
+        };
+    }
+
+    let ok = which("npm").is_ok() || which("npx").is_ok();
+    Check {
+        name: "electron-npm".into(),
+        ok,
+        severity: Severity::Optional,
+        detail: if ok {
+            "found (needed for Electron `signet build` unless --skip-build)".into()
+        } else {
+            "not found — install Node.js/npm or use --skip-build / custom build_command".into()
+        },
+    }
 }
 
 fn sums_minisign_key_check(has_config: bool) -> Check {

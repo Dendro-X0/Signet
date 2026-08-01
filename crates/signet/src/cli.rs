@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::commands::{
-    build, doctor, identity, init, release, scan, self_cmd, sums_key, trust, verify,
+    android, build, doctor, identity, init, release, scan, self_cmd, sums_key, trust, verify,
 };
 
 /// Identity, sign, explain, and release self-signed desktop and mobile apps.
@@ -23,7 +23,9 @@ pub enum Command {
     /// Manage minisign key for signing SHA256SUMS
     #[command(name = "sums-key")]
     SumsKey(sums_key::Args),
-    /// Build and sign platform artifacts (Tauri today; more frameworks next)
+    /// Android keystore + APK signing helpers
+    Android(android::Args),
+    /// Build and sign platform artifacts (Tauri / Electron / Android)
     Build(build::Args),
     /// Emit trust / install documentation
     Trust(trust::Args),

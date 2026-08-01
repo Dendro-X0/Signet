@@ -21,6 +21,9 @@ your-app/
       minisign.key           # PRIVATE — SHA256SUMS signing key
       minisign.pub           # public (also quoted in TRUST.md)
       meta.toml
+    android/
+      release.jks            # PRIVATE — Android release/upload keystore
+      meta.toml              # alias + cert SHA-256 (no passwords)
 ```
 
 Legacy `.selfsign/` layouts are still detected for status/scan.
@@ -39,6 +42,7 @@ secrets_dir = ".signet"
 # gpg_key_id = ""
 ```
 
+Android passwords: `SIGNET_ANDROID_STORE_PASS` / optional `SIGNET_ANDROID_KEY_PASS` — never in config.
 ## Rules
 
 1. Never write private keys into `signet.toml`, `TRUST.md`, or release notes.
@@ -57,5 +61,8 @@ signet identity show
 signet identity use <name>
 signet sums-key create [--force]
 signet sums-key show
+signet android keystore create [--force]
+signet android keystore show
+signet android sign --apk path.apk
 signet trust [--out TRUST.md]
 ```

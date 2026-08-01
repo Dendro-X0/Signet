@@ -73,19 +73,19 @@ cargo run -p signet -- doctor
 
 ## Phase 10 — Electron adapter
 
-**Spec:** [electron-adapter-design.md](../specs/backend/electron-adapter-design.md) — **blocked on Phase 9**
+**Spec:** [electron-adapter-design.md](../specs/backend/electron-adapter-design.md)
 
-- [ ] Discover Electron Builder/Forge outputs
-- [ ] Optional build command wrap
-- [ ] Reuse host sign + sums + release
+- [x] Discover Electron Builder/Forge outputs
+- [x] Optional build command wrap
+- [x] Reuse host sign + sums + release
 
 ## Phase 11 — Android helpers
 
-**Spec:** [android-signing-design.md](../specs/backend/android-signing-design.md) — **blocked on Phases 6–9**
+**Spec:** [android-signing-design.md](../specs/backend/android-signing-design.md) · **User doc:** [android.md](android.md)
 
-- [ ] Keystore create/import under `.signet/`
-- [ ] APK sign via platform tools
-- [ ] Honest Play App Signing documentation (external)
+- [x] Keystore create/import under `.signet/`
+- [x] APK sign via platform tools
+- [x] Honest Play App Signing documentation (external)
 
 ## Phase 12 — iOS packaging notes / IPA helpers
 

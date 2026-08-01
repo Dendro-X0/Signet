@@ -45,9 +45,12 @@ pub struct Project {
     pub name: String,
     /// Path to the Tauri app root (directory containing `src-tauri`), relative to config
     pub tauri_root: String,
-    /// Framework adapter id (`tauri` today; Electron in Phase 10). Default: tauri.
+    /// Framework adapter id (`tauri` / `electron`). Default: tauri.
     #[serde(default = "default_framework")]
     pub framework: String,
+    /// Optional build argv override (Electron: default `npm run dist` when empty).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub build_command: String,
 }
 
 fn default_framework() -> String {
@@ -126,6 +129,7 @@ impl Default for Config {
                 name: "my-app".into(),
                 tauri_root: ".".into(),
                 framework: default_framework(),
+                build_command: String::new(),
             },
             platforms: Platforms {
                 windows: true,
@@ -150,6 +154,7 @@ impl Config {
                 name: name.into(),
                 tauri_root: tauri_root.into(),
                 framework: default_framework(),
+                build_command: String::new(),
             },
             ..Self::default()
         }

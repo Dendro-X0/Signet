@@ -11,6 +11,7 @@ mod scan;
 mod self_manage;
 mod sign;
 mod artifact;
+mod android;
 mod trust_kit;
 mod trust_tier;
 mod tui;
@@ -49,6 +50,10 @@ fn run() -> anyhow::Result<ExitCode> {
         }
         Some(Command::SumsKey(args)) => {
             commands::sums_key::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Android(args)) => {
+            commands::android::run(args)?;
             Ok(ExitCode::Success)
         }
         Some(Command::Build(args)) => {
