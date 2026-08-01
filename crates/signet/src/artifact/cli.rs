@@ -139,7 +139,7 @@ fn collect_bins_in_dir(dir: &Path, out: &mut Vec<Artifact>) -> anyhow::Result<()
         {
             continue;
         }
-        // Cargo stamps: foo.d, but also skip obvious non-binaries
+        // Cargo stamps / dotted junk — allow PE (.exe) only among extensions.
         if name.contains('.') && !lower.ends_with(".exe") {
             continue;
         }
@@ -151,10 +151,14 @@ fn collect_bins_in_dir(dir: &Path, out: &mut Vec<Artifact>) -> anyhow::Result<()
         }
         #[cfg(not(windows))]
         {
-            use std::os::unix::fs::PermissionsExt;
-            let meta = entry.metadata()?;
-            if meta.permissions().mode() & 0o111 == 0 {
-                continue;
+            // Host Cargo bins are extensionless + executable. `.exe` may be a
+            // cross-compiled PE sitting in target/ — include without +x.
+            if !lower.ends_with(".exe") {
+                use std::os::unix::fs::PermissionsExt;
+                let meta = entry.metadata()?;
+                if meta.permissions().mode() & 0o111 == 0 {
+                    continue;
+                }
             }
         }
 
@@ -180,10 +184,41 @@ mod tests {
         let root = dir.path();
         let bin_dir = root.join("target/release");
         fs::create_dir_all(&bin_dir).unwrap();
-        fs::write(bin_dir.join("mytool.exe"), b"MZ").unwrap();
         fs::write(bin_dir.join("mytool.pdb"), b"x").unwrap();
         fs::create_dir_all(root.join("target/release/deps")).unwrap();
+        fs::write(root.join("target/release/deps/noise"), b"x").unwrap();
 
+        #[cfg(windows)]
+        {
+            fs::write(bin_dir.join("mytool.exe"), b"MZ").unwrap();
+        }
+        #[cfg(not(windows))]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let bin = bin_dir.join("mytool");
+            fs::write(&bin, b"#!/bin/sh\n").unwrap();
+            let mut perms = fs::metadata(&bin).unwrap().permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(&bin, perms).unwrap();
+        }
+
+        let arts = discover_cli_binaries(root, "release").unwrap();
+        assert_eq!(arts.len(), 1, "expected one host binary, got {arts:?}");
+        #[cfg(windows)]
+        assert!(arts[0].path.ends_with("mytool.exe"));
+        #[cfg(not(windows))]
+        assert!(arts[0].path.ends_with("mytool"));
+    }
+
+    #[test]
+    #[cfg(not(windows))]
+    fn discovers_cross_compiled_exe_on_unix() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        let bin_dir = root.join("target/release");
+        fs::create_dir_all(&bin_dir).unwrap();
+        // No +x — still discoverable as PE for checksum / optional signing tooling.
+        fs::write(bin_dir.join("mytool.exe"), b"MZ").unwrap();
         let arts = discover_cli_binaries(root, "release").unwrap();
         assert_eq!(arts.len(), 1);
         assert!(arts[0].path.ends_with("mytool.exe"));
