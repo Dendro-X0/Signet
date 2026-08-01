@@ -5,5 +5,6 @@ pub mod init;
 pub mod release;
 pub mod scan;
 pub mod self_cmd;
+pub mod sums_key;
 pub mod trust;
 pub mod verify;

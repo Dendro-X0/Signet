@@ -7,8 +7,7 @@ mod windows_sign {
 
     use crate::identity::{create_identity, CreateOptions};
     use crate::sign::{
-        find_openssl, find_signtool, sign_host_artifacts, ArtifactKind, DiscoveredArtifact,
-        SignOptions,
+        find_openssl, find_signtool, sign_host_artifacts, ArtifactKind, SignOptions,
     };
 
     #[test]
@@ -44,10 +43,10 @@ mod windows_sign {
             .unwrap();
         assert!(status.success());
 
-        let artifacts = vec![DiscoveredArtifact {
-            path: exe.clone(),
-            kind: ArtifactKind::WindowsExe,
-        }];
+        let artifacts = vec![crate::artifact::Artifact::new(
+            exe.clone(),
+            ArtifactKind::WindowsExe,
+        )];
         let report = sign_host_artifacts(
             &identity,
             &artifacts,

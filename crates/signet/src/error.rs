@@ -6,8 +6,8 @@
 pub enum ExitCode {
     Success = 0,
     Failure = 1,
-    /// Subcommand exists but is not implemented yet (Phase stub).
+    /// Subcommand exists but is not implemented yet (Phase stub) / missing inputs.
     NotImplemented = 2,
-    /// Configuration or environment problem.
-    Config = 3,
+    /// Policy failure (e.g. `--require-sig` unmet) or configuration problem.
+    Policy = 3,
 }

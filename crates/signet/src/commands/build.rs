@@ -2,11 +2,12 @@ use std::path::PathBuf;
 
 use clap::Args as ClapArgs;
 
+use crate::artifact::{select_adapter, Artifact, BuildOpts};
 use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::sign::{
-    discover_artifacts, find_tauri_cli, host_signable, resolve_src_tauri, sign_host_artifacts,
-    tool_hint_for_host, write_sha256sums, DiscoveredArtifact, SignOptions,
+    host_signable, maybe_sign_sums, sign_host_artifacts, tool_hint_for_host, write_sha256sums,
+    SignOptions,
 };
 
 #[derive(Debug, ClapArgs)]
@@ -15,13 +16,25 @@ pub struct Args {
     #[arg(long)]
     pub config: Option<PathBuf>,
 
-    /// Skip `tauri build`; only discover + sign existing artifacts
+    /// Skip framework build; only discover + sign existing artifacts
     #[arg(long)]
     pub skip_build: bool,
 
     /// Build without signing (still writes SHA256SUMS when artifacts exist)
     #[arg(long)]
     pub no_sign: bool,
+
+    /// Skip minisign/GPG signing of SHA256SUMS
+    #[arg(long)]
+    pub no_sums_sign: bool,
+
+    /// Fail if minisign cannot sign SHA256SUMS
+    #[arg(long)]
+    pub require_sums_sign: bool,
+
+    /// Fail if GPG checksum signing was requested but did not succeed
+    #[arg(long)]
+    pub require_gpg: bool,
 
     /// Cargo/Tauri profile (default: release)
     #[arg(long, default_value = "release")]
@@ -31,7 +44,7 @@ pub struct Args {
     #[arg(long)]
     pub no_timestamp: bool,
 
-    /// Extra args forwarded to `tauri build` (repeatable)
+    /// Extra args forwarded to the framework build (Tauri: `tauri build`)
     #[arg(long = "tauri-arg")]
     pub tauri_args: Vec<String>,
 
@@ -42,46 +55,33 @@ pub struct Args {
 
 pub fn run(args: Args) -> anyhow::Result<()> {
     let ctx = ProjectCtx::load(args.config.as_deref()).map_err(|e| {
-        anyhow::anyhow!("{e}\nhint: run `signet init` in your Tauri app directory first")
+        anyhow::anyhow!("{e}\nhint: run `signet init` in your app directory first")
     })?;
 
-    let src_tauri = resolve_src_tauri(&ctx.root, &ctx.config.project.tauri_root);
-    println!("tauri crate: {}", src_tauri.display());
+    let adapter = select_adapter(&ctx.config)?;
+    let label = adapter.label_root(&ctx);
+    println!("{} root: {}", adapter.id(), label.display());
 
     if !args.skip_build {
-        let Some(cli) = find_tauri_cli() else {
-            anyhow::bail!(
-                "tauri CLI not found — install with: cargo install tauri-cli --version \"^2\"\n\
-                 or pass --skip-build to sign existing artifacts only"
-            );
-        };
-        println!("running tauri build ({})…", args.profile);
-        // Note: profile selection is typically via cargo features / tauri config;
-        // we forward extra args and run standard `tauri build`.
-        cli.run_build(&src_tauri, &args.tauri_args)?;
+        adapter.build(
+            &ctx,
+            &BuildOpts {
+                profile: args.profile.clone(),
+                extra_args: args.tauri_args.clone(),
+            },
+        )?;
     } else {
-        println!("skipping tauri build (--skip-build)");
+        println!("skipping {} build (--skip-build)", adapter.id());
     }
 
     let discovered = if args.artifacts.is_empty() {
-        discover_artifacts(&src_tauri, &args.profile)?
+        adapter.discover(&ctx, &args.profile)?
     } else {
-        args.artifacts
-            .iter()
-            .map(|p| DiscoveredArtifact {
-                path: p.clone(),
-                kind: classify_explicit(p),
-            })
-            .collect()
+        args.artifacts.iter().map(Artifact::from_path).collect()
     };
 
     if discovered.is_empty() {
-        anyhow::bail!(
-            "no artifacts found under {}/target/{}/bundle\n\
-             hint: run a successful `tauri build` first, or pass --artifact <path>",
-            src_tauri.display(),
-            args.profile
-        );
+        anyhow::bail!("{}", adapter.empty_hint(&ctx, &args.profile));
     }
 
     println!("discovered {} artifact(s):", discovered.len());
@@ -98,6 +98,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     if !checksum_paths.is_empty() {
         write_sha256sums(&sums_path, &checksum_paths)?;
         println!("wrote {}", sums_path.display());
+        emit_sums_sign(&ctx, &sums_path, &args)?;
     }
 
     if args.no_sign {
@@ -158,37 +159,34 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
     if !refresh.is_empty() {
         write_sha256sums(&sums_path, &refresh)?;
+        emit_sums_sign(&ctx, &sums_path, &args)?;
     }
 
     println!("done — compare fingerprints via `signet identity show` / TRUST.md");
     Ok(())
 }
 
-fn classify_explicit(path: &std::path::Path) -> crate::sign::ArtifactKind {
-    use crate::sign::ArtifactKind;
-    let name = path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    if name.ends_with(".appimage") {
-        return ArtifactKind::LinuxAppImage;
+fn emit_sums_sign(
+    ctx: &ProjectCtx,
+    sums_path: &std::path::Path,
+    args: &Args,
+) -> anyhow::Result<()> {
+    let report = maybe_sign_sums(
+        sums_path,
+        &ctx.secrets_dir(),
+        &ctx.config.trust.checksum_signing,
+        args.no_sums_sign,
+        args.require_sums_sign,
+        args.require_gpg,
+    )?;
+    for w in &report.warnings {
+        println!("warning: {w}");
     }
-    if path.extension().and_then(|e| e.to_str()) == Some("app") || name.ends_with(".app") {
-        return ArtifactKind::MacApp;
+    if let Some(p) = &report.minisig {
+        println!("wrote {}", p.display());
     }
-    match path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase()
-        .as_str()
-    {
-        "exe" => ArtifactKind::WindowsExe,
-        "msi" | "msix" => ArtifactKind::WindowsMsi,
-        "dmg" => ArtifactKind::MacDmg,
-        "deb" => ArtifactKind::LinuxDeb,
-        "rpm" => ArtifactKind::LinuxRpm,
-        _ => ArtifactKind::Other,
+    if let Some(p) = &report.asc {
+        println!("wrote {}", p.display());
     }
+    Ok(())
 }

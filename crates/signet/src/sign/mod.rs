@@ -5,6 +5,7 @@ mod discover;
 mod linux;
 mod macos;
 mod pfx;
+mod sums_sig;
 mod tools;
 mod windows;
 
@@ -13,13 +14,18 @@ mod integration_tests;
 
 use std::path::PathBuf;
 
+use crate::artifact::Artifact;
 use crate::identity::IdentityRecord;
 
 pub use checksum::{verify_sha256sums, write_sha256sums, write_sha256sums_named, ChecksumResult};
-pub use discover::{
-    discover_artifacts, host_signable, resolve_src_tauri, ArtifactKind, DiscoveredArtifact,
+pub use discover::{discover_artifacts, resolve_src_tauri};
+pub use sums_sig::{
+    create_sums_key, maybe_sign_sums, parse_minisign_pub_from_trust, read_public_key_text,
+    verify_sums_gpg, verify_sums_minisign, SumsKeyPaths,
 };
 pub use tools::{find_openssl, find_signtool, find_tauri_cli};
+
+pub use crate::artifact::{host_signable, ArtifactKind, DiscoveredArtifact};
 
 #[derive(Debug, Clone)]
 pub struct SignOptions {
@@ -56,7 +62,7 @@ pub struct SignReport {
 /// Sign discovered artifacts for the current host OS.
 pub fn sign_host_artifacts(
     identity: &IdentityRecord,
-    artifacts: &[DiscoveredArtifact],
+    artifacts: &[Artifact],
     opts: &SignOptions,
 ) -> anyhow::Result<SignReport> {
     match std::env::consts::OS {

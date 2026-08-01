@@ -118,6 +118,8 @@ fn gather_checks() -> Vec<Check> {
     });
 
     checks.push(trust_tier_check(has_config, identity_ok));
+    checks.push(sums_minisign_key_check(has_config));
+    checks.push(gpg_check_if_configured(has_config));
 
     let gh = which("gh").is_ok();
     let token = std::env::var("GH_TOKEN")
@@ -139,6 +141,62 @@ fn gather_checks() -> Vec<Check> {
 
     checks.extend(platform_checks());
     checks
+}
+
+fn sums_minisign_key_check(has_config: bool) -> Check {
+    use crate::config::{resolve_config_path, Config};
+    use crate::sign::SumsKeyPaths;
+
+    let root = std::path::Path::new(".");
+    let secrets = if has_config {
+        Config::load(resolve_config_path(None))
+            .map(|c| c.secrets_path(root))
+            .unwrap_or_else(|_| root.join(".signet"))
+    } else {
+        root.join(".signet")
+    };
+    let paths = SumsKeyPaths::from_secrets_dir(&secrets);
+    let ok = paths.exists();
+    Check {
+        name: "sums-minisign-key".into(),
+        ok,
+        severity: Severity::Optional,
+        detail: if ok {
+            format!("present at {}", paths.dir.display())
+        } else {
+            "missing — run `signet sums-key create` to sign SHA256SUMS".into()
+        },
+    }
+}
+
+fn gpg_check_if_configured(has_config: bool) -> Check {
+    use crate::config::{resolve_config_path, Config};
+
+    let gpg_wanted = has_config
+        && Config::load(resolve_config_path(None))
+            .map(|c| c.trust.checksum_signing.gpg)
+            .unwrap_or(false);
+
+    if !gpg_wanted {
+        return Check {
+            name: "gpg".into(),
+            ok: true,
+            severity: Severity::Optional,
+            detail: "not required ([trust.checksum_signing].gpg = false)".into(),
+        };
+    }
+
+    let ok = which("gpg").is_ok();
+    Check {
+        name: "gpg".into(),
+        ok,
+        severity: Severity::Optional,
+        detail: if ok {
+            version_of("gpg", &["--version"])
+        } else {
+            "not found — required because [trust.checksum_signing].gpg = true".into()
+        },
+    }
 }
 
 fn trust_tier_check(has_config: bool, identity_ok: bool) -> Check {

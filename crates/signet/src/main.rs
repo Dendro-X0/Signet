@@ -10,6 +10,7 @@ mod release;
 mod scan;
 mod self_manage;
 mod sign;
+mod artifact;
 mod trust_kit;
 mod trust_tier;
 mod tui;
@@ -44,6 +45,10 @@ fn run() -> anyhow::Result<ExitCode> {
         }
         Some(Command::Identity(args)) => {
             commands::identity::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::SumsKey(args)) => {
+            commands::sums_key::run(args)?;
             Ok(ExitCode::Success)
         }
         Some(Command::Build(args)) => {

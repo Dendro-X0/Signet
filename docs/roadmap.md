@@ -54,21 +54,20 @@ cargo run -p signet -- doctor
 
 ## Phase 8 — Checksum signing
 
-
 **Spec:** [checksum-signing-design.md](../specs/backend/checksum-signing-design.md)
 
-- [ ] `signet sums-key` + minisign on `SHA256SUMS`
-- [ ] Optional GPG `.asc`
-- [ ] Wire build/release/verify/`--require-sig`
+- [x] `signet sums-key` + minisign on `SHA256SUMS`
+- [x] Optional GPG `.asc`
+- [x] Wire build/release/verify/`--require-sig`
 
 **Exit:** Release assets include verifiable signed checksums; tier can report `community_signed_sums`.
 
 ## Phase 9 — Artifact contract
 
-**Spec:** [artifact-contract-design.md](../specs/backend/artifact-contract-design.md) (stub → ready before code)
+**Spec:** [artifact-contract-design.md](../specs/backend/artifact-contract-design.md)
 
-- [ ] Framework-agnostic discover → sign → sums → release types
-- [ ] Tauri path refactored behind the contract
+- [x] Framework-agnostic discover → sign → sums → release types
+- [x] Tauri path refactored behind the contract
 
 **Exit:** A second adapter can plug in without forking release/trust.
 

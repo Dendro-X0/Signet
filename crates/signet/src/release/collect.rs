@@ -2,8 +2,10 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::artifact::select_adapter;
 use crate::config::Config;
-use crate::sign::{discover_artifacts, resolve_src_tauri, write_sha256sums_named};
+use crate::project::ProjectCtx;
+use crate::sign::{maybe_sign_sums, write_sha256sums_named};
 
 #[derive(Debug, Clone)]
 pub struct ReleaseFile {
@@ -13,19 +15,33 @@ pub struct ReleaseFile {
     pub kind: &'static str,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct CollectOpts {
+    pub no_sums_sign: bool,
+    pub require_sums_sign: bool,
+    pub require_gpg: bool,
+}
+
 /// Gather uploadable files: discovered bundles, sidecar .sig, SHA256SUMS, optional TRUST.md.
-pub fn collect_release_files(
+pub fn collect_release_files_with_opts(
     project_root: &Path,
     config: &Config,
     profile: &str,
     extra_artifacts: &[PathBuf],
     attach_trust: bool,
+    opts: CollectOpts,
 ) -> anyhow::Result<Vec<ReleaseFile>> {
-    let src_tauri = resolve_src_tauri(project_root, &config.project.tauri_root);
     let mut paths: Vec<PathBuf> = Vec::new();
 
     if extra_artifacts.is_empty() {
-        for art in discover_artifacts(&src_tauri, profile)? {
+        // Build a temporary ctx for adapter discover (config already loaded by caller).
+        let ctx = ProjectCtx {
+            config_path: project_root.join("signet.toml"),
+            root: project_root.to_path_buf(),
+            config: config.clone(),
+        };
+        let adapter = select_adapter(config)?;
+        for art in adapter.discover(&ctx, profile)? {
             if art.path.is_file() {
                 let sig = sibling_sig(&art.path);
                 paths.push(art.path);
@@ -66,7 +82,34 @@ pub fn collect_release_files(
     let sums_path = project_root.join("SHA256SUMS");
     if !named.is_empty() {
         write_sha256sums_named(&sums_path, &named)?;
-        by_name.insert("SHA256SUMS".into(), sums_path);
+        by_name.insert("SHA256SUMS".into(), sums_path.clone());
+
+        let secrets = config.secrets_path(project_root);
+        let sign_report = maybe_sign_sums(
+            &sums_path,
+            &secrets,
+            &config.trust.checksum_signing,
+            opts.no_sums_sign,
+            opts.require_sums_sign,
+            opts.require_gpg,
+        )?;
+        for w in &sign_report.warnings {
+            eprintln!("warning: {w}");
+        }
+        if let Some(p) = sign_report.minisig {
+            by_name.insert("SHA256SUMS.minisig".into(), p);
+        }
+        if let Some(p) = sign_report.asc {
+            by_name.insert("SHA256SUMS.asc".into(), p);
+        }
+    }
+
+    // Attach pre-existing signature siblings if signing was skipped but files remain.
+    for name in ["SHA256SUMS.minisig", "SHA256SUMS.asc"] {
+        let p = project_root.join(name);
+        if p.is_file() {
+            by_name.entry(name.into()).or_insert(p);
+        }
     }
 
     if attach_trust {
@@ -123,9 +166,11 @@ fn classify_kind(name: &str) -> &'static str {
     let lower = name.to_ascii_lowercase();
     if lower == "sha256sums" {
         "checksums"
+    } else if lower == "sha256sums.minisig" || lower == "sha256sums.asc" {
+        "checksums-sig"
     } else if lower == "trust.md" {
         "trust"
-    } else if lower.ends_with(".sig") {
+    } else if lower.ends_with(".sig") || lower.ends_with(".minisig") || lower.ends_with(".asc") {
         "signature"
     } else if lower.ends_with(".exe") || lower.ends_with(".msi") || lower.ends_with(".msix") {
         "windows"
@@ -138,14 +183,14 @@ fn classify_kind(name: &str) -> &'static str {
     }
 }
 
-/// Ensure SHA256SUMS lists every file that will be uploaded (except itself and TRUST.md).
+/// Ensure SHA256SUMS lists every file that will be uploaded (except itself, TRUST, and sum sigs).
 pub fn verify_checksums_cover(files: &[ReleaseFile]) -> anyhow::Result<()> {
     let Some(sums) = files.iter().find(|f| f.asset_name == "SHA256SUMS") else {
         return Ok(());
     };
     let text = fs::read_to_string(&sums.path)?;
     for f in files {
-        if f.asset_name == "SHA256SUMS" || f.asset_name == "TRUST.md" {
+        if skip_checksum_coverage(&f.asset_name) {
             continue;
         }
         if !text.contains(&f.asset_name) {
@@ -156,6 +201,13 @@ pub fn verify_checksums_cover(files: &[ReleaseFile]) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn skip_checksum_coverage(asset_name: &str) -> bool {
+    matches!(
+        asset_name,
+        "SHA256SUMS" | "SHA256SUMS.minisig" | "SHA256SUMS.asc" | "TRUST.md"
+    )
 }
 
 #[cfg(test)]
@@ -174,7 +226,9 @@ mod tests {
         fs::write(root.join("TRUST.md"), "# trust\n").unwrap();
 
         let cfg = Config::example("app", ".");
-        let files = collect_release_files(root, &cfg, "release", &[], true).unwrap();
+        let files =
+            collect_release_files_with_opts(root, &cfg, "release", &[], true, CollectOpts::default())
+                .unwrap();
         let names: Vec<_> = files.iter().map(|f| f.asset_name.as_str()).collect();
         assert!(names.contains(&"app-setup.exe"));
         assert!(names.contains(&"SHA256SUMS"));

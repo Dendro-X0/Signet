@@ -100,8 +100,9 @@ signet release --tag v0.2.0 --dry-run
 | `doctor` | Host tooling / auth checks |
 | `init` | Write `signet.toml` + `.signet/` |
 | `identity` | Create / import / list / show signing identity |
+| `sums-key` | Create / show minisign key for `SHA256SUMS` |
 | `trust` | Emit `TRUST.md` (safe to commit) |
-| `verify` | Fingerprint + SHA256SUMS checks |
+| `verify` | Fingerprint + SHA256SUMS + minisign/GPG checks |
 | `self` | CLI install status / update / uninstall |
 | `release` | Checksums + GitHub Release publish |
 

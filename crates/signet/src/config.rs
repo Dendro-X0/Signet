@@ -45,6 +45,13 @@ pub struct Project {
     pub name: String,
     /// Path to the Tauri app root (directory containing `src-tauri`), relative to config
     pub tauri_root: String,
+    /// Framework adapter id (`tauri` today; Electron in Phase 10). Default: tauri.
+    #[serde(default = "default_framework")]
+    pub framework: String,
+}
+
+fn default_framework() -> String {
+    "tauri".into()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -74,7 +81,7 @@ pub struct Release {
     pub attach_trust: bool,
 }
 
-/// Declared trust intent. Does not change signing behavior.
+/// Declared trust intent. Does not change host PE/codesign behavior.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct Trust {
     /// Optional tier id (see docs/trust-model.md). When set, overrides inference.
@@ -83,6 +90,33 @@ pub struct Trust {
     /// Extra notes appended to the Trust tier section of TRUST.md.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub notes: Vec<String>,
+    /// Community checksum signing (minisign / optional GPG).
+    #[serde(default)]
+    pub checksum_signing: ChecksumSigning,
+}
+
+/// Phase 8 — sign `SHA256SUMS` for community verify.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ChecksumSigning {
+    /// Sign with Signet-managed minisign key under `.signet/sums/` (default true).
+    #[serde(default = "default_true")]
+    pub minisign: bool,
+    /// Opt-in GPG detach-sign → `SHA256SUMS.asc`.
+    #[serde(default)]
+    pub gpg: bool,
+    /// Optional GPG key id / fingerprint; empty uses gpg default key.
+    #[serde(default)]
+    pub gpg_key_id: String,
+}
+
+impl Default for ChecksumSigning {
+    fn default() -> Self {
+        Self {
+            minisign: true,
+            gpg: false,
+            gpg_key_id: String::new(),
+        }
+    }
 }
 
 impl Default for Config {
@@ -91,6 +125,7 @@ impl Default for Config {
             project: Project {
                 name: "my-app".into(),
                 tauri_root: ".".into(),
+                framework: default_framework(),
             },
             platforms: Platforms {
                 windows: true,
@@ -114,6 +149,7 @@ impl Config {
             project: Project {
                 name: name.into(),
                 tauri_root: tauri_root.into(),
+                framework: default_framework(),
             },
             ..Self::default()
         }

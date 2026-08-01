@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Phase 9 artifact contract: `artifact/` module, `FrameworkAdapter` + `TauriAdapter`, `project.framework`
+- Phase 8 checksum signing: `signet sums-key create|show`, minisign on `SHA256SUMS` → `.minisig`, optional GPG `.asc`
+- `signet build` / `release` flags: `--no-sums-sign`, `--require-sums-sign`, `--require-gpg`
+- `signet verify --require-sig` hard-fails (exit 3); `--minisign-pub` for distributed verify
+- Config: `[trust.checksum_signing]`; doctor checks `sums-minisign-key` and optional `gpg`
+
 ## 0.3.1 — 2026-07-31
 
 ### Fixed

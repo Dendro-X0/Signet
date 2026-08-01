@@ -1,18 +1,25 @@
 //! Generate honest, committable TRUST.md from the active identity.
 
+use std::fs;
 use std::path::Path;
 
 use crate::config::Config;
 use crate::identity::IdentityRecord;
+use crate::sign::SumsKeyPaths;
 use crate::trust_tier::{resolve_primary_tier, TierHints};
 
 #[cfg_attr(not(test), allow(dead_code))]
 pub fn render_trust_md(config: &Config, identity: &IdentityRecord) -> String {
-    render_trust_md_with_hints(config, identity, TierHints {
-        has_active_identity: true,
-        has_sha256sums: false,
-        has_sums_signature: false,
-    })
+    render_trust_md_with_hints(
+        config,
+        identity,
+        TierHints {
+            has_active_identity: true,
+            has_sha256sums: false,
+            has_sums_signature: false,
+        },
+        None,
+    )
 }
 
 /// Like [`render_trust_md`], but uses filesystem hints for inferred tier.
@@ -21,13 +28,19 @@ pub fn render_trust_md_at(
     identity: &IdentityRecord,
     project_root: &Path,
 ) -> String {
-    render_trust_md_with_hints(config, identity, TierHints::probe(project_root))
+    render_trust_md_with_hints(
+        config,
+        identity,
+        TierHints::probe(project_root),
+        Some(project_root),
+    )
 }
 
 fn render_trust_md_with_hints(
     config: &Config,
     identity: &IdentityRecord,
     hints: TierHints,
+    project_root: Option<&Path>,
 ) -> String {
     let app = &config.project.name;
     let meta = &identity.meta;
@@ -63,6 +76,12 @@ fn render_trust_md_with_hints(
         }
         s
     };
+
+    let minisign_pub = project_root.and_then(|root| {
+        let paths = SumsKeyPaths::from_secrets_dir(&config.secrets_path(root));
+        fs::read_to_string(&paths.public).ok()
+    });
+    let minisign_block = minisign_trust_section(minisign_pub.as_deref());
 
     format!(
         r#"# Trust kit — {app}
@@ -105,15 +124,14 @@ Never trust a build whose fingerprint does not match.
 This integrity tier **does not imply** OS or store reputation (SmartScreen, Gatekeeper,
 Play App Signing, or Apple notarization). See [docs/trust-model.md](docs/trust-model.md)
 in the Signet project for the full tier table.
-{notes_block}
+{notes_block}{minisign_block}
 ## Verify a downloaded artifact
 
 1. Download the installer / bundle and the published checksums (when available).
 2. Confirm the release is from this project's known repository or channel.
 3. After install (or on the binary), confirm the signing certificate fingerprint matches `{fp}` when platform tooling allows.
 4. If the OS warns that the publisher is unknown, that can still be a legitimate self-signed build — use the fingerprint, not the absence of a warning, as your check.
-
-(When available, prefer `signet verify` to check fingerprints and SHA256SUMS in one step.)
+5. Prefer `signet verify` (and `signet verify --require-sig` when `SHA256SUMS.minisig` is published).
 
 ## Platform notes ({platforms})
 
@@ -137,6 +155,7 @@ enterprise MDM are different contexts — still never tell public users to trust
 
 - Distributions vary; checksum verification is the primary trust check for many AppImage/deb/rpm flows.
 - When packages are signed, verify with the project's published fingerprint / key as documented for that format.
+- Prefer `signet verify --require-sig` or `minisign -Vm SHA256SUMS -p minisign.pub` when a minisign public key is published above.
 
 ## What signet will never put here
 
@@ -161,8 +180,33 @@ Private material stays under the project's gitignored `.signet/` directory.
         tier_id = tier_id,
         tier_meaning = tier_meaning,
         notes_block = notes_block,
+        minisign_block = minisign_block,
         platforms = platforms,
         app = app,
+    )
+}
+
+fn minisign_trust_section(pub_key: Option<&str>) -> String {
+    let Some(pub_key) = pub_key.map(str::trim).filter(|s| !s.is_empty()) else {
+        return String::new();
+    };
+    format!(
+        r#"
+## Checksum signing (minisign)
+
+Releases may include `SHA256SUMS` attested with this public key (`SHA256SUMS.minisig`).
+
+```
+{pub_key}
+```
+
+Verify with:
+
+```bash
+signet verify --require-sig
+# or: minisign -Vm SHA256SUMS -p minisign.pub
+```
+"#
     )
 }
 
@@ -274,6 +318,7 @@ mod tests {
         cfg.trust = Trust {
             declared_tier: Some("checksum_only".into()),
             notes: vec!["Beta channel only".into()],
+            ..Default::default()
         };
         let md = render_trust_md(&cfg, &rec);
         assert!(md.contains("checksum_only"));

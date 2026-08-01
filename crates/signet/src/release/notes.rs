@@ -27,10 +27,10 @@ pub fn build_release_notes(
     }
 
     body.push_str("### Verify\n\n");
-    body.push_str("1. Download `SHA256SUMS` and the installer for your platform.\n");
-    body.push_str("2. Verify checksums (`sha256sum -c SHA256SUMS` or equivalent).\n");
+    body.push_str("1. Download `SHA256SUMS` (and `SHA256SUMS.minisig` when present) plus the installer.\n");
+    body.push_str("2. Prefer `signet verify --require-sig`, or verify checksums (`sha256sum -c SHA256SUMS`).\n");
     if trust_attached {
-        body.push_str("3. Read `TRUST.md` for platform-specific trust notes.\n");
+        body.push_str("3. Read `TRUST.md` for the publisher fingerprint and minisign public key.\n");
     } else {
         body.push_str("3. Compare the signing certificate fingerprint with the project docs.\n");
     }

@@ -6,8 +6,8 @@ use clap::Args as ClapArgs;
 use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::release::{
-    build_release_notes, collect_release_files, detect_github_repo, publish_github_release,
-    verify_checksums_cover, GitHubPublishOpts,
+    build_release_notes, collect_release_files_with_opts, detect_github_repo,
+    publish_github_release, verify_checksums_cover, CollectOpts, GitHubPublishOpts,
 };
 
 #[derive(Debug, ClapArgs)]
@@ -48,6 +48,18 @@ pub struct Args {
     #[arg(long)]
     pub no_trust: bool,
 
+    /// Skip minisign/GPG signing of SHA256SUMS
+    #[arg(long)]
+    pub no_sums_sign: bool,
+
+    /// Fail if minisign cannot sign SHA256SUMS
+    #[arg(long)]
+    pub require_sums_sign: bool,
+
+    /// Fail if GPG checksum signing was requested but did not succeed
+    #[arg(long)]
+    pub require_gpg: bool,
+
     /// Release title (default: tag)
     #[arg(long)]
     pub title: Option<String>,
@@ -67,12 +79,17 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
 
     let attach_trust = ctx.config.release.attach_trust && !args.no_trust;
-    let files = collect_release_files(
+    let files = collect_release_files_with_opts(
         &ctx.root,
         &ctx.config,
         &args.profile,
         &args.artifacts,
         attach_trust,
+        CollectOpts {
+            no_sums_sign: args.no_sums_sign,
+            require_sums_sign: args.require_sums_sign,
+            require_gpg: args.require_gpg,
+        },
     )?;
 
     if files.is_empty() {
@@ -107,6 +124,12 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         .unwrap_or_else(|_| "(undetected — set --repo or [release].repo)".into());
         println!("\ndry-run: would publish tag '{tag}' to {repo}");
         println!("title: {title}");
+        let arts: Vec<_> = files
+            .iter()
+            .filter(|f| !matches!(f.kind, "checksums" | "checksums-sig" | "trust"))
+            .map(|f| crate::artifact::Artifact::from_path(&f.path))
+            .collect();
+        println!("artifacts_json: {}", crate::artifact::artifacts_json(&arts));
         println!("--- notes ---");
         println!("{notes}");
         return Ok(());

@@ -1,7 +1,7 @@
 # Design: trust tiers and `signet verify`
 
 **Phase:** 6 (trust clarity) + 7 (verify)  
-**Status:** ready  
+**Status:** implemented (Phases 6–7; Phase 8 `--require-sig` wired)  
 **Owners:** `crates/signet/src/trust_kit.rs`, new `commands/verify.rs`, `sign/checksum.rs` (read/verify), `commands/doctor.rs` (labels)  
 **Plan alignment:** integrity-first roadmap; no Electron/Android work in this band.
 
@@ -161,7 +161,7 @@ resolve paths → load expected fingerprint → load SHA256SUMS
 - [x] Unit tests for `verify_sha256sums` and fingerprint parse.
 - [x] Help text does not suggest installing Root certs.
 
-**Implemented:** `commands/verify.rs`, checksum verify helpers, TRUST fingerprint parse. `--require-sig` soft-warns until Phase 8.
+**Implemented:** `commands/verify.rs`, checksum verify helpers, TRUST fingerprint parse. Phase 8 wires hard `--require-sig` (exit 3) + minisign/GPG.
 
 ### Proof plan
 

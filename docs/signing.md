@@ -1,20 +1,24 @@
 # Signing
 
-`signet build` runs `tauri build` (unless `--skip-build`), discovers bundle artifacts, writes `SHA256SUMS`, and signs host-matching outputs with the active identity.
+`signet build` selects a [`FrameworkAdapter`](../specs/backend/artifact-contract-design.md) (`project.framework`, default `tauri`), runs the framework build (unless `--skip-build`), discovers artifacts, writes `SHA256SUMS`, and signs host-matching outputs with the active identity.
 
-Other frameworks are detected by `scan`; dedicated build adapters are roadmap work.
+Other frameworks are detected by `scan`; dedicated adapters are roadmap work (Electron = Phase 10).
 
 ## Usage
 
 ```bash
+signet sums-key create             # once per project — `.signet/sums/` minisign key
 signet build
 signet build --skip-build          # sign existing bundles only
-signet build --no-sign             # build/discover + checksums, no crypto sign
+signet build --no-sign             # build/discover + checksums, no host crypto sign
+signet build --no-sums-sign        # skip minisign/GPG on SHA256SUMS
+signet build --require-sums-sign   # fail if minisign cannot sign checksums
 signet build --no-timestamp        # Windows: skip Authenticode TSA
 signet build --artifact path.exe   # explicit files (skips discovery)
 signet build --tauri-arg=--debug   # forwarded to `tauri build` (repeatable)
 ```
 
+With a sums key present, build/release also write `SHA256SUMS.minisig` (and optional `SHA256SUMS.asc` when `[trust.checksum_signing].gpg = true`).
 ## Host backends
 
 | OS | Tooling |

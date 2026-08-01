@@ -1,9 +1,9 @@
 # Design: checksum signing (minisign + optional GPG)
 
 **Phase:** 8  
-**Status:** ready  
+**Status:** implemented  
 **Depends on:** Phase 6–7 designs (verify hooks for `sums_signature`)  
-**Owners:** new `sign/sums_sig.rs` (or `release/sums_sig.rs`), `sign/checksum.rs`, `commands/build.rs`, `commands/release.rs`, `commands/doctor.rs`, `trust_kit.rs`  
+**Owners:** `sign/sums_sig.rs`, `sign/checksum.rs`, `commands/sums_key.rs`, `commands/build.rs`, `commands/release.rs`, `commands/doctor.rs`, `trust_kit.rs`  
 **Plan alignment:** community verify layer; does **not** replace Authenticode / codesign.
 
 ## Problem
@@ -143,18 +143,20 @@ Include:
 
 ## Acceptance
 
-- [ ] `sums-key create` produces pub/priv under `.signet/sums/`; priv gitignored.
-- [ ] Build with key present emits `SHA256SUMS.minisig`.
-- [ ] `signet verify` validates matching sig; fails on tampered `SHA256SUMS`.
-- [ ] `--require-sums-sign` fails build when key missing.
-- [ ] GPG path documented + tested only when `gpg` available (ignore or skip on hosts without it).
-- [ ] Unit tests for sign/verify round-trip with temp keys.
+- [x] `sums-key create` produces pub/priv under `.signet/sums/`; priv gitignored.
+- [x] Build with key present emits `SHA256SUMS.minisig`.
+- [x] `signet verify` validates matching sig; fails on tampered `SHA256SUMS`.
+- [x] `--require-sums-sign` fails build when key missing.
+- [x] GPG path documented + tested only when `gpg` available (ignore or skip on hosts without it).
+- [x] Unit tests for sign/verify round-trip with temp keys.
+
+**Status:** implemented (2026-07-31)
 
 ## Proof plan
 
 | Layer | Evidence |
 |-------|----------|
-| L1 | Unit tests: sign sums → verify; tamper → fail |
+| L1 | Unit tests: sign sums → verify; tamper → fail (`sign/sums_sig.rs`) |
 | L2 | `cargo test -p signet` |
 | L3 | End-to-end: identity + sums-key + write fixture sums + verify |
 
@@ -165,4 +167,4 @@ Include:
 
 ## Do not implement until
 
-Phases 6–7 landed enough that `verify` exists (or lands in the same PR series with verify first). Prefer: Phase 6 → 7 → 8 in separate commits/PRs.
+~~Phases 6–7 landed enough that `verify` exists~~ — done.
