@@ -33,6 +33,17 @@ attach_trust = true
 # gpg = false              # opt-in → SHA256SUMS.asc
 # gpg_key_id = ""
 
+# Optional — OV / Azure / Apple notarization helpers (no secrets)
+# [graduation]
+# ov_thumbprint = ""
+# timestamp_url = "http://timestamp.digicert.com"
+# [graduation.azure]
+# dlib = ""
+# metadata = ""
+# timestamp_url = "http://timestamp.acs.microsoft.com"
+# [graduation.apple]
+# keychain_profile = ""
+
 secrets_dir = ".signet"
 ```
 
@@ -51,4 +62,5 @@ secrets_dir = ".signet"
 | `trust.checksum_signing.minisign` | Sign `SHA256SUMS` with `.signet/sums/` minisign key (default true) |
 | `trust.checksum_signing.gpg` | Opt-in GPG detach-sign |
 | `trust.checksum_signing.gpg_key_id` | Optional GPG key id |
+| `graduation.*` | OV thumbprint / Azure dlib+metadata / Apple Keychain profile (see [graduation.md](graduation.md)) |
 | `secrets_dir` | Relative path for private material (gitignored) |

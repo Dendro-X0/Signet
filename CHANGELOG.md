@@ -4,6 +4,7 @@
 
 ### Added
 
+- Graduation helpers: `signet graduate notes|ov-sign|azure-sign|notarize|staple`, `docs/graduation.md`, `[graduation]` config
 - Phase 12 iOS helpers: `signet ios package|notes`, `framework = "ios"`, `docs/ios.md` (7-day free provisioning honesty)
 - Phase 11 Android helpers: `signet android keystore|sign`, `framework = "android"`, `docs/android.md`
 - Phase 10 Electron adapter: `framework = "electron"`, discover `dist`/`out`/`release`, optional `build_command`

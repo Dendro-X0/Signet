@@ -1,6 +1,7 @@
 pub mod android;
 pub mod build;
 pub mod doctor;
+pub mod graduate;
 pub mod identity;
 pub mod init;
 pub mod ios;

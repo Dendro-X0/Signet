@@ -425,6 +425,14 @@ fn platform_checks() -> Vec<Check> {
                     None => "not found (needed to export PFX from PEM identity)".into(),
                 },
             });
+            checks.push(Check {
+                name: "graduation-windows".into(),
+                ok: true,
+                severity: Severity::Optional,
+                detail: "OV/Azure: `signet graduate ov-sign|azure-sign` — docs/graduation.md \
+                         (not Signet self-signed identity)"
+                    .into(),
+            });
         }
         "macos" => {
             let codesign = which("codesign").is_ok();
@@ -456,6 +464,37 @@ fn platform_checks() -> Vec<Check> {
                 severity: Severity::Optional,
                 detail: if openssl {
                     "found (PFX export for keychain import)".into()
+                } else {
+                    "not found".into()
+                },
+            });
+            let notary = Command::new("xcrun")
+                .args(["--find", "notarytool"])
+                .output()
+                .map(|o| o.status.success())
+                .unwrap_or(false);
+            checks.push(Check {
+                name: "notarytool".into(),
+                ok: notary,
+                severity: Severity::Optional,
+                detail: if notary {
+                    "found (Apple notarization — `signet graduate notarize`)"
+                        .into()
+                } else {
+                    "not found (needed for `signet graduate notarize`)".into()
+                },
+            });
+            let stapler = Command::new("xcrun")
+                .args(["--find", "stapler"])
+                .output()
+                .map(|o| o.status.success())
+                .unwrap_or(false);
+            checks.push(Check {
+                name: "stapler".into(),
+                ok: stapler,
+                severity: Severity::Optional,
+                detail: if stapler {
+                    "found (`signet graduate staple`)".into()
                 } else {
                     "not found".into()
                 },

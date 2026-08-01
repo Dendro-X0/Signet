@@ -94,9 +94,16 @@ cargo run -p signet -- doctor
 - [x] Design + honest free-provisioning (7-day) docs
 - [x] IPA packaging helpers without claiming App Store trust
 
+## Graduation helpers — OV / Azure / notarize
+
+**Spec:** [graduation-helpers-design.md](../specs/backend/graduation-helpers-design.md) · **User doc:** [graduation.md](graduation.md)
+
+- [x] Design + honesty docs (ladder; no SmartScreen/Gatekeeper guarantees)
+- [x] `signet graduate notes|ov-sign|azure-sign|notarize|staple`
+- [x] Optional `[graduation]` config; doctor / TRUST / scan hooks
+
 ## Later
 
-- OV / Azure Artifact Signing / notarization *helpers* (graduation ladder)
 - Flutter / React Native / Capacitor adapters
 - Optional desktop GUI
 - Update channels beyond checksums + GitHub Releases

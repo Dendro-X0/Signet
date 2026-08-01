@@ -43,11 +43,12 @@ Primary tier is reported in `TRUST.md`, doctor, and (planned) `signet verify`. S
 
 1. Compare the **SHA-256 fingerprint** in `TRUST.md` with `signet identity show`.
 2. Verify downloads with `SHA256SUMS` via `signet verify` (and signed sums when Phase 8 ships).
-3. Treat OS warnings as expected for self-signed desktop apps unless you graduate to CA/notarization.
+3. Treat OS warnings as expected for self-signed desktop apps unless you graduate to CA/notarization (`signet graduate` — [graduation.md](graduation.md)).
 
 ## Related
 
 - [`product.md`](product.md) — thesis and surfaces
 - [`identity.md`](identity.md) — identity commands
 - [`signing.md`](signing.md) — host signing
+- [`graduation.md`](graduation.md) — OV / Azure / notarization helpers
 - [`roadmap.md`](roadmap.md) — phased delivery

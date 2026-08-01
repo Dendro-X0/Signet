@@ -245,7 +245,9 @@ pub fn finalize_report(
 
     let mut notes = Vec::new();
     notes.push(
-        "Desktop self-signing (Windows/macOS/Linux) is what `signet build` covers today.".into(),
+        "Desktop self-signing (Windows/macOS/Linux) is what `signet build` covers today. \
+         Reputation ladder (OV / Azure / notarize): `signet graduate notes` + docs/graduation.md."
+            .into(),
     );
     if android || ios {
         notes.push(

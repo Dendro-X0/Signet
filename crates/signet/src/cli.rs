@@ -1,7 +1,8 @@
 use clap::{Parser, Subcommand};
 
 use crate::commands::{
-    android, build, doctor, identity, init, ios, release, scan, self_cmd, sums_key, trust, verify,
+    android, build, doctor, graduate, identity, init, ios, release, scan, self_cmd, sums_key, trust,
+    verify,
 };
 
 /// Identity, sign, explain, and release self-signed desktop and mobile apps.
@@ -27,6 +28,8 @@ pub enum Command {
     Android(android::Args),
     /// iOS IPA packaging helpers (no App Store trust claims)
     Ios(ios::Args),
+    /// OV / Azure Trusted Signing / Apple notarization helpers
+    Graduate(graduate::Args),
     /// Build and sign platform artifacts (Tauri / Electron / Android / iOS)
     Build(build::Args),
     /// Emit trust / install documentation

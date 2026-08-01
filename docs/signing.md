@@ -8,6 +8,8 @@
 
 **iOS:** set `framework = "ios"` or use `signet ios package`. See [ios.md](ios.md) — free provisioning ~7 days; packaging ≠ App Store trust. Build requires explicit `build_command` (no scheme guessing).
 
+**Graduation (OV / Azure / notarize):** explicit helpers — not part of default `signet build`. See [graduation.md](graduation.md) and `signet graduate notes`.
+
 ## Usage
 
 ```bash

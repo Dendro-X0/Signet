@@ -135,6 +135,7 @@ Private keys live under gitignored `.signet/` — never in `TRUST.md` or git.
 | [docs/signing.md](docs/signing.md) | Platform signing |
 | [docs/android.md](docs/android.md) | Android keystore + Play honesty |
 | [docs/ios.md](docs/ios.md) | iOS IPA package + free-provisioning honesty |
+| [docs/graduation.md](docs/graduation.md) | OV / Azure Trusted Signing / Apple notarization helpers |
 | [docs/release.md](docs/release.md) | GitHub Releases |
 | [CHANGELOG.md](CHANGELOG.md) | Releases |
 

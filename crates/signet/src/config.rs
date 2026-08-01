@@ -33,6 +33,69 @@ pub struct Config {
     /// Optional trust-tier declaration and notes for TRUST.md / doctor.
     #[serde(default)]
     pub trust: Trust,
+    /// Optional OV / Azure / Apple notarization helper settings (no secrets).
+    #[serde(default)]
+    pub graduation: Graduation,
+}
+
+/// Reputation graduation helpers — paths and public ids only (see docs/graduation.md).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Graduation {
+    /// Windows OV cert SHA-1 thumbprint (hex). Prefer env override for CI.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub ov_thumbprint: String,
+    /// Default Authenticode timestamp URL for `graduate ov-sign`.
+    #[serde(default = "default_ov_timestamp")]
+    pub timestamp_url: String,
+    #[serde(default)]
+    pub azure: GraduationAzure,
+    #[serde(default)]
+    pub apple: GraduationApple,
+}
+
+impl Default for Graduation {
+    fn default() -> Self {
+        Self {
+            ov_thumbprint: String::new(),
+            timestamp_url: default_ov_timestamp(),
+            azure: GraduationAzure::default(),
+            apple: GraduationApple::default(),
+        }
+    }
+}
+
+fn default_ov_timestamp() -> String {
+    "http://timestamp.digicert.com".into()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct GraduationAzure {
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub dlib: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub metadata: String,
+    #[serde(default = "default_azure_timestamp")]
+    pub timestamp_url: String,
+}
+
+fn default_azure_timestamp() -> String {
+    "http://timestamp.acs.microsoft.com".into()
+}
+
+impl Default for GraduationAzure {
+    fn default() -> Self {
+        Self {
+            dlib: String::new(),
+            metadata: String::new(),
+            timestamp_url: default_azure_timestamp(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct GraduationApple {
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub keychain_profile: String,
 }
 
 fn default_secrets_dir() -> String {
@@ -143,6 +206,7 @@ impl Default for Config {
             },
             secrets_dir: default_secrets_dir(),
             trust: Trust::default(),
+            graduation: Graduation::default(),
         }
     }
 }

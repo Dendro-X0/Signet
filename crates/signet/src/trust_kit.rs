@@ -84,6 +84,7 @@ fn render_trust_md_with_hints(
     let minisign_block = minisign_trust_section(minisign_pub.as_deref());
     let android_block = android_trust_section(project_root.map(|r| config.secrets_path(r)).as_deref());
     let ios_block = ios_trust_section(config);
+    let graduation_block = graduation_trust_section(config);
 
     format!(
         r#"# Trust kit — {app}
@@ -126,7 +127,7 @@ Never trust a build whose fingerprint does not match.
 This integrity tier **does not imply** OS or store reputation (SmartScreen, Gatekeeper,
 Play App Signing, or Apple notarization). See [docs/trust-model.md](docs/trust-model.md)
 in the Signet project for the full tier table.
-{notes_block}{minisign_block}{android_block}{ios_block}
+{notes_block}{minisign_block}{android_block}{ios_block}{graduation_block}
 ## Verify a downloaded artifact
 
 1. Download the installer / bundle and the published checksums (when available).
@@ -185,6 +186,7 @@ Private material stays under the project's gitignored `.signet/` directory.
         minisign_block = minisign_block,
         android_block = android_block,
         ios_block = ios_block,
+        graduation_block = graduation_block,
         platforms = platforms,
         app = app,
     )
@@ -201,6 +203,26 @@ Free Apple ID **development** provisioning typically expires in about **7 days**
 Packaging an IPA (`signet ios package`) does **not** provide App Store, TestFlight, or notarization trust.
 
 See [docs/ios.md](docs/ios.md). Never tell end users to install developer certificates into a system trust store.
+"#
+    .to_string()
+}
+
+fn graduation_trust_section(config: &Config) -> String {
+    let Some(declared) = config.trust.declared_tier.as_deref() else {
+        return String::new();
+    };
+    let lower = declared.to_ascii_lowercase();
+    if lower != "ca_authenticode" && lower != "apple_notarized" {
+        return String::new();
+    }
+    r#"
+## Graduation
+
+This project declares a reputation-oriented tier (`ca_authenticode` / `apple_notarized`).  
+That is maintainer intent for paid CA / Apple notarization paths — it does **not** guarantee SmartScreen or Gatekeeper silence.
+
+Helpers: `signet graduate notes` · [docs/graduation.md](docs/graduation.md).  
+Never install publisher certificates into Trusted Root on end-user machines.
 "#
     .to_string()
 }
@@ -378,6 +400,18 @@ mod tests {
         assert!(md.contains("checksum_only"));
         assert!(md.contains("Beta channel only"));
         assert!(md.contains("### Maintainer notes"));
+    }
+
+    #[test]
+    fn graduation_section_for_ca_tier() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().join("identity");
+        let rec = sample_identity(&root);
+        let mut cfg = Config::example("trust-demo", ".");
+        cfg.trust.declared_tier = Some("ca_authenticode".into());
+        let md = render_trust_md(&cfg, &rec);
+        assert!(md.contains("## Graduation"));
+        assert!(md.contains("docs/graduation.md"));
     }
 
     #[test]
