@@ -15,6 +15,14 @@ pub struct Args {
     #[arg(long, default_value = ".")]
     pub tauri_root: String,
 
+    /// Framework adapter id (tauri, electron, flutter, …)
+    #[arg(long, default_value = "tauri")]
+    pub framework: String,
+
+    /// Optional build argv (required for some hybrid / iOS adapters)
+    #[arg(long, default_value = "")]
+    pub build_command: String,
+
     /// Directory to write config into (default: current directory)
     #[arg(long, default_value = ".")]
     pub path: PathBuf,
@@ -35,7 +43,12 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         );
     }
 
-    let config = Config::example(&args.name, &args.tauri_root);
+    let mut config = Config::example(&args.name, &args.tauri_root);
+    config.project.framework = args.framework.trim().to_string();
+    if config.project.framework.is_empty() {
+        config.project.framework = "tauri".into();
+    }
+    config.project.build_command = args.build_command;
     config.write(&config_path)?;
 
     let secrets_dir = root.join(SECRETS_DIR_NAME);

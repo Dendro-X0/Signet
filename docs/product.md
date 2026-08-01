@@ -55,7 +55,7 @@ Binary: `signet`. Scriptable for CI and agents.
 
 ### TUI
 
-Guided flows wrapping the same CLI engines (Phase 14: Sign → Prove → Check labeling).
+Guided flows wrapping the same CLI engines. **Guided setup** runs Sign → Prove → Check with framework pick (Phase 14).
 
 ### GUI
 

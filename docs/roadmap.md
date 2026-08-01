@@ -128,10 +128,10 @@ Goal: easy setup, dual path (self-sign **or** official facilitation), low learni
 
 **Spec:** [golden-path-onboarding-design.md](../specs/backend/golden-path-onboarding-design.md)
 
-- [ ] TUI Guided setup uses Sign / Prove / Check
-- [ ] Framework pick from scan + `build_command` when required
-- [ ] Guided ends with verify/inspect Check
-- [ ] Hub exposes Verify / Inspect (+ graduate hint)
+- [x] TUI Guided setup uses Sign / Prove / Check
+- [x] Framework pick from scan + `build_command` when required
+- [x] Guided ends with verify/inspect Check
+- [x] Hub exposes Verify / Inspect (+ graduate hint)
 
 **Exit:** First signed artifact + check in one guided sitting.
 

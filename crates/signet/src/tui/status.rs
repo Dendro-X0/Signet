@@ -57,19 +57,20 @@ impl ProjectStatus {
         } else if !self.has_artifacts {
             "build"
         } else {
-            "release"
+            "verify"
         }
     }
 
     pub fn next_hint(&self) -> String {
         match self.recommended_action() {
-            "scan" => "run Scan to find installers & suggest config".into(),
-            "identity" => "create a signing identity".into(),
-            "trust" => "emit TRUST.md".into(),
-            "build" => "build & sign artifacts".into(),
+            "scan" => "run Scan or Guided setup (Sign → Prove → Check)".into(),
+            "identity" => "Sign · create a signing identity".into(),
+            "trust" => "Prove · emit TRUST.md".into(),
+            "build" => "Sign · build & sign artifacts".into(),
+            "verify" => "Check · verify + inspect artifacts".into(),
             "release" => {
                 let name = self.app_name.as_deref().unwrap_or("app");
-                format!("publish {name} (try dry-run first)")
+                format!("Prove · publish {name} (try dry-run first)")
             }
             _ => "choose an action".into(),
         }

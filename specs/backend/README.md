@@ -24,7 +24,7 @@ Implementation contracts for Signet. **Public narrative** lives under [`docs/`](
 | [signature-inspect-design.md](signature-inspect-design.md) | Later | Deep | implemented |
 | [hybrid-framework-adapters-design.md](hybrid-framework-adapters-design.md) | Later | Deep | implemented |
 | [public-release-readiness-design.md](public-release-readiness-design.md) | 13–16 | Deep | ready |
-| [golden-path-onboarding-design.md](golden-path-onboarding-design.md) | 14 | Deep | ready |
+| [golden-path-onboarding-design.md](golden-path-onboarding-design.md) | 14 | Deep | implemented |
 | [demo-and-dogfood-design.md](demo-and-dogfood-design.md) | 15–16 | Deep | ready |
 | [self-update-design.md](self-update-design.md) | Dist | Deep | implemented |
 

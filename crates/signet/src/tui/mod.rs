@@ -1,6 +1,7 @@
 //! Interactive TUI hub — guided flows over the same command modules as the CLI.
 
 mod flows;
+mod framework_pick;
 mod prompts;
 mod status;
 mod theme;
@@ -33,7 +34,7 @@ const ITEMS: &[HubItem] = &[
     HubItem {
         id: "guided",
         label: "Guided setup",
-        hint: "First-release wizard (init → identity → trust → build → release)",
+        hint: "Sign → Prove → Check wizard (framework pick + verify/inspect)",
     },
     HubItem {
         id: "scan",
@@ -53,22 +54,37 @@ const ITEMS: &[HubItem] = &[
     HubItem {
         id: "identity",
         label: "Identity",
-        hint: "Create or show signing identity",
+        hint: "Sign · create or show signing identity",
     },
     HubItem {
         id: "trust",
         label: "Trust",
-        hint: "Write TRUST.md from active identity",
+        hint: "Prove · write TRUST.md from active identity",
     },
     HubItem {
         id: "build",
         label: "Build",
-        hint: "Build + sign (Tauri today; more next)",
+        hint: "Sign · build + sign (any configured framework)",
+    },
+    HubItem {
+        id: "verify",
+        label: "Verify",
+        hint: "Check · fingerprints + SHA256SUMS",
+    },
+    HubItem {
+        id: "inspect",
+        label: "Inspect",
+        hint: "Check · signed/unsigned per platform",
+    },
+    HubItem {
+        id: "graduate",
+        label: "Graduate notes",
+        hint: "Official Sign · OV / Azure / notarize honesty",
     },
     HubItem {
         id: "release",
         label: "Release",
-        hint: "Checksums + GitHub Release (guided)",
+        hint: "Prove · checksums + GitHub Release",
     },
     HubItem {
         id: "self-status",
@@ -201,7 +217,7 @@ fn draw_hub(frame: &mut Frame, state: &mut ListState, status: &ProjectStatus, fl
 fn draw_header(frame: &mut Frame, area: Rect) {
     let line = Line::from(vec![
         Span::styled(" Signet ", title_style()),
-        Span::styled("· self-signed desktop & mobile releases", dim()),
+        Span::styled("· Sign → Prove → Check", dim()),
     ]);
     let widget = Paragraph::new(line).block(
         Block::default()
@@ -298,6 +314,9 @@ fn dispatch(id: &str) -> anyhow::Result<()> {
         "identity" => flows::guided_identity(),
         "trust" => flows::run_trust(),
         "build" => flows::guided_build(),
+        "verify" => flows::guided_verify(),
+        "inspect" => flows::guided_inspect(),
+        "graduate" => flows::run_graduate_notes(),
         "release" => flows::guided_release(),
         "self-status" => flows::run_self_status(),
         "self-update" => flows::run_self_update(),

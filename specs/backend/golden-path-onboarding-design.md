@@ -1,7 +1,7 @@
 # Design: golden-path onboarding (Phase 14)
 
 **Phase:** 14  
-**Status:** ready  
+**Status:** implemented  
 **Depends on:** Phase 13 narrative (Sign / Prove / Check labels)  
 **Owners:** `crates/signet/src/tui/`, `commands/init.rs` / `scan`, optional thin CLI glue, `docs/install.md`  
 **Plan alignment:** one sitting from install → signed artifact → check; demo/GIF friendly.
@@ -67,13 +67,13 @@ When guided writes `signet.toml`:
 
 ## Acceptance
 
-- [ ] Guided setup shows Sign/Prove/Check sectioning.
-- [ ] Framework pick works for at least: tauri, electron, flutter (fixture or mock).
-- [ ] Required `build_command` prompted for flutter/rn/expo/capacitor/ios.
-- [ ] Check step invokes verify and/or inspect without requiring the user to know subcommands.
-- [ ] Hub lists Verify / Inspect (and Graduate notes entry or help text).
-- [ ] `cargo test -p signet` + clippy `-D warnings`.
-- [ ] Phase 13 docs mention the guided path.
+- [x] Guided setup shows Sign/Prove/Check sectioning.
+- [x] Framework pick works for at least: tauri, electron, flutter (fixture or mock).
+- [x] Required `build_command` prompted for flutter/rn/expo/capacitor/ios.
+- [x] Check step invokes verify and/or inspect without requiring the user to know subcommands.
+- [x] Hub lists Verify / Inspect (and Graduate notes entry or help text).
+- [x] `cargo test -p signet` + clippy `-D warnings`.
+- [x] Phase 13 docs mention the guided path.
 
 ## Proof
 

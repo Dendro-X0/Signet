@@ -4,6 +4,7 @@
 
 ### Added
 
+- Phase 14 golden-path TUI: Sign → Prove → Check guided setup, framework/`build_command` pick, hub Verify / Inspect / Graduate notes
 - Phase 13 public narrative: Sign → Prove → Check, dual-path (self-sign vs official), README/product rewrite
 - Public release program: Phases 13–16 (narrative → golden path → demo kit → dogfood/cut); specs under `specs/backend/public-release-*.md` / `golden-path-*` / `demo-and-dogfood-*`
 - Hybrid adapters: `framework = flutter|react-native|expo|capacitor` (+ `rn` alias), `docs/frameworks.md`, scan detection
