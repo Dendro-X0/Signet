@@ -1,15 +1,28 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 — 2026-08-01
+
+Public **preview** cut: Sign → Prove → Check packaging, CLI project detection, and TUI polish.
 
 ### Added
 
 - Phase 15 demo kit: `demo/fixture` + `demo/scripts/happy-path.{sh,ps1}` + `docs/demo.md`
 - Phase 14 golden-path TUI: Sign → Prove → Check guided setup, framework/`build_command` pick, hub Verify / Inspect / Graduate notes
 - Phase 13 public narrative: Sign → Prove → Check, dual-path (self-sign vs official), README/product rewrite
-- Public release program: Phases 13–16 (narrative → golden path → demo kit → dogfood/cut); specs under `specs/backend/public-release-*.md` / `golden-path-*` / `demo-and-dogfood-*`
+- Public release program + **v0.5.0 roadmap**: `specs/backend/v0.5-release-roadmap.md`, Phases 13–16
 - Hybrid adapters: `framework = flutter|react-native|expo|capacitor` (+ `rn` alias), `docs/frameworks.md`, scan detection
 - `signet inspect` — best-effort signed/unsigned/adhoc/unknown report per artifact platform (`docs/verify.md`)
+- CLI / Rust workspace detection (`framework = "cli"`); prefer root over nested `demo/` / fixtures; guided init auto-suggest
+- Partial dogfood notes: `docs/dogfood/signet-cli-notes.md`
+
+### Changed
+
+- TUI hub: shared cyan panel frames; Sign / Prove / Check accent in hints; green/dim status marks
+- Console / prompts: TTY-aware color hierarchy (`NO_COLOR` / `SIGNET_FORCE_COLOR`)
+
+### Fixed
+
+- CLI binary discovery tests on Unix (host `+x` bins + cross-compiled `.exe` without `+x`)
 
 ## 0.4.0 — 2026-07-31
 

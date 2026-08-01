@@ -78,4 +78,5 @@ demo/
 
 - [product.md](product.md) — Sign → Prove → Check
 - [tui.md](tui.md) — Guided setup
+- Dogfood (partial): [dogfood/signet-cli-notes.md](dogfood/signet-cli-notes.md)
 - Spec: [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md)

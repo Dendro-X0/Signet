@@ -161,16 +161,15 @@ Public-release Phases **13 → 14 → 15** are done (order was frozen; only Phas
 
 **Specs:** [v0.5-release-roadmap.md](../specs/backend/v0.5-release-roadmap.md) · [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Cut
 
-- [ ] Real-app dogfood notes (`docs/dogfood/<app>-notes.md`) — **partial OK** for preview
-- [ ] CHANGELOG Unreleased → `## 0.5.0` (include CLI detect + TUI polish)
-- [ ] Workspace version bump `0.4.0` → `0.5.0`; START-HERE / README status
-- [ ] `cargo test -p signet` + clippy `-D warnings`
+- [x] Real-app dogfood notes (`docs/dogfood/<app>-notes.md`) — **partial** OK for preview (`signet-cli-notes.md`)
+- [x] CHANGELOG Unreleased → `## 0.5.0` (include CLI detect + TUI polish)
+- [x] Workspace version bump `0.4.0` → `0.5.0`; START-HERE / README status
+- [x] `cargo test -p signet` + clippy `-D warnings`
 - [ ] Tag **v0.5.0** → `release-cli` green
 - [ ] Spot-check install + `signet verify` against release `SHA256SUMS`
 - [ ] Release body: dual-path + demo link
 
-**Exit:** Public preview tag matches the “official enough to demo” bar.  
-**Blocked for coding:** maintainer dogfood notes (process + tag).
+**Exit:** Public preview tag matches the “official enough to demo” bar.
 
 ### After tag — 0.5.x → v1.0.0
 

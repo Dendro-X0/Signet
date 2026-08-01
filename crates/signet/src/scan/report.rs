@@ -362,16 +362,12 @@ pub fn finalize_report(
                 .into(),
         );
     }
-    if preferred.map(|p| p.kind) == Some(ProjectKind::Electron)
-        || (framework != "cli" && projects.iter().any(|p| p.kind == ProjectKind::Electron))
-    {
-        if framework == "electron" {
-            notes.push(
-                "Electron app detected — set [project].framework = \"electron\" in signet.toml, \
-                 then `signet build` (or --skip-build) to sign/checksum installers under dist/out/release."
-                    .into(),
-            );
-        }
+    if framework == "electron" {
+        notes.push(
+            "Electron app detected — set [project].framework = \"electron\" in signet.toml, \
+             then `signet build` (or --skip-build) to sign/checksum installers under dist/out/release."
+                .into(),
+        );
     }
     if preferred.map(|p| p.kind.is_installable_app()).unwrap_or(false)
         && projects.iter().any(|p| {

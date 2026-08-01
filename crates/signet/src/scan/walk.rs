@@ -547,7 +547,7 @@ fn cargo_toml_string_field(text: &str, key: &str) -> Option<String> {
         if !in_package {
             continue;
         }
-        let Some(rest) = t.strip_prefix(&format!("{key}")) else {
+        let Some(rest) = t.strip_prefix(key) else {
             continue;
         };
         let rest = rest.trim_start();
