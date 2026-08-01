@@ -28,10 +28,25 @@ Then: `signet --version` · `signet self update` · full notes in [docs/install.
 
 ## Two-minute start
 
+**Scripted demo kit** (fixed fixture — best for local smoke / GIF prep):
+
 ```bash
-signet doctor          # host tools
+./demo/scripts/happy-path.sh
+# Windows: pwsh ./demo/scripts/happy-path.ps1
+```
+
+Guide: [docs/demo.md](docs/demo.md).
+
+**Interactive:**
+
+```bash
+signet doctor
 signet                 # TUI → Guided setup (Sign → Prove → Check)
-# or scripted:
+```
+
+**CLI sketch:**
+
+```bash
 signet scan
 signet init --name my-app
 signet identity create
@@ -40,8 +55,6 @@ signet build           # set project.framework in signet.toml (see docs/framewor
 signet verify
 signet inspect --file path/to/artifact
 ```
-
-Recording kit for GIF/video lands in Phase 15 (`docs/demo.md` when present).
 
 ## Two paths
 
@@ -86,6 +99,7 @@ Tauri · Electron · Android · iOS · Flutter · React Native · Expo · Capaci
 | [docs/verify.md](docs/verify.md) | Verify + inspect |
 | [docs/graduation.md](docs/graduation.md) | Official signing helpers |
 | [docs/frameworks.md](docs/frameworks.md) | Hybrid adapters |
+| [docs/demo.md](docs/demo.md) | Demo kit / recording happy path |
 | [docs/android.md](docs/android.md) / [ios.md](docs/ios.md) | Mobile honesty |
 | [docs/roadmap.md](docs/roadmap.md) | Phases 13–16 public cut |
 | [START-HERE.md](START-HERE.md) | Contributor boot |

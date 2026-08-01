@@ -1,0 +1,23 @@
+# signet project config (safe to commit)
+# Demo fixture — Electron-shaped discover roots (dist/). No real app runtime.
+
+[project]
+name = "HelloSignet"
+tauri_root = "."
+framework = "electron"
+build_command = ""
+
+[platforms]
+windows = true
+macos = true
+linux = true
+
+[release]
+github = true
+repo = ""
+attach_trust = true
+
+[trust]
+# declared_tier left unset — inferred after identity
+
+secrets_dir = ".signet"

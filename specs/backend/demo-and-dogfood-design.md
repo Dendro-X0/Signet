@@ -1,7 +1,7 @@
 # Design: demo kit + dogfood + public cut (Phases 15–16)
 
 **Phases:** 15 (demo kit), 16 (dogfood + public cut)  
-**Status:** ready  
+**Status:** ready (Phase 15 implemented; Phase 16 open)  
 **Depends on:** Phase 13 narrative, Phase 14 golden path (for “one demo” claim)  
 **Owners:** `examples/` (or `demo/`), scripts, `CHANGELOG`, release tag, optional `docs/demo.md`  
 **Plan alignment:** recordable GIF/video path; real-app proof before calling the version “official.”
@@ -45,9 +45,9 @@ CI: do **not** require signing the fixture PE in PR CI; unit tests already cover
 
 ### Acceptance (15)
 
-- [ ] `demo/` + `docs/demo.md` exist.
-- [ ] Happy-path script runs on a clean machine with Signet installed (document prereqs).
-- [ ] README links “2-minute demo” → `docs/demo.md`.
+- [x] `demo/` + `docs/demo.md` exist.
+- [x] Happy-path script runs on a clean machine with Signet installed (document prereqs).
+- [x] README links “2-minute demo” → `docs/demo.md`.
 
 ### Proof (15)
 

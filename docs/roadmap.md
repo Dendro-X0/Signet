@@ -139,9 +139,9 @@ Goal: easy setup, dual path (self-sign **or** official facilitation), low learni
 
 **Spec:** [demo-and-dogfood-design.md](../specs/backend/demo-and-dogfood-design.md) §Demo
 
-- [ ] `demo/` fixture + happy-path scripts
-- [ ] `docs/demo.md` recording guide
-- [ ] README links the demo
+- [x] `demo/` fixture + happy-path scripts
+- [x] `docs/demo.md` recording guide
+- [x] README links the demo
 
 **Exit:** Maintainer can record GIF/video from a fixed script.
 
