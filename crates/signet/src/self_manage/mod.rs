@@ -6,14 +6,16 @@ mod receipt;
 mod replace;
 
 pub use github::{download_bytes, expected_sha256_from_sums, fetch_latest_release};
-pub use paths::{install_root, managed_binary_path, receipt_path};
+pub use paths::{
+    install_root, managed_binary_path, receipt_path, remove_windows_home_shim, sync_windows_home_shim,
+};
 pub use receipt::{read_receipt, write_receipt, InstallMethod, InstallReceipt};
 pub use replace::{replace_executable, schedule_windows_cleanup, windows_deferred_delete};
 
 use std::fs;
 use std::path::PathBuf;
 
-use paths::is_under_install_root;
+use paths::{is_under_install_root, windows_home_shim_path};
 
 #[derive(Debug, Clone)]
 pub struct InstallStatus {
@@ -32,9 +34,18 @@ pub fn current_status() -> InstallStatus {
 
     if let Some(rec) = read_receipt() {
         if rec.method == InstallMethod::Installer {
-            let managed = same_exe(&exe, &rec.binary_path) || is_under_install_root(&exe);
+            let on_home_shim = windows_home_shim_path()
+                .as_ref()
+                .map(|p| same_exe(&exe, p))
+                .unwrap_or(false);
+            let managed =
+                same_exe(&exe, &rec.binary_path) || is_under_install_root(&exe) || on_home_shim;
             let detail = if managed {
-                "installer-managed — `signet self update` / `uninstall` available".into()
+                if on_home_shim && !is_under_install_root(&exe) {
+                    "installer-managed (via %USERPROFILE%\\bin shim) — `signet self update` / `uninstall` available".into()
+                } else {
+                    "installer-managed — `signet self update` / `uninstall` available".into()
+                }
             } else if is_cargo_install_path(&exe) {
                 format!(
                     "WARNING: this process is cargo (~/.cargo/bin) while an installer \
@@ -64,7 +75,12 @@ pub fn current_status() -> InstallStatus {
                 } else {
                     running_version
                 },
-                binary: exe,
+                binary: if managed {
+                    // Prefer the real install-root binary for update/uninstall targets.
+                    rec.binary_path.clone()
+                } else {
+                    exe
+                },
                 receipt_path: Some(receipt_path),
                 detail,
             };
@@ -120,5 +136,6 @@ pub fn ensure_managed_receipt(version: &str) -> anyhow::Result<InstallReceipt> {
         ),
     };
     write_receipt(&rec)?;
+    sync_windows_home_shim();
     Ok(rec)
 }

@@ -7,9 +7,9 @@ use sha2::{Digest, Sha256};
 
 use crate::self_manage::{
     current_status, download_bytes, ensure_managed_receipt, expected_sha256_from_sums,
-    fetch_latest_release, install_root, managed_binary_path, receipt_path, replace_executable,
-    schedule_windows_cleanup, windows_deferred_delete, write_receipt, InstallMethod,
-    InstallReceipt,
+    fetch_latest_release, install_root, managed_binary_path, receipt_path, remove_windows_home_shim,
+    replace_executable, schedule_windows_cleanup, sync_windows_home_shim, windows_deferred_delete,
+    write_receipt, InstallMethod, InstallReceipt,
 };
 use crate::ui::console;
 
@@ -121,6 +121,7 @@ fn update(check_only: bool, force: bool) -> anyhow::Result<()> {
     };
 
     replace_executable(&dest, &bytes)?;
+    sync_windows_home_shim();
 
     let rec = InstallReceipt {
         method: InstallMethod::Installer,
@@ -185,6 +186,7 @@ fn uninstall(yes: bool) -> anyhow::Result<()> {
     if receipt.exists() {
         fs::remove_file(&receipt)?;
     }
+    remove_windows_home_shim();
 
     if let Some(bin_dir) = managed_binary_path().parent() {
         let _ = fs::remove_dir(bin_dir);

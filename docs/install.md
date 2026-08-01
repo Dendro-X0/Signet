@@ -12,6 +12,28 @@ irm https://github.com/Dendro-X0/Signet/releases/latest/download/install.ps1 | i
 
 - Install root: `%LOCALAPPDATA%\Signet\`
 - Binary: `bin\signet.exe` (user PATH updated by the installer — **prepended** so it can beat `~\.cargo\bin`)
+- Also mirrors to `%USERPROFILE%\bin\signet.exe` so **Git Bash / Cursor** terminals that already have `~/bin` on PATH work **without restarting the IDE**
+
+### “command not found” after install (Windows + bash)
+
+The installer wrote the binary and updated the **User** PATH registry, but **already-open Cursor / Git Bash** processes keep a stale `PATH` until you fully quit and reopen the app.
+
+**Immediate fix (this terminal):**
+
+```bash
+cp "$LOCALAPPDATA/Signet/bin/signet.exe" "$HOME/bin/signet.exe"
+hash -r
+signet --version
+```
+
+Or:
+
+```bash
+export PATH="$LOCALAPPDATA/Signet/bin:$HOME/bin:$PATH"
+signet --version
+```
+
+**Durable:** re-run the installer (v0.5.2+) which mirrors into `~/bin`, or fully quit Cursor and open a new window.
 
 ## Cargo vs installer (PATH shadow)
 

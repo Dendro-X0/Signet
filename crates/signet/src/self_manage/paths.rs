@@ -18,6 +18,36 @@ pub fn receipt_path() -> PathBuf {
     install_root().join("install.toml")
 }
 
+/// Optional Windows mirror under `%USERPROFILE%\bin\signet.exe` for Git Bash / Cursor PATH.
+pub fn windows_home_shim_path() -> Option<PathBuf> {
+    if !cfg!(windows) {
+        return None;
+    }
+    Some(dirs_home().join("bin").join("signet.exe"))
+}
+
+/// Keep `%USERPROFILE%\bin\signet.exe` in sync with the managed binary (best-effort).
+pub fn sync_windows_home_shim() {
+    let Some(shim) = windows_home_shim_path() else {
+        return;
+    };
+    let src = managed_binary_path();
+    if !src.is_file() {
+        return;
+    }
+    if let Some(parent) = shim.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let _ = std::fs::copy(&src, &shim);
+}
+
+/// Remove the home shim if present (uninstall).
+pub fn remove_windows_home_shim() {
+    if let Some(shim) = windows_home_shim_path() {
+        let _ = std::fs::remove_file(shim);
+    }
+}
+
 pub fn is_under_install_root(path: &Path) -> bool {
     let root = install_root();
     let Ok(canon_root) = std::fs::canonicalize(&root) else {

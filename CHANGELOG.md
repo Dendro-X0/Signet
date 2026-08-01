@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2 — 2026-08-01
+
+### Fixed
+
+- Windows installer mirrors into `%USERPROFILE%\bin` so Git Bash / Cursor can run `signet` without restarting the IDE
+- Broadcast `WM_SETTINGCHANGE` after PATH updates; write install receipt without UTF-8 BOM
+- Treat the home shim as installer-managed for `self status|update|uninstall`
+
 ## 0.5.1 — 2026-08-01
 
 ### Fixed
