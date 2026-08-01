@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.3 — 2026-08-01
+
+### Fixed
+
+- Windows `install.ps1`: prefer `curl.exe` with retries (avoids flaky `Invoke-WebRequest` TLS EOF); document curl fallback in `docs/install.md`
+
 ## 0.5.2 — 2026-08-01
 
 ### Fixed

@@ -10,9 +10,21 @@ Design: [`specs/backend/self-update-design.md`](../specs/backend/self-update-des
 irm https://github.com/Dendro-X0/Signet/releases/latest/download/install.ps1 | iex
 ```
 
+If download fails with `unexpected EOF` / transport errors (flaky `Invoke-WebRequest`), retry or install via curl:
+
+```powershell
+curl.exe -fL --retry 3 -o "$env:TEMP\signet.exe" `
+  https://github.com/Dendro-X0/Signet/releases/latest/download/signet-x86_64-pc-windows-msvc.exe
+New-Item -Force -ItemType Directory "$env:LOCALAPPDATA\Signet\bin" | Out-Null
+Copy-Item -Force "$env:TEMP\signet.exe" "$env:LOCALAPPDATA\Signet\bin\signet.exe"
+Copy-Item -Force "$env:TEMP\signet.exe" "$env:USERPROFILE\bin\signet.exe"
+& "$env:LOCALAPPDATA\Signet\bin\signet.exe" --version
+```
+
 - Install root: `%LOCALAPPDATA%\Signet\`
 - Binary: `bin\signet.exe` (user PATH updated by the installer — **prepended** so it can beat `~\.cargo\bin`)
 - Also mirrors to `%USERPROFILE%\bin\signet.exe` so **Git Bash / Cursor** terminals that already have `~/bin` on PATH work **without restarting the IDE**
+- Installer prefers `curl.exe` with retries (falls back to `Invoke-WebRequest`)
 
 ### “command not found” after install (Windows + bash)
 

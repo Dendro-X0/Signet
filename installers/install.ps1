@@ -2,6 +2,8 @@
 #   irm https://github.com/Dendro-X0/Signet/releases/latest/download/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 $Repo = "Dendro-X0/Signet"
 $Base = "https://github.com/$Repo/releases/latest/download"
 $Root = Join-Path $env:LOCALAPPDATA "Signet"
@@ -13,14 +15,54 @@ $Asset = "signet-x86_64-pc-windows-msvc.exe"
 $HomeBin = Join-Path $env:USERPROFILE "bin"
 $HomeShim = Join-Path $HomeBin "signet.exe"
 
-$release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ "User-Agent" = "signet-installer" }
+function Get-SignetRelease {
+    Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{
+        "User-Agent" = "signet-installer"
+        "Accept"     = "application/vnd.github+json"
+    }
+}
+
+function Save-UrlToFile {
+    param(
+        [Parameter(Mandatory = $true)][string]$Uri,
+        [Parameter(Mandatory = $true)][string]$OutFile,
+        [int]$Attempts = 4
+    )
+    $last = $null
+    for ($i = 1; $i -le $Attempts; $i++) {
+        try {
+            if (Test-Path $OutFile) { Remove-Item -Force $OutFile }
+            $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
+            if ($curl) {
+                & curl.exe -fsSL --retry 3 --retry-delay 2 --connect-timeout 30 -o $OutFile $Uri
+                if ($LASTEXITCODE -ne 0) {
+                    throw "curl.exe exited with code $LASTEXITCODE"
+                }
+            } else {
+                Invoke-WebRequest -Uri $Uri -OutFile $OutFile -UseBasicParsing -TimeoutSec 120
+            }
+            if (-not (Test-Path $OutFile) -or ((Get-Item $OutFile).Length -lt 1024)) {
+                throw "download missing or too small"
+            }
+            return
+        } catch {
+            $last = $_
+            Write-Host "  download attempt $i/$Attempts failed: $($_.Exception.Message)" -ForegroundColor Yellow
+            Start-Sleep -Seconds ([Math]::Min(2 * $i, 8))
+        }
+    }
+    throw "Failed to download $Uri after $Attempts attempts. Last error: $last`nTry: curl.exe -fL -o signet.exe $Uri"
+}
+
+$release = Get-SignetRelease
 $Tag = $release.tag_name
 $Version = $Tag.TrimStart("v")
+$Url = "$Base/$Asset"
 
 New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
 $Tmp = Join-Path $env:TEMP "signet-install.exe"
 Write-Host "Downloading $Asset ($Tag)…"
-Invoke-WebRequest -Uri "$Base/$Asset" -OutFile $Tmp -UseBasicParsing
+Save-UrlToFile -Uri $Url -OutFile $Tmp
 Move-Item -Force $Tmp $Bin
 
 $Receipt = @"
