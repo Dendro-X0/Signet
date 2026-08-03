@@ -4,7 +4,9 @@ use std::path::PathBuf;
 use clap::Args as ClapArgs;
 
 use crate::config::{Config, CONFIG_FILE_NAME, SECRETS_DIR_NAME};
-use crate::scan::{print_human, scan_repository, ScanReport};
+use crate::scan::{
+    draft_targets, merge_platforms, print_human, scan_repository, ScanReport,
+};
 
 #[derive(Debug, ClapArgs)]
 pub struct Args {
@@ -20,7 +22,7 @@ pub struct Args {
     #[arg(long)]
     pub apply: bool,
 
-    /// Overwrite project name / app_root / framework from scan when using --apply
+    /// Overwrite project name / app_root / framework / platforms / targets from scan
     #[arg(long)]
     pub force: bool,
 }
@@ -47,90 +49,88 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
     let root = &report.root;
     let config_path = root.join(CONFIG_FILE_NAME);
     let s = &report.suggested;
+    let drafted = draft_targets(root, &report.projects);
 
-    if config_path.exists() && !force {
+    if config_path.exists() {
         let mut cfg = Config::load(&config_path)?;
-        cfg.platforms.windows = s.windows;
-        cfg.platforms.macos = s.macos;
-        cfg.platforms.linux = s.linux;
-        // Fill omitted fields only (zero-friction apply).
-        let mut filled = Vec::new();
-        if cfg.project.framework.trim().is_empty() {
-            cfg.project.framework = s.framework.clone();
-            filled.push("framework");
-        }
-        if cfg.project.app_root.trim().is_empty() {
+        let mut parts: Vec<String> = Vec::new();
+
+        if force {
+            cfg.project.name = s.project_name.clone();
             cfg.project.app_root = s.app_root.clone();
-            filled.push("app_root");
-        }
-        cfg.write(&config_path)?;
-        console::blank();
-        if filled.is_empty() {
-            console::ok_line(
-                "updated platforms in signet.toml (use --force to also replace name/app_root/framework)",
-            );
+            cfg.project.framework = s.framework.clone();
+            parts.push("project fields".into());
         } else {
-            console::ok_line(&format!(
-                "updated platforms + filled {} (use --force to replace existing fields)",
-                filled.join(", ")
-            ));
+            let mut filled = Vec::new();
+            if cfg.project.framework.trim().is_empty() {
+                cfg.project.framework = s.framework.clone();
+                filled.push("framework");
+            }
+            if cfg.project.app_root.trim().is_empty() {
+                cfg.project.app_root = s.app_root.clone();
+                filled.push("app_root");
+            }
+            if !filled.is_empty() {
+                parts.push(format!("filled {}", filled.join(", ")));
+            }
         }
-    } else if config_path.exists() && force {
-        let mut cfg = Config::load(&config_path)?;
-        cfg.project.name = s.project_name.clone();
-        cfg.project.app_root = s.app_root.clone();
-        cfg.project.framework = s.framework.clone();
-        cfg.platforms.windows = s.windows;
-        cfg.platforms.macos = s.macos;
-        cfg.platforms.linux = s.linux;
+
+        let before = cfg.platforms.clone();
+        let kept_shipping_intent = !force
+            && ((before.macos && !s.macos) || (before.linux && !s.linux) || (before.windows && !s.windows));
+        cfg.platforms = merge_platforms(&before, s.windows, s.macos, s.linux, force);
+        if force {
+            parts.push("platforms (forced)".into());
+        } else if cfg.platforms != before {
+            parts.push("platforms (expanded only)".into());
+        } else {
+            parts.push("platforms unchanged".into());
+        }
+
+        if force {
+            if !drafted.is_empty() {
+                cfg.targets = drafted.clone();
+                parts.push("[[targets]] replaced".into());
+            }
+        } else if cfg.targets.is_empty() && !drafted.is_empty() {
+            cfg.targets = drafted.clone();
+            parts.push("[[targets]] drafted".into());
+        }
+
         cfg.write(&config_path)?;
         console::blank();
-        console::ok_line("rewrote project + platforms in signet.toml");
+        if parts.is_empty() {
+            console::ok_line("signet.toml unchanged (use --force to replace fields)");
+        } else {
+            console::ok_line(&format!("updated signet.toml — {}", parts.join("; ")));
+        }
+        if kept_shipping_intent
+            && ((cfg.platforms.macos && !s.macos) || (cfg.platforms.linux && !s.linux))
+        {
+            console::note(
+                "kept macos/linux=true (shipping intent); pass --force to adopt host-shaped platforms",
+            );
+        }
+        if !force && cfg.targets.is_empty() && drafted.is_empty() && report.projects.len() > 1 {
+            console::note(
+                "multiple detections but fewer than 2 installable apps — no [[targets]] draft",
+            );
+        }
+        if !force && !cfg.targets.is_empty() && !drafted.is_empty() && parts.iter().all(|p| !p.contains("[[targets]]"))
+        {
+            console::note("[[targets]] already set — left unchanged (pass --force to replace)");
+        }
     } else {
         let mut cfg = Config::example(&s.project_name, &s.app_root);
         cfg.project.framework = s.framework.clone();
         cfg.platforms.windows = s.windows;
         cfg.platforms.macos = s.macos;
         cfg.platforms.linux = s.linux;
-
-        // Multiple detected apps → draft [[targets]] for monorepo roots.
-        if report.projects.len() > 1 {
-            use crate::config::Target;
-            use crate::scan::framework_id_for_kind;
-            cfg.targets = report
-                .projects
-                .iter()
-                .take(8)
-                .enumerate()
-                .map(|(i, p)| {
-                    let fw = framework_id_for_kind(p.kind).to_string();
-                    let root_rel = p
-                        .path
-                        .strip_prefix(root)
-                        .map(|r| {
-                            let s = r.to_string_lossy().replace('\\', "/");
-                            if s.is_empty() {
-                                ".".into()
-                            } else {
-                                s
-                            }
-                        })
-                        .unwrap_or_else(|_| ".".into());
-                    let id = p
-                        .name
-                        .clone()
-                        .filter(|n| !n.is_empty())
-                        .unwrap_or_else(|| format!("target{}", i + 1));
-                    Target {
-                        id,
-                        framework: fw,
-                        app_root: root_rel,
-                        build_command: String::new(),
-                    }
-                })
-                .collect();
-            // Prefer suggested as [project] summary; keep targets list.
-            console::note("multiple projects detected — wrote [[targets]] draft (edit ids/build_command as needed)");
+        if !drafted.is_empty() {
+            cfg.targets = drafted;
+            console::note(
+                "multiple installable apps — wrote [[targets]] draft (edit ids/build_command as needed)",
+            );
         }
 
         cfg.write(&config_path)?;
@@ -154,7 +154,11 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
             "android/ios detected but not stored in [platforms] — desktop self-sign only",
         );
     }
-    console::numbered(1, "signet identity create", "create a local code-signing identity");
+    if !report.has_identity {
+        console::numbered(1, "signet identity create", "create a local code-signing identity");
+    } else {
+        console::note("identity already present — next: `signet build` / `signet trust`");
+    }
     Ok(())
 }
 

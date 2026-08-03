@@ -204,7 +204,107 @@ fn resolve_artifact_path(
             }
         }
     }
+    // Basename-only leftover SHA256SUMS (e.g. after release collect): walk for the name.
+    if let Some(base) = Path::new(sums_name)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .filter(|b| !b.is_empty())
+    {
+        let mut best: Option<(i32, PathBuf)> = None;
+        for root in search_roots {
+            if let Some((score, path)) = find_basename_under(root, base) {
+                match &best {
+                    Some((best_score, _)) if *best_score >= score => {}
+                    _ => best = Some((score, path)),
+                }
+            }
+        }
+        if let Some((_, path)) = best {
+            return path;
+        }
+    }
     sums_dir.join(sums_name)
+}
+
+const BASENAME_WALK_MAX_DEPTH: usize = 14;
+const BASENAME_WALK_MAX_VISITS: usize = 50_000;
+
+fn find_basename_under(root: &Path, basename: &str) -> Option<(i32, PathBuf)> {
+    let mut best: Option<(i32, PathBuf)> = None;
+    let mut visits = 0usize;
+    fn walk(
+        dir: &Path,
+        depth: usize,
+        basename: &str,
+        visits: &mut usize,
+        best: &mut Option<(i32, PathBuf)>,
+    ) {
+        if depth > BASENAME_WALK_MAX_DEPTH || *visits >= BASENAME_WALK_MAX_VISITS {
+            return;
+        }
+        let Ok(entries) = fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            *visits += 1;
+            if *visits >= BASENAME_WALK_MAX_VISITS {
+                return;
+            }
+            let path = entry.path();
+            let name = entry.file_name();
+            let name_str = name.to_string_lossy();
+            if path.is_dir() {
+                if skip_basename_walk_dir(&name_str) {
+                    continue;
+                }
+                walk(&path, depth + 1, basename, visits, best);
+            } else if path.is_file() && name_str == basename {
+                let score = basename_path_score(&path);
+                match best {
+                    Some((best_score, _)) if *best_score >= score => {}
+                    _ => *best = Some((score, path)),
+                }
+            }
+        }
+    }
+    walk(root, 0, basename, &mut visits, &mut best);
+    best
+}
+
+fn skip_basename_walk_dir(name: &str) -> bool {
+    matches!(
+        name,
+        "node_modules"
+            | ".git"
+            | ".signet"
+            | ".selfsign"
+            | ".next"
+            | ".turbo"
+            | ".cache"
+            | "deps"
+            | "incremental"
+            | "examples"
+            | "fixtures"
+            | "testdata"
+    ) || name == "debug" // skip target/debug when encountered as a dir name
+}
+
+fn basename_path_score(path: &Path) -> i32 {
+    let s = path.to_string_lossy().to_ascii_lowercase();
+    let mut score = 0i32;
+    for (needle, pts) in [
+        ("bundle", 40),
+        ("nsis", 30),
+        ("msi", 25),
+        ("release", 20),
+        ("dist", 10),
+        ("out", 5),
+    ] {
+        if s.contains(needle) {
+            score += pts;
+        }
+    }
+    score
 }
 
 fn check_one(name: &str, path: PathBuf, expected: &str) -> ChecksumResult {
@@ -511,5 +611,33 @@ mod tests {
         assert!(!f.version_mismatch);
         assert!(!f.is_stale());
         assert_eq!(f.found, 1);
+    }
+
+    #[test]
+    fn resolves_basename_under_nested_bundle() {
+        let dir = tempdir().unwrap();
+        let nested = dir
+            .path()
+            .join("apps/desk/src-tauri/target/release/bundle/nsis");
+        fs::create_dir_all(&nested).unwrap();
+        let file = nested.join("Miro Desktop_0.3.0_x64-setup.exe");
+        fs::write(&file, b"mz-setup").unwrap();
+        let sums = dir.path().join("SHA256SUMS");
+        // Basename-only line (release-style leftover).
+        let digest = sha256_hex_file(&file).unwrap();
+        fs::write(
+            &sums,
+            format!("{digest}  Miro Desktop_0.3.0_x64-setup.exe\n"),
+        )
+        .unwrap();
+
+        let ok = verify_sha256sums(&sums, &[dir.path()], None).unwrap();
+        assert_eq!(ok.len(), 1, "{ok:?}");
+        assert!(ok[0].ok, "{:?}", ok[0]);
+
+        let fresh = assess_sums_freshness(&sums, &[dir.path()], Some("0.3.0")).unwrap();
+        assert!(!fresh.empty_disk);
+        assert_eq!(fresh.found, 1);
+        assert!(!fresh.is_stale());
     }
 }

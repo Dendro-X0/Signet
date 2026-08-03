@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.8 — 2026-08-03
+
+### Fixed
+
+- `scan --apply` no longer shrinks `[platforms]` without `--force` (preserves shipping intent)
+- `scan --apply` drafts `[[targets]]` on existing configs when empty and ≥2 installable apps (excludes nested rust_cli)
+- Basename-only `SHA256SUMS` entries resolve via bounded tree walk (verify + stale assess match)
+- `scan --apply` skips “identity create” when an identity already exists
+
+### Docs
+
+- Spec: `specs/backend/scan-apply-hardening-design.md`
+
 ## 0.5.7 — 2026-08-03
 
 ### Added

@@ -548,3 +548,136 @@ fn shell_quote(s: &str) -> String {
         s.to_string()
     }
 }
+
+/// Merge scan-suggested platforms into existing config.
+/// Without `force`, never shrink a `true` flag to `false` (shipping intent preserved).
+pub fn merge_platforms(
+    existing: &crate::config::Platforms,
+    suggested_windows: bool,
+    suggested_macos: bool,
+    suggested_linux: bool,
+    force: bool,
+) -> crate::config::Platforms {
+    if force {
+        return crate::config::Platforms {
+            windows: suggested_windows,
+            macos: suggested_macos,
+            linux: suggested_linux,
+        };
+    }
+    crate::config::Platforms {
+        windows: existing.windows || suggested_windows,
+        macos: existing.macos || suggested_macos,
+        linux: existing.linux || suggested_linux,
+    }
+}
+
+/// Draft `[[targets]]` from installable detections (excludes nested rust_cli).
+pub fn draft_targets(root: &Path, projects: &[DetectedProject]) -> Vec<crate::config::Target> {
+    let installable: Vec<&DetectedProject> = projects
+        .iter()
+        .filter(|p| p.kind.is_installable_app())
+        .take(8)
+        .collect();
+    if installable.len() < 2 {
+        return Vec::new();
+    }
+    let mut used_ids = std::collections::BTreeSet::new();
+    installable
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            let fw = framework_id_for_kind(p.kind).to_string();
+            let app_root = relativize(root, &p.path);
+            let mut id = preferred_target_id(p, i);
+            if used_ids.contains(&id) {
+                id = format!("{id}-{}", i + 1);
+            }
+            used_ids.insert(id.clone());
+            crate::config::Target {
+                id,
+                framework: fw,
+                app_root,
+                build_command: String::new(),
+            }
+        })
+        .collect()
+}
+
+fn preferred_target_id(p: &DetectedProject, index: usize) -> String {
+    if let Some(name) = p.name.as_deref().filter(|n| !n.is_empty()) {
+        let slug: String = name
+            .chars()
+            .map(|c| {
+                if c.is_ascii_alphanumeric() {
+                    c.to_ascii_lowercase()
+                } else {
+                    '-'
+                }
+            })
+            .collect();
+        let slug = slug.trim_matches('-').to_string();
+        if !slug.is_empty() && slug.len() <= 40 {
+            return slug;
+        }
+    }
+    match p.kind {
+        ProjectKind::Tauri | ProjectKind::Electron => "desktop".into(),
+        ProjectKind::Expo | ProjectKind::ReactNative | ProjectKind::Flutter | ProjectKind::Capacitor => {
+            "mobile".into()
+        }
+        ProjectKind::AndroidNative => "android".into(),
+        ProjectKind::IosNative => "ios".into(),
+        ProjectKind::RustCli => format!("cli{}", index + 1),
+    }
+}
+
+#[cfg(test)]
+mod apply_helpers_tests {
+    use super::*;
+    use crate::config::Platforms;
+    use std::path::PathBuf;
+
+    #[test]
+    fn merge_platforms_never_shrinks_without_force() {
+        let existing = Platforms {
+            windows: true,
+            macos: true,
+            linux: true,
+        };
+        let merged = merge_platforms(&existing, true, false, false, false);
+        assert!(merged.windows && merged.macos && merged.linux);
+        let forced = merge_platforms(&existing, true, false, false, true);
+        assert!(forced.windows && !forced.macos && !forced.linux);
+    }
+
+    #[test]
+    fn draft_targets_skips_cli_and_needs_two_installable() {
+        let root = PathBuf::from("/repo");
+        let projects = vec![
+            DetectedProject {
+                kind: ProjectKind::Tauri,
+                path: root.join("apps/desk"),
+                name: Some("Desk".into()),
+                detail: String::new(),
+            },
+            DetectedProject {
+                kind: ProjectKind::RustCli,
+                path: root.join("apps/desk/src-tauri"),
+                name: None,
+                detail: String::new(),
+            },
+            DetectedProject {
+                kind: ProjectKind::Expo,
+                path: root.join("apps/mobile"),
+                name: Some("Mobile".into()),
+                detail: String::new(),
+            },
+        ];
+        let targets = draft_targets(&root, &projects);
+        assert_eq!(targets.len(), 2);
+        assert!(targets.iter().all(|t| t.framework != "cli"));
+        assert!(targets.iter().any(|t| t.framework == "tauri"));
+        assert!(targets.iter().any(|t| t.framework == "expo"));
+    }
+}
