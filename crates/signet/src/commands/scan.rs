@@ -151,7 +151,7 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
 
     if s.android || s.ios {
         console::note(
-            "android/ios detected but not stored in [platforms] — desktop self-sign only",
+            "android/ios detected — set platforms.android/ios or mobile [[targets]]; coverage follows via `signet ship --plan`",
         );
     }
     if !report.has_identity {

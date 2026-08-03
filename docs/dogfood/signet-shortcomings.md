@@ -12,9 +12,9 @@
 
 2. **`[platforms]` is documentation-ish, not a commitment** — Doctor/build/release can succeed Windows-only while macOS/Linux remain declared and empty. No fail-closed “missing declared platform” check on release.
 
-3. **Official (graduate) path is not on the same ship plan** — OV / Azure / notarize helpers exist, but there is no unified “self vs graduate” profile that runs across the same multi-OS release flow.
+3. **Official (graduate) path is not on the same ship plan** — ~~OV / Azure / notarize helpers exist, but there is no unified “self vs graduate” profile that runs across the same multi-OS release flow.~~ **Addressed in 0.5.14** (`[ship] path`, plan, CI `graduate apply`).
 
-4. **Mobile is second-class in the end-to-end loop** — Expo/RN/Flutter adapters need `build_command`; scan drafts targets, but ship/release does not carry mobile through the same Prove → Check → Release story as desktop.
+4. **Mobile is second-class in the end-to-end loop** — ~~Expo/RN/Flutter adapters need `build_command`; scan drafts targets, but ship/release does not carry mobile through the same Prove → Check → Release story as desktop.~~ **Addressed in 0.5.13** for coverage/CI/collect/release classify; Play/App Store and unpaid mobile `build_command` remain honesty/debt.
 
 ---
 
@@ -64,6 +64,6 @@ These do **not** excuse missing orchestration, collect, coverage gates, or dual-
 | 2 | Soft-fail unpaid `[[targets]]` (5–6) | **Done in 0.5.10** — debt skip + `--strict-targets` |
 | 3 | `release --dry-run` read-only (8) | **Done in 0.5.11** |
 | 4 | CI template + collect + release coverage gate (1, 9) | **Done in 0.5.12** |
-| 5 | Graduate on same ship plan (3) | next |
-| 6 | Mobile through full loop (4) | |
-| 7 | Release auth guided path (10) | |
+| 5 | Graduate on same ship plan (3) | **Done in 0.5.14** |
+| 6 | Mobile through full loop (4) | **Done in 0.5.13** — coverage/CI/collect/release classify |
+| 7 | Release auth guided path (10) | next |

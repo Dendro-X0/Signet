@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.5.14 — 2026-08-03
+
+### Added
+
+- `[ship] path = "self" | "graduate"` — dual Sign profile on the same multi-OS plan
+- `signet ship --plan` shows per-OS Sign path (self / azure / ov / notarize / missing)
+- `signet graduate apply` — discover host installers and run configured graduate backend
+- `signet ship --ci` emits `graduate apply` on Windows/macOS when path=graduate
+
+### Docs
+
+- Spec: `specs/backend/ship-graduate-profile-design.md` (multi-platform ship slice F)
+
+## 0.5.13 — 2026-08-03
+
+### Added
+
+- `[platforms].android` / `[platforms].ios` (default false); mobile `[[targets]]` (expo/RN/flutter/capacitor/android/ios) also declare commitment
+- Ship coverage gap includes android/ios; `ship --ci` emits `ship-android` / `ship-ios` jobs when declared
+- Release `classify_kind`: `.apk`/`.aab` → `android`, `.ipa` → `ios`; collect accepts `.aab`
+
+### Docs
+
+- Spec: `specs/backend/mobile-ship-loop-design.md` (multi-platform ship slice G)
+- `docs/ship.md` / config-schema mobile platforms
+
 ## 0.5.12 — 2026-08-03
 
 ### Added

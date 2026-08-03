@@ -139,6 +139,7 @@ fn is_collectable(path: &Path) -> bool {
             | ArtifactKind::LinuxDeb
             | ArtifactKind::LinuxRpm
             | ArtifactKind::Apk
+            | ArtifactKind::Aab
             | ArtifactKind::Ipa
     ) || path
         .file_name()

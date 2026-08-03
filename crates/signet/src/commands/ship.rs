@@ -7,7 +7,8 @@ use clap::Args as ClapArgs;
 
 use crate::project::ProjectCtx;
 use crate::ship::{
-    assess_coverage, collect_into_staging, render_signet_ship_workflow, workflow_rel_path,
+    assess_coverage, assess_sign_profile, collect_into_staging, render_signet_ship_workflow,
+    workflow_rel_path,
 };
 use crate::ui::console;
 
@@ -48,11 +49,15 @@ pub fn run(args: Args) -> anyhow::Result<()> {
 
     let _ = args.plan;
     let report = assess_coverage(&ctx.root, &ctx.config);
+    let profile = assess_sign_profile(&ctx.config);
 
     console::banner("ship · plan");
     report.print_human();
     console::blank();
+    profile.print_human();
+    console::blank();
     console::note(&report.summary_line());
+    console::note(&profile.summary_line());
     if report.has_gap() {
         console::blank();
         console::note(
@@ -63,7 +68,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         );
     } else {
         console::note(
-            "Declared desktop platforms have on-disk artifacts — verify signatures per OS before release.",
+            "Declared platforms have on-disk artifacts — verify signatures per OS before release.",
         );
     }
     Ok(())
@@ -85,8 +90,19 @@ fn emit_ci(ctx: &ProjectCtx, force: bool) -> anyhow::Result<()> {
     fs::write(&path, body)?;
     console::banner("ship · ci");
     console::ok_line(&format!("wrote {}", path.display()));
+    let profile = assess_sign_profile(&ctx.config);
+    console::note(&profile.summary_line());
     console::note("Commit the workflow, push a tag or run workflow_dispatch, then collect artifacts.");
-    console::note("Restore `.signet/identity` in CI via secrets before expecting host signatures.");
+    if matches!(
+        profile.path,
+        crate::ship::ShipSignPath::Graduate
+    ) {
+        console::note(
+            "Graduate path: wire Azure/OV/Apple secrets in Actions before expecting official Sign.",
+        );
+    } else {
+        console::note("Restore `.signet/identity` in CI via secrets before expecting host signatures.");
+    }
     Ok(())
 }
 
@@ -111,7 +127,7 @@ fn run_collect(ctx: &ProjectCtx, from: &std::path::Path) -> anyhow::Result<()> {
             cov.gap.join(", ")
         ));
     } else {
-        console::note("coverage complete for declared desktop platforms — ready for `signet release`");
+        console::note("coverage complete for declared platforms — ready for `signet release`");
     }
     Ok(())
 }

@@ -23,12 +23,17 @@ declared_tier = "ca_authenticode"   # or "apple_notarized"
 
 ```bash
 signet graduate notes
+signet graduate apply              # ship path=graduate: discover + azure/ov/notarize on this host
 signet graduate ov-sign --file app.exe --thumbprint ABCDEF…
 # or: --pfx path.pfx   + env SIGNET_OV_PFX_PASS
 signet graduate azure-sign --file app.exe
 signet graduate notarize --path App.app --profile MyNotaryProfile
 signet graduate staple --path App.app
 ```
+
+### Same plan as ship
+
+Set `[ship] path = "graduate"` so `signet ship --plan` / `--ci` use the official Sign profile. Windows prefers Azure when dlib+metadata are set, else OV; macOS uses notarize when a keychain profile is set; Linux stays integrity-first (sums). See [ship.md](ship.md).
 
 ### Windows OV
 
@@ -60,6 +65,9 @@ Set `[graduation.azure] dlib` + `metadata`, or `SIGNET_AZURE_DLIB` / `SIGNET_AZU
 ## Config sketch
 
 ```toml
+[ship]
+path = "graduate"   # or "self" (default)
+
 [graduation]
 ov_thumbprint = ""
 timestamp_url = "http://timestamp.digicert.com"

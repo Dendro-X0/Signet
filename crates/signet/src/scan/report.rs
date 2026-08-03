@@ -563,12 +563,17 @@ pub fn merge_platforms(
             windows: suggested_windows,
             macos: suggested_macos,
             linux: suggested_linux,
+            // Desktop apply only — preserve mobile commitments.
+            android: existing.android,
+            ios: existing.ios,
         };
     }
     crate::config::Platforms {
         windows: existing.windows || suggested_windows,
         macos: existing.macos || suggested_macos,
         linux: existing.linux || suggested_linux,
+        android: existing.android,
+        ios: existing.ios,
     }
 }
 
@@ -644,6 +649,8 @@ mod apply_helpers_tests {
             windows: true,
             macos: true,
             linux: true,
+            android: false,
+            ios: false,
         };
         let merged = merge_platforms(&existing, true, false, false, false);
         assert!(merged.windows && merged.macos && merged.linux);

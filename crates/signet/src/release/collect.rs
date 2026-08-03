@@ -197,6 +197,10 @@ fn classify_kind(name: &str) -> &'static str {
         "macos"
     } else if lower.ends_with(".appimage") || lower.ends_with(".deb") || lower.ends_with(".rpm") {
         "linux"
+    } else if lower.ends_with(".apk") || lower.ends_with(".aab") {
+        "android"
+    } else if lower.ends_with(".ipa") {
+        "ios"
     } else {
         "other"
     }
@@ -241,6 +245,19 @@ fn skip_checksum_coverage(asset_name: &str) -> bool {
         asset_name,
         "SHA256SUMS" | "SHA256SUMS.minisig" | "SHA256SUMS.asc" | "TRUST.md"
     )
+}
+
+#[cfg(test)]
+mod classify_tests {
+    use super::classify_kind;
+
+    #[test]
+    fn classifies_mobile_extensions() {
+        assert_eq!(classify_kind("app-release.apk"), "android");
+        assert_eq!(classify_kind("app.aab"), "android");
+        assert_eq!(classify_kind("App.ipa"), "ios");
+        assert_eq!(classify_kind("setup.exe"), "windows");
+    }
 }
 
 #[cfg(test)]

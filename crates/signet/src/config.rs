@@ -36,9 +36,32 @@ pub struct Config {
     /// Optional OV / Azure / Apple notarization helper settings (no secrets).
     #[serde(default)]
     pub graduation: Graduation,
+    /// Multi-platform ship profile (`self` vs `graduate`).
+    #[serde(default)]
+    pub ship: Ship,
     /// Optional monorepo ship targets. Empty → synthesize one from `[project]`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub targets: Vec<Target>,
+}
+
+/// Ship orchestration profile (same plan, dual Sign path).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Ship {
+    /// `self` (default Signet identity) or `graduate` (OV / Azure / notarize).
+    #[serde(default = "default_ship_path")]
+    pub path: String,
+}
+
+fn default_ship_path() -> String {
+    "self".into()
+}
+
+impl Default for Ship {
+    fn default() -> Self {
+        Self {
+            path: default_ship_path(),
+        }
+    }
 }
 
 /// One shippable app/framework under a repo-level `signet.toml`.
@@ -184,6 +207,12 @@ pub struct Platforms {
     pub macos: bool,
     #[serde(default = "default_true")]
     pub linux: bool,
+    /// Ship Android APK/AAB (also implied by mobile `[[targets]]`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub android: bool,
+    /// Ship iOS IPA (macOS-hosted; also implied by ios/expo-style targets).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ios: bool,
 }
 
 fn default_true() -> bool {
@@ -254,6 +283,8 @@ impl Default for Config {
                 windows: true,
                 macos: true,
                 linux: true,
+                android: false,
+                ios: false,
             },
             release: Release {
                 github: true,
@@ -263,6 +294,7 @@ impl Default for Config {
             secrets_dir: default_secrets_dir(),
             trust: Trust::default(),
             graduation: Graduation::default(),
+            ship: Ship::default(),
             targets: Vec::new(),
         }
     }

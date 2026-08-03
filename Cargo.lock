@@ -1319,7 +1319,7 @@ dependencies = [
 
 [[package]]
 name = "signet"
-version = "0.5.12"
+version = "0.5.14"
 dependencies = [
  "anyhow",
  "clap",

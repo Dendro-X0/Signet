@@ -26,6 +26,12 @@ framework = "tauri"       # tauri | electron | android | ios | flutter | react-n
 windows = true
 macos = true
 linux = true
+# android = false          # APK/AAB commitment (also implied by mobile [[targets]])
+# ios = false              # IPA commitment (macOS-hosted; also implied by expo/rn/…)
+
+[ship]
+path = "self"             # self (default) | graduate — same plan, dual Sign backend
+# path = "graduate"       # then configure [graduation] + CI secrets
 
 [release]
 github = true
@@ -63,7 +69,8 @@ secrets_dir = ".signet"
 | `project.framework` | Adapter id: `tauri`, `electron`, `android`, `ios`, `flutter`, `react-native`/`rn`, `expo`, `capacitor`, `cli` |
 | `project.build_command` | Optional build argv (required for hybrid/iOS; Tauri monorepo scripts OK) |
 | `targets[]` | Optional `[[targets]]` (`id`, `framework`, `app_root`, `build_command`); `signet build --target` |
-| `platforms.*` | Which OS targets this project intends to ship |
+| `platforms.*` | Ship commitment: `windows`/`macos`/`linux` (default true); `android`/`ios` (default false; also implied by mobile frameworks/`[[targets]]`) |
+| `ship.path` | Sign profile on the multi-OS plan: `self` (default) or `graduate` |
 | `release.github` | Enable GitHub Releases in `signet release` |
 | `release.repo` | Optional `owner/name` override |
 | `release.attach_trust` | Attach `TRUST.md` when present |

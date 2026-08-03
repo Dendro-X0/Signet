@@ -11,6 +11,10 @@ use crate::graduate::{
     NotarizeOptions, OvCredential, OvSignOptions,
 };
 use crate::project::ProjectCtx;
+use crate::ship::{
+    assess_sign_profile, discover_graduate_files, PlatformSignAction, ShipSignPath,
+};
+use crate::ui::console;
 
 #[derive(Debug, ClapArgs)]
 pub struct Args {
@@ -26,6 +30,8 @@ pub struct Args {
 pub enum Action {
     /// Print graduation ladder honesty notes
     Notes,
+    /// Discover host installers and apply configured graduate backend (`[ship] path = "graduate"`)
+    Apply,
     /// Sign with an OV/CA Authenticode cert (thumbprint or PFX) — not Signet self-signed identity
     #[command(name = "ov-sign")]
     OvSign(OvSignArgs),
@@ -91,6 +97,12 @@ pub fn run(args: Args) -> anyhow::Result<()> {
             println!("{}", honesty_notes());
             println!("Full guide: docs/graduation.md");
         }
+        Action::Apply => {
+            let ctx = ctx.ok_or_else(|| {
+                anyhow::anyhow!("signet.toml required for `graduate apply` — run from project root")
+            })?;
+            run_apply(&ctx)?;
+        }
         Action::OvSign(a) => {
             let opts = resolve_ov_opts(cfg, &a)?;
             let signed = ov_sign_files(&a.files, &opts)?;
@@ -116,6 +128,122 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn run_apply(ctx: &ProjectCtx) -> anyhow::Result<()> {
+    console::banner("graduate · apply");
+    let profile = assess_sign_profile(&ctx.config);
+    console::note(&profile.summary_line());
+
+    if profile.path == ShipSignPath::SelfSigned {
+        console::note(
+            "[ship] path = \"self\" — nothing to graduate. Set path = \"graduate\" or use ov-sign / azure-sign / notarize directly.",
+        );
+        return Ok(());
+    }
+
+    let files = discover_graduate_files(&ctx.root, &ctx.config);
+    match std::env::consts::OS {
+        "windows" => apply_windows(ctx, &profile.windows, &files)?,
+        "macos" => apply_macos(ctx, &profile.macos, &files)?,
+        "linux" => {
+            console::note(
+                "Linux graduate path is integrity-first (SHA256SUMS / self). No OV/Azure/notarize apply on this host.",
+            );
+        }
+        other => {
+            anyhow::bail!("graduate apply unsupported on OS `{other}`");
+        }
+    }
+    Ok(())
+}
+
+fn apply_windows(
+    ctx: &ProjectCtx,
+    action: &PlatformSignAction,
+    files: &[PathBuf],
+) -> anyhow::Result<()> {
+    match action {
+        PlatformSignAction::Azure => {
+            if files.is_empty() {
+                anyhow::bail!(
+                    "no Windows installers found to azure-sign — build first or place artifacts under dist/signet-ship/"
+                );
+            }
+            let opts = resolve_azure_opts(Some(&ctx.config))?;
+            let signed = azure_sign_files(files, &opts)?;
+            for p in signed {
+                console::ok_line(&format!("azure-signed {}", p.display()));
+            }
+        }
+        PlatformSignAction::Ov => {
+            if files.is_empty() {
+                anyhow::bail!(
+                    "no Windows installers found to ov-sign — build first or place artifacts under dist/signet-ship/"
+                );
+            }
+            let opts = resolve_ov_opts_for_apply(&ctx.config)?;
+            let signed = ov_sign_files(files, &opts)?;
+            for p in signed {
+                console::ok_line(&format!("ov-signed {}", p.display()));
+            }
+        }
+        PlatformSignAction::GraduateMissing(msg) => {
+            anyhow::bail!("Windows graduate not configured: {msg}");
+        }
+        other => {
+            anyhow::bail!("unexpected Windows graduate action: {}", other.label());
+        }
+    }
+    Ok(())
+}
+
+fn apply_macos(
+    ctx: &ProjectCtx,
+    action: &PlatformSignAction,
+    files: &[PathBuf],
+) -> anyhow::Result<()> {
+    match action {
+        PlatformSignAction::Notarize => {
+            if files.is_empty() {
+                anyhow::bail!(
+                    "no macOS .app/.dmg found to notarize — build first or place artifacts under dist/signet-ship/"
+                );
+            }
+            let opts = resolve_notarize_opts(
+                Some(&ctx.config),
+                &NotarizeArgs {
+                    path: files[0].clone(),
+                    profile: None,
+                    no_staple: false,
+                },
+            )?;
+            for path in files {
+                notarize(path, &opts)?;
+                console::ok_line(&format!("notarized {}", path.display()));
+            }
+        }
+        PlatformSignAction::GraduateMissing(msg) => {
+            anyhow::bail!("macOS graduate not configured: {msg}");
+        }
+        other => {
+            anyhow::bail!("unexpected macOS graduate action: {}", other.label());
+        }
+    }
+    Ok(())
+}
+
+fn resolve_ov_opts_for_apply(cfg: &Config) -> anyhow::Result<OvSignOptions> {
+    resolve_ov_opts(
+        Some(cfg),
+        &OvSignArgs {
+            files: Vec::new(),
+            thumbprint: None,
+            pfx: None,
+            pfx_pass: None,
+            no_timestamp: false,
+        },
+    )
 }
 
 fn resolve_ov_opts(cfg: Option<&Config>, a: &OvSignArgs) -> anyhow::Result<OvSignOptions> {

@@ -1,4 +1,4 @@
-//! Declared `[platforms]` vs on-disk artifacts (ship slice A).
+//! Declared `[platforms]` (+ implied mobile targets) vs on-disk artifacts (ship slices A/G).
 
 use std::path::Path;
 
@@ -11,14 +11,19 @@ pub struct DesktopFlags {
     pub windows: bool,
     pub macos: bool,
     pub linux: bool,
+    pub android: bool,
+    pub ios: bool,
 }
 
 impl DesktopFlags {
     pub fn from_config(config: &Config) -> Self {
+        let (android, ios) = mobile_commitment(config);
         Self {
             windows: config.platforms.windows,
             macos: config.platforms.macos,
             linux: config.platforms.linux,
+            android,
+            ios,
         }
     }
 
@@ -29,6 +34,8 @@ impl DesktopFlags {
             ArtifactKind::LinuxAppImage | ArtifactKind::LinuxDeb | ArtifactKind::LinuxRpm => {
                 self.linux = true
             }
+            ArtifactKind::Apk | ArtifactKind::Aab => self.android = true,
+            ArtifactKind::Ipa => self.ios = true,
             _ => {}
         }
     }
@@ -38,6 +45,8 @@ impl DesktopFlags {
             "windows" => self.windows,
             "macos" => self.macos,
             "linux" => self.linux,
+            "android" => self.android,
+            "ios" => self.ios,
             _ => false,
         };
         if on {
@@ -45,6 +54,29 @@ impl DesktopFlags {
         } else {
             "MISSING"
         }
+    }
+}
+
+/// Android/iOS declared via `[platforms]` or mobile-style framework / `[[targets]]`.
+pub fn mobile_commitment(config: &Config) -> (bool, bool) {
+    let mut android = config.platforms.android;
+    let mut ios = config.platforms.ios;
+    imply_mobile_framework(config.project.framework.as_str(), &mut android, &mut ios);
+    for t in resolve_targets(config) {
+        imply_mobile_framework(t.framework.as_str(), &mut android, &mut ios);
+    }
+    (android, ios)
+}
+
+fn imply_mobile_framework(fw: &str, android: &mut bool, ios: &mut bool) {
+    match fw.trim().to_ascii_lowercase().as_str() {
+        "android" => *android = true,
+        "ios" => *ios = true,
+        "expo" | "react-native" | "rn" | "flutter" | "capacitor" => {
+            *android = true;
+            *ios = true;
+        }
+        _ => {}
     }
 }
 
@@ -66,11 +98,18 @@ impl CoverageReport {
 
     /// One-line summary for build / doctor / guided.
     pub fn summary_line(&self) -> String {
+        let mut parts = vec![
+            format!("windows={}", self.declared_vs("windows")),
+            format!("macos={}", self.declared_vs("macos")),
+            format!("linux={}", self.declared_vs("linux")),
+        ];
+        if self.declared.android || self.declared.ios {
+            parts.push(format!("android={}", self.declared_vs("android")));
+            parts.push(format!("ios={}", self.declared_vs("ios")));
+        }
         format!(
-            "ship coverage: windows={} macos={} linux={} (host={} can sign {} only)",
-            self.declared_vs("windows"),
-            self.declared_vs("macos"),
-            self.declared_vs("linux"),
+            "ship coverage: {} (host={} can sign {} only)",
+            parts.join(" "),
             self.host_os,
             self.host_can_sign,
         )
@@ -81,6 +120,8 @@ impl CoverageReport {
             "windows" => self.declared.windows,
             "macos" => self.declared.macos,
             "linux" => self.declared.linux,
+            "android" => self.declared.android,
+            "ios" => self.declared.ios,
             _ => false,
         };
         if !declared {
@@ -94,15 +135,23 @@ impl CoverageReport {
         console::section("ship coverage");
         console::kv(14, "declared", &format_flags(&self.declared));
         console::kv(14, "present", &format_flags(&self.present));
-        console::kv(14, "host", &format!("{} (can sign {})", self.host_os, self.host_can_sign));
+        console::kv(
+            14,
+            "host",
+            &format!("{} (can sign {})", self.host_os, self.host_can_sign),
+        );
         if self.gap.is_empty() {
-            console::kv(14, "gap", "(none — declared desktop platforms have artifacts)");
+            console::kv(
+                14,
+                "gap",
+                "(none — declared platforms have artifacts)",
+            );
         } else {
             console::kv(
                 14,
                 "gap",
                 &format!(
-                    "{} — need matching CI/host or `signet ship --collect` (planned)",
+                    "{} — need matching CI/host or `signet ship --collect`",
                     self.gap.join(", ")
                 ),
             );
@@ -114,10 +163,14 @@ impl CoverageReport {
 }
 
 fn format_flags(f: &DesktopFlags) -> String {
-    format!(
+    let mut s = format!(
         "windows={} macos={} linux={}",
         f.windows, f.macos, f.linux
-    )
+    );
+    if f.android || f.ios {
+        s.push_str(&format!(" android={} ios={}", f.android, f.ios));
+    }
+    s
 }
 
 pub fn host_can_sign_platform() -> &'static str {
@@ -127,6 +180,26 @@ pub fn host_can_sign_platform() -> &'static str {
         "linux" => "linux",
         other => other,
     }
+}
+
+fn compute_gap(declared: &DesktopFlags, present: &DesktopFlags) -> Vec<&'static str> {
+    let mut gap = Vec::new();
+    if declared.windows && !present.windows {
+        gap.push("windows");
+    }
+    if declared.macos && !present.macos {
+        gap.push("macos");
+    }
+    if declared.linux && !present.linux {
+        gap.push("linux");
+    }
+    if declared.android && !present.android {
+        gap.push("android");
+    }
+    if declared.ios && !present.ios {
+        gap.push("ios");
+    }
+    gap
 }
 
 /// Assess coverage from config + on-disk evidence (scan installers, discover, SHA256SUMS).
@@ -141,7 +214,8 @@ pub fn assess_coverage(root: &Path, config: &Config) -> CoverageReport {
                 ScanPlatform::Windows => present.windows = true,
                 ScanPlatform::Macos => present.macos = true,
                 ScanPlatform::Linux => present.linux = true,
-                ScanPlatform::Android | ScanPlatform::Ios => {}
+                ScanPlatform::Android => present.android = true,
+                ScanPlatform::Ios => present.ios = true,
             }
         }
     }
@@ -188,20 +262,11 @@ pub fn assess_coverage(root: &Path, config: &Config) -> CoverageReport {
 
     let host_os = std::env::consts::OS.to_string();
     let host_can_sign = host_can_sign_platform();
-    let mut gap = Vec::new();
-    if declared.windows && !present.windows {
-        gap.push("windows");
-    }
-    if declared.macos && !present.macos {
-        gap.push("macos");
-    }
-    if declared.linux && !present.linux {
-        gap.push("linux");
-    }
+    let gap = compute_gap(&declared, &present);
 
     let mut notes = Vec::new();
     notes.push(
-        "[platforms] is a ship commitment: missing declared OS assets are a coverage gap, not optional docs."
+        "[platforms] (+ mobile targets) is a ship commitment: missing declared OS assets are a coverage gap, not optional docs."
             .into(),
     );
     if declared.macos || declared.linux || declared.windows {
@@ -225,21 +290,17 @@ pub fn assess_coverage(root: &Path, config: &Config) -> CoverageReport {
         }
     }
 
-    let mobile_targets: Vec<String> = resolve_targets(config)
-        .into_iter()
-        .filter(|t| {
-            matches!(
-                t.framework.as_str(),
-                "expo" | "react-native" | "flutter" | "capacitor" | "android" | "ios"
-            )
-        })
-        .map(|t| format!("{} ({})", t.id, t.framework))
-        .collect();
-    if !mobile_targets.is_empty() {
-        notes.push(format!(
-            "Mobile targets {} are not covered by [platforms] desktop flags yet — ship/mobile loop is later slice.",
-            mobile_targets.join(", ")
-        ));
+    if declared.android {
+        notes.push(
+            "Android: local keystore ≠ Play App Signing — see docs/android.md. Collect APK/AAB via CI or `signet ship --collect`."
+                .into(),
+        );
+    }
+    if declared.ios {
+        notes.push(
+            "iOS: free provisioning ~7 days; IPA packaging is not App Store trust — see docs/ios.md (macOS host / ship-ios job)."
+                .into(),
+        );
     }
 
     CoverageReport {
@@ -255,7 +316,7 @@ pub fn assess_coverage(root: &Path, config: &Config) -> CoverageReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::Config;
+    use crate::config::{Config, Target};
     use tempfile::tempdir;
 
     fn present_from_kinds(kinds: &[ArtifactKind]) -> DesktopFlags {
@@ -277,22 +338,12 @@ mod tests {
             "linux" => "linux",
             _ => "unknown",
         };
-        let mut gap = Vec::new();
-        if declared.windows && !present.windows {
-            gap.push("windows");
-        }
-        if declared.macos && !present.macos {
-            gap.push("macos");
-        }
-        if declared.linux && !present.linux {
-            gap.push("linux");
-        }
         CoverageReport {
             declared,
             present,
             host_os: host_os.into(),
             host_can_sign,
-            gap,
+            gap: compute_gap(&declared, &present),
             notes: vec![
                 "[platforms] is a ship commitment: missing declared OS assets are a coverage gap."
                     .into(),
@@ -306,6 +357,7 @@ mod tests {
             windows: true,
             macos: true,
             linux: true,
+            ..Default::default()
         };
         let present = present_from_kinds(&[ArtifactKind::WindowsExe, ArtifactKind::WindowsMsi]);
         let report = coverage_from_parts(declared, present, "windows");
@@ -320,11 +372,43 @@ mod tests {
     fn no_gap_when_undeclared() {
         let declared = DesktopFlags {
             windows: true,
-            macos: false,
-            linux: false,
+            ..Default::default()
         };
         let present = present_from_kinds(&[ArtifactKind::WindowsExe]);
         let report = coverage_from_parts(declared, present, "windows");
+        assert!(!report.has_gap());
+    }
+
+    #[test]
+    fn expo_target_declares_android_and_ios() {
+        let mut cfg = Config::example("App", ".");
+        cfg.platforms.windows = true;
+        cfg.platforms.macos = false;
+        cfg.platforms.linux = false;
+        cfg.targets.push(Target {
+            id: "mobile".into(),
+            framework: "expo".into(),
+            app_root: "apps/mobile".into(),
+            build_command: String::new(),
+        });
+        let (android, ios) = mobile_commitment(&cfg);
+        assert!(android && ios);
+        let declared = DesktopFlags::from_config(&cfg);
+        assert!(declared.android && declared.ios);
+        let report = coverage_from_parts(declared, DesktopFlags::default(), "windows");
+        assert!(report.gap.contains(&"android"));
+        assert!(report.gap.contains(&"ios"));
+        assert!(report.summary_line().contains("android=MISSING"));
+    }
+
+    #[test]
+    fn apk_fills_android_gap() {
+        let declared = DesktopFlags {
+            android: true,
+            ..Default::default()
+        };
+        let present = present_from_kinds(&[ArtifactKind::Apk]);
+        let report = coverage_from_parts(declared, present, "linux");
         assert!(!report.has_gap());
     }
 
@@ -344,5 +428,30 @@ mod tests {
         assert!(report.present.windows, "present={:?}", report.present);
         assert!(report.gap.contains(&"macos"));
         assert!(report.gap.contains(&"linux"));
+    }
+
+    #[test]
+    fn assess_finds_apk_for_android_commitment() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        let apk_dir = root.join("apps/mobile/android/app/build/outputs/apk/release");
+        std::fs::create_dir_all(&apk_dir).unwrap();
+        std::fs::write(apk_dir.join("app-release.apk"), b"APK").unwrap();
+        let mut cfg = Config::example("App", "apps/desk");
+        cfg.platforms.windows = false;
+        cfg.platforms.macos = false;
+        cfg.platforms.linux = false;
+        cfg.platforms.android = true;
+        cfg.targets.push(Target {
+            id: "mobile".into(),
+            framework: "expo".into(),
+            app_root: "apps/mobile".into(),
+            build_command: String::new(),
+        });
+        cfg.write(root.join("signet.toml")).unwrap();
+        let report = assess_coverage(root, &cfg);
+        assert!(report.present.android, "present={:?}", report.present);
+        assert!(report.gap.contains(&"ios"), "gap={:?}", report.gap);
+        assert!(!report.gap.contains(&"android"));
     }
 }
