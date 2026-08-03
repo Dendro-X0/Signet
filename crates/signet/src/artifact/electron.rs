@@ -18,7 +18,7 @@ pub struct ElectronAdapter;
 
 impl ElectronAdapter {
     pub fn app_root(&self, ctx: &ProjectCtx) -> PathBuf {
-        ctx.root.join(&ctx.config.project.tauri_root)
+        ctx.root.join(&ctx.config.project.app_root)
     }
 }
 
@@ -251,7 +251,7 @@ mod tests {
             r#"
 [project]
 name = "demo"
-tauri_root = "."
+app_root = "."
 framework = "electron"
 
 [platforms]

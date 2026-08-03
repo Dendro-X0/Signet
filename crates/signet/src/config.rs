@@ -36,6 +36,55 @@ pub struct Config {
     /// Optional OV / Azure / Apple notarization helper settings (no secrets).
     #[serde(default)]
     pub graduation: Graduation,
+    /// Optional monorepo ship targets. Empty → synthesize one from `[project]`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub targets: Vec<Target>,
+}
+
+/// One shippable app/framework under a repo-level `signet.toml`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Target {
+    pub id: String,
+    pub framework: String,
+    #[serde(alias = "tauri_root")]
+    pub app_root: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub build_command: String,
+}
+
+/// Targets to build: explicit `[[targets]]`, or a synthetic `default` from `[project]`.
+pub fn resolve_targets(config: &Config) -> Vec<Target> {
+    if !config.targets.is_empty() {
+        return config.targets.clone();
+    }
+    vec![Target {
+        id: "default".into(),
+        framework: config.project.framework.clone(),
+        app_root: config.project.app_root.clone(),
+        build_command: config.project.build_command.clone(),
+    }]
+}
+
+/// Filter by `--target id`. `None` → all targets.
+pub fn select_targets<'a>(
+    all: &'a [Target],
+    filter: Option<&str>,
+) -> anyhow::Result<Vec<&'a Target>> {
+    match filter.map(str::trim).filter(|s| !s.is_empty()) {
+        None => Ok(all.iter().collect()),
+        Some(id) => {
+            let found: Vec<_> = all.iter().filter(|t| t.id == id).collect();
+            if found.is_empty() {
+                let known = all
+                    .iter()
+                    .map(|t| t.id.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                anyhow::bail!("unknown target `{id}` — known: {known}");
+            }
+            Ok(found)
+        }
+    }
 }
 
 /// Reputation graduation helpers — paths and public ids only (see docs/graduation.md).
@@ -106,8 +155,9 @@ fn default_secrets_dir() -> String {
 pub struct Project {
     /// Display / release name
     pub name: String,
-    /// Path to the Tauri app root (directory containing `src-tauri`), relative to config
-    pub tauri_root: String,
+    /// App / package root relative to config (legacy TOML key: `tauri_root`).
+    #[serde(alias = "tauri_root")]
+    pub app_root: String,
     /// Framework adapter id (`tauri` / `electron` / `cli` / …).
     /// Empty when omitted from TOML — resolved via scan at use time (see `resolve_framework`).
     #[serde(default, skip_serializing_if = "String::is_empty")]
@@ -196,7 +246,7 @@ impl Default for Config {
         Self {
             project: Project {
                 name: "my-app".into(),
-                tauri_root: ".".into(),
+                app_root: ".".into(),
                 framework: default_framework(),
                 build_command: String::new(),
             },
@@ -213,16 +263,17 @@ impl Default for Config {
             secrets_dir: default_secrets_dir(),
             trust: Trust::default(),
             graduation: Graduation::default(),
+            targets: Vec::new(),
         }
     }
 }
 
 impl Config {
-    pub fn example(name: &str, tauri_root: &str) -> Self {
+    pub fn example(name: &str, app_root: &str) -> Self {
         Self {
             project: Project {
                 name: name.into(),
-                tauri_root: tauri_root.into(),
+                app_root: app_root.into(),
                 framework: default_framework(),
                 build_command: String::new(),
             },
@@ -299,12 +350,62 @@ mod tests {
     }
 
     #[test]
-    fn explicit_framework_deserializes() {
-        let mut base = Config::example("App", ".");
-        base.project.framework = "cli".into();
-        let text = toml::to_string_pretty(&base).unwrap();
-        let cfg: Config = toml::from_str(&text).unwrap();
-        assert_eq!(cfg.project.framework, "cli");
-        assert!(framework_is_explicit(&cfg));
+    fn legacy_tauri_root_alias_loads_as_app_root() {
+        let text = r#"
+[project]
+name = "App"
+tauri_root = "apps/desk"
+framework = "tauri"
+[platforms]
+windows = true
+[release]
+github = false
+"#;
+        let cfg: Config = toml::from_str(text).unwrap();
+        assert_eq!(cfg.project.app_root, "apps/desk");
+        let out = toml::to_string_pretty(&cfg).unwrap();
+        assert!(out.contains("app_root"), "serialize prefers app_root:\n{out}");
+        assert!(!out.contains("tauri_root"), "should not emit legacy key:\n{out}");
+    }
+
+    #[test]
+    fn resolve_targets_synthesizes_default() {
+        let cfg = Config::example("App", "apps/x");
+        let t = resolve_targets(&cfg);
+        assert_eq!(t.len(), 1);
+        assert_eq!(t[0].id, "default");
+        assert_eq!(t[0].app_root, "apps/x");
+    }
+
+    #[test]
+    fn resolve_targets_uses_explicit_list() {
+        let text = r#"
+[project]
+name = "Mono"
+app_root = "."
+framework = "tauri"
+[platforms]
+windows = true
+[release]
+github = false
+[[targets]]
+id = "desktop"
+framework = "tauri"
+app_root = "apps/desk"
+build_command = "pnpm desktop:release"
+[[targets]]
+id = "cli"
+framework = "cli"
+app_root = "crates/tool"
+"#;
+        let cfg: Config = toml::from_str(text).unwrap();
+        let t = resolve_targets(&cfg);
+        assert_eq!(t.len(), 2);
+        assert_eq!(t[0].id, "desktop");
+        assert_eq!(t[1].framework, "cli");
+        let one = select_targets(&t, Some("cli")).unwrap();
+        assert_eq!(one.len(), 1);
+        assert_eq!(one[0].id, "cli");
+        assert!(select_targets(&t, Some("missing")).is_err());
     }
 }

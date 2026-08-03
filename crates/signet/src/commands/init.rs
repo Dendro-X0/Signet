@@ -11,9 +11,9 @@ pub struct Args {
     #[arg(long, default_value = "my-app")]
     pub name: String,
 
-    /// Path to Tauri app root (directory containing src-tauri), relative to cwd
-    #[arg(long, default_value = ".")]
-    pub tauri_root: String,
+    /// Path to app root (directory containing src-tauri for Tauri), relative to cwd
+    #[arg(long = "app-root", visible_alias = "tauri-root", default_value = ".")]
+    pub app_root: String,
 
     /// Framework adapter id (tauri, electron, flutter, …)
     #[arg(long, default_value = "tauri")]
@@ -43,7 +43,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         );
     }
 
-    let mut config = Config::example(&args.name, &args.tauri_root);
+    let mut config = Config::example(&args.name, &args.app_root);
     config.project.framework = args.framework.trim().to_string();
     if config.project.framework.is_empty() {
         config.project.framework = "tauri".into();

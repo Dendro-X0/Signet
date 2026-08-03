@@ -79,7 +79,7 @@ pub struct DetectedInstaller {
 #[derive(Debug, Clone, Serialize)]
 pub struct SuggestedConfig {
     pub project_name: String,
-    pub tauri_root: String,
+    pub app_root: String,
     /// Suggested `[project].framework` (e.g. tauri, electron, cli).
     pub framework: String,
     /// Detected project version (no leading `v`), when known.
@@ -169,7 +169,7 @@ pub fn print_human(report: &ScanReport) {
     let s = &report.suggested;
     const W: usize = 16;
     console::kv(W, "project.name", &format!("{:?}", s.project_name));
-    console::kv(W, "tauri_root", &format!("{:?}", s.tauri_root));
+    console::kv(W, "app_root", &format!("{:?}", s.app_root));
     console::kv(W, "framework", &format!("{:?}", s.framework));
     if let Some(ref ver) = s.version {
         console::kv(W, "version", &format!("{ver:?}"));
@@ -300,7 +300,7 @@ pub fn finalize_report(
         })
         .unwrap_or_else(|| "my-app".into());
 
-    let tauri_root = preferred
+    let app_root = preferred
         .map(|p| relativize(&root, &p.path))
         .or_else(|| tauri.map(|p| relativize(&root, &p.path)))
         .unwrap_or_else(|| ".".into());
@@ -403,9 +403,9 @@ pub fn finalize_report(
     if !has_signet {
         next_steps.push(NextStep {
             command: format!(
-                "signet init --name {} --tauri-root {} --framework {}",
+                "signet init --name {} --app-root {} --framework {}",
                 shell_quote(&project_name),
-                shell_quote(&tauri_root),
+                shell_quote(&app_root),
                 shell_quote(&framework)
             ),
             why: "create signet.toml from this suggestion".into(),
@@ -461,7 +461,7 @@ pub fn finalize_report(
         installers,
         suggested: SuggestedConfig {
             project_name,
-            tauri_root,
+            app_root,
             framework,
             version,
             windows,

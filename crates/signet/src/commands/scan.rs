@@ -20,7 +20,7 @@ pub struct Args {
     #[arg(long)]
     pub apply: bool,
 
-    /// Overwrite project name / tauri_root from scan when using --apply
+    /// Overwrite project name / app_root / framework from scan when using --apply
     #[arg(long)]
     pub force: bool,
 }
@@ -53,15 +53,32 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
         cfg.platforms.windows = s.windows;
         cfg.platforms.macos = s.macos;
         cfg.platforms.linux = s.linux;
+        // Fill omitted fields only (zero-friction apply).
+        let mut filled = Vec::new();
+        if cfg.project.framework.trim().is_empty() {
+            cfg.project.framework = s.framework.clone();
+            filled.push("framework");
+        }
+        if cfg.project.app_root.trim().is_empty() {
+            cfg.project.app_root = s.app_root.clone();
+            filled.push("app_root");
+        }
         cfg.write(&config_path)?;
         console::blank();
-        console::ok_line(
-            "updated platforms in signet.toml (use --force to also replace name/tauri_root)",
-        );
+        if filled.is_empty() {
+            console::ok_line(
+                "updated platforms in signet.toml (use --force to also replace name/app_root/framework)",
+            );
+        } else {
+            console::ok_line(&format!(
+                "updated platforms + filled {} (use --force to replace existing fields)",
+                filled.join(", ")
+            ));
+        }
     } else if config_path.exists() && force {
         let mut cfg = Config::load(&config_path)?;
         cfg.project.name = s.project_name.clone();
-        cfg.project.tauri_root = s.tauri_root.clone();
+        cfg.project.app_root = s.app_root.clone();
         cfg.project.framework = s.framework.clone();
         cfg.platforms.windows = s.windows;
         cfg.platforms.macos = s.macos;
@@ -70,11 +87,52 @@ fn apply_suggestion(report: &ScanReport, force: bool) -> anyhow::Result<()> {
         console::blank();
         console::ok_line("rewrote project + platforms in signet.toml");
     } else {
-        let mut cfg = Config::example(&s.project_name, &s.tauri_root);
+        let mut cfg = Config::example(&s.project_name, &s.app_root);
         cfg.project.framework = s.framework.clone();
         cfg.platforms.windows = s.windows;
         cfg.platforms.macos = s.macos;
         cfg.platforms.linux = s.linux;
+
+        // Multiple detected apps → draft [[targets]] for monorepo roots.
+        if report.projects.len() > 1 {
+            use crate::config::Target;
+            use crate::scan::framework_id_for_kind;
+            cfg.targets = report
+                .projects
+                .iter()
+                .take(8)
+                .enumerate()
+                .map(|(i, p)| {
+                    let fw = framework_id_for_kind(p.kind).to_string();
+                    let root_rel = p
+                        .path
+                        .strip_prefix(root)
+                        .map(|r| {
+                            let s = r.to_string_lossy().replace('\\', "/");
+                            if s.is_empty() {
+                                ".".into()
+                            } else {
+                                s
+                            }
+                        })
+                        .unwrap_or_else(|_| ".".into());
+                    let id = p
+                        .name
+                        .clone()
+                        .filter(|n| !n.is_empty())
+                        .unwrap_or_else(|| format!("target{}", i + 1));
+                    Target {
+                        id,
+                        framework: fw,
+                        app_root: root_rel,
+                        build_command: String::new(),
+                    }
+                })
+                .collect();
+            // Prefer suggested as [project] summary; keep targets list.
+            console::note("multiple projects detected — wrote [[targets]] draft (edit ids/build_command as needed)");
+        }
+
         cfg.write(&config_path)?;
 
         let secrets = root.join(SECRETS_DIR_NAME);

@@ -2,10 +2,10 @@
 
 **Status:** Sign → Prove → Check green on Windows (self-signed; SmartScreen still warns)  
 **App:** Miro (`E:\Web Projects\miro-workspace\miro`) — Tauri v2 desktop  
-**Framework:** `tauri` · `tauri_root = apps/miro-desktop` · `build_command = pnpm desktop:release`  
-**Date:** 2026-08-03  
+**Framework:** `tauri` · `app_root = apps/miro-desktop` · `build_command = pnpm desktop:release`  
+**Date:** 2026-08-03 (updated for Signet 0.5.6 Check honesty)  
 **Host:** Windows  
-**Signet:** local 0.5.4+ (Tauri `build_command` + Windows `cmd /C` for pnpm)
+**Signet:** ≥0.5.6 recommended (inspect honesty + relative SHA256SUMS + optional `[[targets]]`)
 
 ## Goal
 
@@ -14,41 +14,46 @@ Complete Sign → Prove → Check on a real installable app (v1.0 gate).
 ## Commands used
 
 ```bash
-cd /e/Web\ Projects/miro-workspace\miro
+cd /e/Web\ Projects/miro-workspace/miro
 signet scan
 signet doctor
 signet build --no-sign          # pnpm desktop:release → NSIS + MSI + exe
 signet sums-key create          # once
 signet build --skip-build       # Authenticode + SHA256SUMS.minisig
-signet verify
+signet verify                   # finds relative paths under SHA256SUMS
 signet inspect --file "apps/miro-desktop/src-tauri/target/release/bundle/nsis/Miro Desktop_0.2.0_x64-setup.exe"
+# Expected: status=signed (self-signed / untrusted root detail OK) — not false "unsigned"
+```
+
+Optional monorepo shape (0.5.6+):
+
+```toml
+[[targets]]
+id = "desktop"
+framework = "tauri"
+app_root = "apps/miro-desktop"
+build_command = "pnpm desktop:release"
 ```
 
 ## Friction found → fixes
 
 | Issue | Fix |
 |-------|-----|
-| `frontendDist` `../miro-web/out` resolved under `miro-desktop/` | Miro: `../../miro-web/out` in `tauri.conf.json` |
-| Signet ignored Tauri `build_command` | Signet: run monorepo script from project root |
-| Windows `program not found` for `pnpm` | Signet: spawn via `cmd /C` |
-| Corrupt cargo `cc` registry | Delete `~/.cargo/registry/src/.../cc-1.2.46` and rebuild |
+| `frontendDist` wrong relative path | Miro: `../../miro-web/out` |
+| Signet ignored Tauri `build_command` | Signet 0.5.5: project-root script |
+| Windows `program not found` for `pnpm` | Signet 0.5.5: `cmd /C` |
+| `inspect` reported unsigned after sign | Signet 0.5.6: signature presence vs `/pa` trust |
+| `verify` skipped all sums (basenames only) | Signet 0.5.6: relative paths in SHA256SUMS |
 
 ## Outcome
 
 | Step | Result |
 |------|--------|
-| Scan / init | `framework=tauri`, `tauri_root=apps/miro-desktop` |
-| Build | NSIS + MSI + `miro-desktop.exe` discovered |
-| Prove | `SHA256SUMS` + `.minisig` |
-| Sign | `signtool` reported success on all three (`signtool+timestamp`) |
-| Check | minisign OK; `inspect /pa` may report unsigned for self-signed (expected without Trusted Root) |
-
-## Artifacts (Windows)
-
-- `…/bundle/nsis/Miro Desktop_0.2.0_x64-setup.exe`
-- `…/bundle/msi/Miro Desktop_0.2.0_x64_en-US.msi`
-- `…/release/miro-desktop.exe`
+| Build | NSIS + MSI + exe discovered |
+| Prove | `SHA256SUMS` (+ `.minisig`) with relative paths |
+| Sign | Authenticode `signtool+timestamp` |
+| Check | minisign OK; inspect **signed** for self-signed (honest detail) |
 
 ## Time-to-first-useful check
 
-~5–10+ min for first `desktop:release` (Rust compile); sign-only afterward is seconds.
+~5–10+ min first `desktop:release`; sign-only afterward is seconds.

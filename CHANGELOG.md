@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.5.6 — 2026-08-03
+
+### Fixed
+
+- Windows `inspect`: self-signed Authenticode reports **signed** (presence vs `/pa` trust), not false `unsigned`
+- `SHA256SUMS` uses paths relative to the sums file so `signet verify` finds monorepo artifacts
+
+### Added
+
+- Config field `app_root` (legacy alias `tauri_root`); guided init can accept scan suggestion in one confirm
+- `signet scan --apply` fills omitted `framework` / `app_root`; multi-project scans draft `[[targets]]`
+- Monorepo `[[targets]]` + `signet build --target <id>` (shared identity / sums / TRUST.md)
+
+### Docs
+
+- Specs: `config-simplification-design.md`, `multi-target-design.md`
+- Updated Miro dogfood notes for Check honesty
+
 ## 0.5.5 — 2026-08-03
 
 ### Fixed

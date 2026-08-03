@@ -17,20 +17,47 @@ pub struct ChecksumResult {
 }
 
 /// Write a SHA256SUMS file (GNU coreutils compatible: `hash  filename`).
+/// Filenames are paths relative to the directory containing `out` when possible
+/// (so `signet verify` can find monorepo artifacts next to a root `SHA256SUMS`).
 pub fn write_sha256sums(out: &Path, paths: &[PathBuf]) -> anyhow::Result<PathBuf> {
+    let sums_dir = out.parent().unwrap_or_else(|| Path::new("."));
     let named: Vec<(String, PathBuf)> = paths
         .iter()
         .filter(|p| p.is_file())
         .map(|path| {
-            let name = path
-                .file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("artifact")
-                .to_string();
+            let name = relative_sums_name(path, sums_dir);
             (name, path.clone())
         })
         .collect();
     write_sha256sums_named(out, &named)
+}
+
+/// Path written into SHA256SUMS: relative to `sums_dir` with `/` separators, else basename.
+pub fn relative_sums_name(path: &Path, sums_dir: &Path) -> String {
+    let abs_path = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+    let abs_dir = sums_dir
+        .canonicalize()
+        .unwrap_or_else(|_| sums_dir.to_path_buf());
+    if let Ok(rel) = abs_path.strip_prefix(&abs_dir) {
+        return normalize_sums_rel(rel);
+    }
+    // Best-effort without canonicalize (tests / missing parents).
+    if let Ok(rel) = path.strip_prefix(sums_dir) {
+        return normalize_sums_rel(rel);
+    }
+    path.file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("artifact")
+        .to_string()
+}
+
+fn normalize_sums_rel(rel: &Path) -> String {
+    let s = rel.to_string_lossy().replace('\\', "/");
+    if s.is_empty() {
+        "artifact".into()
+    } else {
+        s
+    }
 }
 
 /// Like [`write_sha256sums`], but uses explicit names (for release asset filenames).
@@ -226,6 +253,40 @@ mod tests {
         let text = fs::read_to_string(out).unwrap();
         assert!(text.contains("  a.bin"));
         assert_eq!(text.split_whitespace().next().unwrap().len(), 64);
+    }
+
+    #[test]
+    fn writes_relative_nested_path() {
+        let dir = tempdir().unwrap();
+        let nested = dir.path().join("apps/desk/bundle");
+        fs::create_dir_all(&nested).unwrap();
+        let file = nested.join("setup.exe");
+        fs::write(&file, b"mz").unwrap();
+        let out = dir.path().join("SHA256SUMS");
+        write_sha256sums(&out, &[file]).unwrap();
+        let text = fs::read_to_string(&out).unwrap();
+        assert!(
+            text.contains("apps/desk/bundle/setup.exe") || text.contains("apps\\desk\\bundle\\setup.exe"),
+            "expected relative path in sums, got:\n{text}"
+        );
+        let ok = verify_sha256sums(&out, &[dir.path()], None).unwrap();
+        assert_eq!(ok.len(), 1);
+        assert!(ok[0].ok, "{:?}", ok[0]);
+    }
+
+    #[test]
+    fn verify_finds_relative_entry_without_search_root_hit() {
+        let dir = tempdir().unwrap();
+        let nested = dir.path().join("out");
+        fs::create_dir_all(&nested).unwrap();
+        let file = nested.join("app.exe");
+        fs::write(&file, b"data").unwrap();
+        let sums = dir.path().join("SHA256SUMS");
+        write_sha256sums(&sums, &[file]).unwrap();
+        // Empty search roots — must resolve via sums_dir + relative name.
+        let ok = verify_sha256sums(&sums, &[], None).unwrap();
+        assert_eq!(ok.len(), 1);
+        assert!(ok[0].ok);
     }
 
     #[test]

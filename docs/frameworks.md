@@ -8,7 +8,7 @@ Signet’s artifact contract plugs these stacks into **discover → checksum →
 [project]
 name = "my-app"
 framework = "flutter"   # flutter | react-native | rn | expo | capacitor
-tauri_root = "."        # app root (legacy field name)
+app_root = "."          # app root (legacy key: tauri_root)
 build_command = "flutter build apk"   # REQUIRED for `signet build` (no target guess)
 ```
 

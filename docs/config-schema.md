@@ -8,10 +8,18 @@ Non-secret project configuration. Written by `signet init`. Legacy `selfsign.tom
 
 [project]
 name = "my-app"
-tauri_root = "."          # app root (src-tauri parent for Tauri; package.json dir for Electron)
+app_root = "."            # app root (legacy alias: tauri_root)
 framework = "tauri"       # tauri | electron | android | ios | flutter | react-native | expo | capacitor | cli
 # build_command = ""      # required for flutter/rn/expo/capacitor/ios build (see docs/frameworks.md)
                           # cli defaults to: cargo build --release
+                          # tauri monorepo: e.g. pnpm desktop:release
+
+# Optional monorepo ship targets (omit → single target from [project])
+# [[targets]]
+# id = "desktop"
+# framework = "tauri"
+# app_root = "apps/miro-desktop"
+# build_command = "pnpm desktop:release"
 
 
 [platforms]
@@ -51,9 +59,10 @@ secrets_dir = ".signet"
 | Field | Meaning |
 |-------|---------|
 | `project.name` | Display / release name |
-| `project.tauri_root` | App root relative to config (Tauri: dir with `src-tauri`; Electron: `package.json` dir) |
-| `project.framework` | Adapter id: `tauri`, `electron`, `android`, `ios`, `flutter`, `react-native`/`rn`, `expo`, `capacitor` |
-| `project.build_command` | Optional build argv (required for iOS `signet build` without `--skip-build`) |
+| `project.app_root` | App root relative to config (legacy key: `tauri_root`) |
+| `project.framework` | Adapter id: `tauri`, `electron`, `android`, `ios`, `flutter`, `react-native`/`rn`, `expo`, `capacitor`, `cli` |
+| `project.build_command` | Optional build argv (required for hybrid/iOS; Tauri monorepo scripts OK) |
+| `targets[]` | Optional `[[targets]]` (`id`, `framework`, `app_root`, `build_command`); `signet build --target` |
 | `platforms.*` | Which OS targets this project intends to ship |
 | `release.github` | Enable GitHub Releases in `signet release` |
 | `release.repo` | Optional `owner/name` override |

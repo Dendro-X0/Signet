@@ -18,7 +18,7 @@ impl FrameworkAdapter for TauriAdapter {
     }
 
     fn label_root(&self, ctx: &ProjectCtx) -> PathBuf {
-        resolve_src_tauri(&ctx.root, &ctx.config.project.tauri_root)
+        resolve_src_tauri(&ctx.root, &ctx.config.project.app_root)
     }
 
     fn build(&self, ctx: &ProjectCtx, opts: &BuildOpts) -> anyhow::Result<()> {
@@ -91,7 +91,7 @@ mod tests {
             r#"
 [project]
 name = "demo"
-tauri_root = "."
+app_root = "."
 framework = "tauri"
 
 [platforms]
@@ -125,7 +125,7 @@ secrets_dir = ".signet"
             r#"
 [project]
 name = "demo"
-tauri_root = "."
+app_root = "."
 framework = "tauri"
 build_command = "pnpm desktop:release"
 

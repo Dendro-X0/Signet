@@ -162,7 +162,7 @@ pub fn guided_init() -> anyhow::Result<()> {
     }
     console::note(&format!(
         "suggested: framework={}  root={}  name={}",
-        suggested.framework, suggested.tauri_root, suggested.project_name
+        suggested.framework, suggested.app_root, suggested.project_name
     ));
     if suggested.framework == "cli" {
         console::note(
@@ -170,17 +170,36 @@ pub fn guided_init() -> anyhow::Result<()> {
         );
     }
 
+    // Zero-friction path: accept scan suggestion with one confirm.
+    if confirm("write suggested signet.toml (Enter = yes)?", true)? {
+        let mut build_command = String::new();
+        if crate::tui::framework_pick::requires_build_command(&suggested.framework) {
+            console::note(crate::tui::framework_pick::build_command_hint(
+                &suggested.framework,
+            ));
+            build_command = prompt_line("build_command (required)", "")?;
+        }
+        return commands::init::run(commands::init::Args {
+            name: suggested.project_name.clone(),
+            app_root: suggested.app_root.clone(),
+            framework: suggested.framework.clone(),
+            build_command,
+            path: PathBuf::from("."),
+            force: status.has_config,
+        });
+    }
+
     let default_name = status
         .app_name
         .as_deref()
         .unwrap_or(suggested.project_name.as_str());
     let name = prompt_line("app name", default_name)?;
-    let tauri_root = prompt_line("app root (tauri_root)", &suggested.tauri_root)?;
+    let app_root = prompt_line("app root", &suggested.app_root)?;
     let (framework, build_command) =
         prompt_framework_and_build_cmd(Some(suggested.framework.as_str()))?;
     commands::init::run(commands::init::Args {
         name,
-        tauri_root,
+        app_root,
         framework,
         build_command,
         path: PathBuf::from("."),
@@ -321,6 +340,7 @@ pub fn guided_build() -> anyhow::Result<()> {
     console::blank();
     commands::build::run(commands::build::Args {
         config: None,
+        target: None,
         skip_build,
         no_sign,
         no_sums_sign: false,
@@ -415,7 +435,7 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
             let report = scan_repository(std::path::Path::new("."))?;
             crate::scan::print_human(&report);
             suggested_fw = Some(report.suggested.framework.clone());
-            suggested_root = report.suggested.tauri_root.clone();
+            suggested_root = report.suggested.app_root.clone();
             if let Some(ref fw) = suggested_fw {
                 console::note(&format!("suggested framework: {fw}"));
             }
@@ -429,7 +449,7 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
             suggested_fw =
                 preferred_framework_from_projects(&report.root, &report.projects)
                     .map(|s| s.to_string());
-            suggested_root = report.suggested.tauri_root.clone();
+            suggested_root = report.suggested.app_root.clone();
         }
     }
     step_n += 1;
@@ -441,12 +461,12 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
     step_active(step_n, total, "Init · config + framework");
     if !status.has_config {
         let name = prompt_line("app name", status.app_name.as_deref().unwrap_or("my-app"))?;
-        let tauri_root = prompt_line("app root (tauri_root)", &suggested_root)?;
+        let app_root = prompt_line("app root", &suggested_root)?;
         let (framework, build_command) =
             prompt_framework_and_build_cmd(suggested_fw.as_deref())?;
         commands::init::run(commands::init::Args {
             name,
-            tauri_root,
+            app_root,
             framework,
             build_command,
             path: PathBuf::from("."),

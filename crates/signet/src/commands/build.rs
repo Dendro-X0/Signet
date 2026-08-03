@@ -4,6 +4,7 @@ use clap::Args as ClapArgs;
 
 use crate::android::{keystore_paths, sign_apks};
 use crate::artifact::{select_adapter, Artifact, ArtifactKind, BuildOpts};
+use crate::config::select_targets;
 use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::sign::{
@@ -16,6 +17,10 @@ pub struct Args {
     /// Path to signet.toml
     #[arg(long)]
     pub config: Option<PathBuf>,
+
+    /// Build only this `[[targets]].id` (default: all targets)
+    #[arg(long)]
+    pub target: Option<String>,
 
     /// Skip framework build; only discover + sign existing artifacts
     #[arg(long)]
@@ -59,30 +64,58 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         anyhow::anyhow!("{e}\nhint: run `signet init` in your app directory first")
     })?;
 
-    let adapter = select_adapter(&ctx.root, &ctx.config)?;
-    let label = adapter.label_root(&ctx);
-    println!("{} root: {}", adapter.id(), label.display());
+    let all = ctx.targets();
+    let selected = select_targets(&all, args.target.as_deref())?;
 
-    if !args.skip_build {
-        adapter.build(
-            &ctx,
-            &BuildOpts {
-                profile: args.profile.clone(),
-                extra_args: args.tauri_args.clone(),
-            },
-        )?;
+    let mut discovered: Vec<Artifact> = Vec::new();
+    let mut saw_ios = false;
+
+    if args.artifacts.is_empty() {
+        for target in &selected {
+            println!("── target {} ({}) ──", target.id, target.framework);
+            let tctx = ctx.with_target(target);
+            let adapter = select_adapter(&tctx.root, &tctx.config)?;
+            let label = adapter.label_root(&tctx);
+            println!("{} root: {}", adapter.id(), label.display());
+
+            if !args.skip_build {
+                adapter.build(
+                    &tctx,
+                    &BuildOpts {
+                        profile: args.profile.clone(),
+                        extra_args: args.tauri_args.clone(),
+                    },
+                )?;
+            } else {
+                println!("skipping {} build (--skip-build)", adapter.id());
+            }
+
+            if adapter.id() == "ios" {
+                saw_ios = true;
+            }
+
+            for art in adapter.discover(&tctx, &args.profile)? {
+                if !discovered.iter().any(|a| a.path == art.path) {
+                    discovered.push(art);
+                }
+            }
+        }
     } else {
-        println!("skipping {} build (--skip-build)", adapter.id());
+        println!("using {} explicit --artifact path(s)", args.artifacts.len());
+        discovered = args.artifacts.iter().map(Artifact::from_path).collect();
     }
 
-    let discovered = if args.artifacts.is_empty() {
-        adapter.discover(&ctx, &args.profile)?
-    } else {
-        args.artifacts.iter().map(Artifact::from_path).collect()
-    };
-
     if discovered.is_empty() {
-        anyhow::bail!("{}", adapter.empty_hint(&ctx, &args.profile));
+        let hints: Vec<String> = selected
+            .iter()
+            .map(|t| {
+                let tctx = ctx.with_target(t);
+                select_adapter(&tctx.root, &tctx.config)
+                    .map(|a| a.empty_hint(&tctx, &args.profile))
+                    .unwrap_or_else(|e| e.to_string())
+            })
+            .collect();
+        anyhow::bail!("{}", hints.join("\n"));
     }
 
     println!("discovered {} artifact(s):", discovered.len());
@@ -110,20 +143,34 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let is_android = adapter.id() == "android";
-    if is_android {
-        return sign_android_flow(&ctx, &discovered, &checksum_paths, &sums_path, &args);
+    let apks: Vec<Artifact> = discovered
+        .iter()
+        .filter(|a| a.kind == ArtifactKind::Apk)
+        .cloned()
+        .collect();
+    let host = host_signable(&discovered);
+
+    if saw_ios || discovered.iter().any(|a| a.kind == ArtifactKind::Ipa) {
+        println!("note: {}", crate::ios::honesty_notes());
+        println!(
+            "note: IPA/device signing stays in Xcode — `signet ios package --app …` for IPA layout"
+        );
     }
 
-    if adapter.id() == "ios" {
-        println!("note: {}", crate::ios::honesty_notes());
-        if !args.no_sign {
-            println!(
-                "signing skipped for framework=ios — use Xcode for device signing; \
-                 `signet ios package --app …` for IPA layout"
-            );
+    if !apks.is_empty() {
+        sign_android_flow(&ctx, &apks, &checksum_paths, &sums_path, &args)?;
+    }
+
+    if host.is_empty() && apks.is_empty() {
+        if saw_ios || discovered.iter().any(|a| a.kind == ArtifactKind::Ipa) {
+            println!("done — see docs/ios.md");
+            return Ok(());
         }
-        println!("done — see docs/ios.md");
+        println!("nothing to host-sign (no host-matching or APK artifacts)");
+        return Ok(());
+    }
+
+    if host.is_empty() {
         return Ok(());
     }
 
@@ -136,17 +183,11 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     );
     println!("host tools: {}", tool_hint_for_host());
 
-    let to_sign = if args.artifacts.is_empty() {
-        host_signable(&discovered)
-    } else {
-        discovered.clone()
-    };
-
     let opts = SignOptions {
         timestamp: !args.no_timestamp,
         ..SignOptions::default()
     };
-    let report = sign_host_artifacts(&identity, &to_sign, &opts)?;
+    let report = sign_host_artifacts(&identity, &host, &opts)?;
 
     for w in &report.warnings {
         println!("warning: {w}");
@@ -167,8 +208,6 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         anyhow::bail!("signing produced no successful artifacts");
     }
 
-    // Refresh checksums after signing (signature bytes may change PE checksum overlays;
-    // detached .sig files are separate).
     let mut refresh = checksum_paths;
     for s in &report.signed {
         if s.path.is_file() && !refresh.iter().any(|p| p == &s.path) {
@@ -186,22 +225,15 @@ pub fn run(args: Args) -> anyhow::Result<()> {
 
 fn sign_android_flow(
     ctx: &ProjectCtx,
-    discovered: &[Artifact],
+    apk_arts: &[Artifact],
     checksum_paths: &[PathBuf],
     sums_path: &std::path::Path,
     args: &Args,
 ) -> anyhow::Result<()> {
     let paths = keystore_paths(&ctx.secrets_dir());
-    let apks: Vec<PathBuf> = discovered
-        .iter()
-        .filter(|a| a.kind == ArtifactKind::Apk)
-        .map(|a| a.path.clone())
-        .collect();
+    let apks: Vec<PathBuf> = apk_arts.iter().map(|a| a.path.clone()).collect();
     if apks.is_empty() {
-        anyhow::bail!(
-            "no APKs to sign — pass --artifact *.apk or build an APK first\n\
-             note: AAB Play upload is documented in docs/android.md (not auto-signed as Play distribution)"
-        );
+        return Ok(());
     }
     println!(
         "signing {} APK(s) with android keystore ({})",

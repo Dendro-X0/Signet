@@ -34,19 +34,21 @@ pub fn collect_release_files_with_opts(
     let mut paths: Vec<PathBuf> = Vec::new();
 
     if extra_artifacts.is_empty() {
-        // Build a temporary ctx for adapter discover (config already loaded by caller).
         let ctx = ProjectCtx {
             config_path: project_root.join("signet.toml"),
             root: project_root.to_path_buf(),
             config: config.clone(),
         };
-        let adapter = select_adapter(project_root, config)?;
-        for art in adapter.discover(&ctx, profile)? {
-            if art.path.is_file() {
-                let sig = sibling_sig(&art.path);
-                paths.push(art.path);
-                if sig.is_file() {
-                    paths.push(sig);
+        for target in crate::config::resolve_targets(config) {
+            let tctx = ctx.with_target(&target);
+            let adapter = select_adapter(project_root, &tctx.config)?;
+            for art in adapter.discover(&tctx, profile)? {
+                if art.path.is_file() {
+                    let sig = sibling_sig(&art.path);
+                    paths.push(art.path);
+                    if sig.is_file() {
+                        paths.push(sig);
+                    }
                 }
             }
         }

@@ -15,7 +15,7 @@ pub struct CliAdapter;
 
 impl CliAdapter {
     fn app_root(&self, ctx: &ProjectCtx) -> PathBuf {
-        ctx.root.join(&ctx.config.project.tauri_root)
+        ctx.root.join(&ctx.config.project.app_root)
     }
 }
 

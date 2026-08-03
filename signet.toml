@@ -6,7 +6,7 @@ secrets_dir = ".signet"
 [project]
 name = "Signet"
 framework = "cli"
-tauri_root = "."
+app_root = "."
 
 [platforms]
 windows = true

@@ -16,7 +16,7 @@ pub struct IosAdapter;
 
 impl IosAdapter {
     fn app_root(&self, ctx: &ProjectCtx) -> PathBuf {
-        ctx.root.join(&ctx.config.project.tauri_root)
+        ctx.root.join(&ctx.config.project.app_root)
     }
 }
 

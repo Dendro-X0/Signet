@@ -66,27 +66,76 @@ fn probe_windows(path: &Path) -> (SignatureStatus, String, String) {
             "signtool not found (install Windows SDK Signing Tools)".into(),
         );
     };
-    match Command::new(&signtool)
+
+    // Presence probe: /v output distinguishes "no signature" from untrusted chain.
+    let verbose = Command::new(&signtool)
+        .args(["verify", "/v"])
+        .arg(path)
+        .output();
+    let (verbose_ok, verbose_text) = match &verbose {
+        Ok(out) => {
+            let text = format!(
+                "{}{}",
+                String::from_utf8_lossy(&out.stdout),
+                String::from_utf8_lossy(&out.stderr)
+            );
+            (out.status.success(), text)
+        }
+        Err(e) => {
+            return (
+                SignatureStatus::Error,
+                "signtool-verify".into(),
+                format!("failed to run signtool: {e}"),
+            );
+        }
+    };
+
+    if !parse_signtool_has_signature(&verbose_text) {
+        return (
+            SignatureStatus::Unsigned,
+            "signtool-verify".into(),
+            "no Authenticode signature found".into(),
+        );
+    }
+
+    // Signature is embedded. /pa asks whether the OS trusts the chain (OV/public CA).
+    let pa_ok = Command::new(&signtool)
         .args(["verify", "/pa"])
         .arg(path)
         .output()
-    {
-        Ok(out) if out.status.success() => (
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if pa_ok || verbose_ok {
+        (
             SignatureStatus::Signed,
             "signtool-verify".into(),
             "Authenticode signature present (not a SmartScreen guarantee)".into(),
-        ),
-        Ok(_) => (
-            SignatureStatus::Unsigned,
+        )
+    } else {
+        (
+            SignatureStatus::Signed,
             "signtool-verify".into(),
-            "no Authenticode signature accepted by signtool verify /pa".into(),
-        ),
-        Err(e) => (
-            SignatureStatus::Error,
-            "signtool-verify".into(),
-            format!("failed to run signtool: {e}"),
-        ),
+            "Authenticode present but chain not trusted by /pa (self-signed / untrusted root — expected; not SmartScreen silence)".into(),
+        )
     }
+}
+
+/// True when `signtool verify /v` output indicates an embedded signature (unit-tested).
+pub fn parse_signtool_has_signature(text: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    if lower.contains("no signature found")
+        || lower.contains("not signed")
+        || lower.contains("file not signed")
+        || lower.contains("the file is not signed")
+    {
+        return false;
+    }
+    lower.contains("signature index")
+        || lower.contains("number of signatures")
+        || lower.contains("hash of file")
+        || lower.contains("successfully verified")
+        || lower.contains("signing certificate")
 }
 
 fn probe_macos(path: &Path) -> (SignatureStatus, String, String) {
@@ -242,6 +291,19 @@ mod tests {
     fn parse_adhoc_marker() {
         assert!(parse_codesign_adhoc("Signature=adhoc\nFormat=bundle"));
         assert!(!parse_codesign_adhoc("Authority=Developer ID Application: Example"));
+    }
+
+    #[test]
+    fn parse_signtool_signature_presence() {
+        assert!(!parse_signtool_has_signature(
+            "SignTool Error: No signature found.\nNumber of errors: 1"
+        ));
+        assert!(parse_signtool_has_signature(
+            "Signature Index: 0 (Primary Signature)\nHash of file (sha256): AABB\nSignTool Error: A certificate chain could not be built"
+        ));
+        assert!(parse_signtool_has_signature(
+            "Successfully verified: C:\\app.exe"
+        ));
     }
 
     #[test]

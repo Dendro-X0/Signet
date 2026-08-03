@@ -27,7 +27,7 @@ impl ProjectStatus {
         if has_config {
             if let Ok(cfg) = Config::load(&config_path) {
                 app_name = Some(cfg.project.name.clone());
-                let src = resolve_src_tauri(root, &cfg.project.tauri_root);
+                let src = resolve_src_tauri(root, &cfg.project.app_root);
                 if let Ok(arts) = discover_artifacts(&src, "release") {
                     has_artifacts = arts.iter().any(|a| a.path.is_file());
                 }
@@ -99,7 +99,7 @@ mod tests {
             r#"
 [project]
 name = "x"
-tauri_root = "."
+app_root = "."
 [platforms]
 windows = true
 macos = true
