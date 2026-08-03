@@ -63,7 +63,7 @@ These do **not** excuse missing orchestration, collect, coverage gates, or dual-
 | 1 | Coverage report / treat platforms as commitment (shortcomings 1–2, 7, 11–12) | **Done in 0.5.9** (`signet ship --plan`, doctor/build/guided) — release fail-closed still slice E |
 | 2 | Soft-fail unpaid `[[targets]]` (5–6) | **Done in 0.5.10** — debt skip + `--strict-targets` |
 | 3 | `release --dry-run` read-only (8) | **Done in 0.5.11** |
-| 4 | CI template + collect + release coverage gate (1, 9) | next |
-| 5 | Graduate on same ship plan (3) | |
+| 4 | CI template + collect + release coverage gate (1, 9) | **Done in 0.5.12** |
+| 5 | Graduate on same ship plan (3) | next |
 | 6 | Mobile through full loop (4) | |
 | 7 | Release auth guided path (10) | |

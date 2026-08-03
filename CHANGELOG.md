@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.12 — 2026-08-03
+
+### Added
+
+- `signet ship --ci` — emit `.github/workflows/signet-ship.yml` matrix from declared `[platforms]`
+- `signet ship --collect DIR` — merge multi-host installers into `dist/signet-ship/` and rewrite `SHA256SUMS`
+- `signet release` coverage gate: fails on declared-platform gap unless `--allow-partial` (dry-run warns only)
+- Release collect attaches `dist/signet-ship/` assets
+
+### Docs
+
+- `docs/ship.md`; spec `specs/backend/ship-ci-collect-design.md` (slices D–E)
+
 ## 0.5.11 — 2026-08-03
 
 ### Fixed

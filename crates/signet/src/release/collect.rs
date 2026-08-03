@@ -79,6 +79,14 @@ pub fn collect_release_files_with_opts(
         by_name.insert(name, path);
     }
 
+    // Multi-host staging from `signet ship --collect`
+    for path in crate::ship::staging_release_paths(project_root) {
+        if path.is_file() {
+            let name = unique_asset_name(&path, &by_name)?;
+            by_name.entry(name).or_insert(path);
+        }
+    }
+
     let named: Vec<(String, PathBuf)> = by_name
         .iter()
         .map(|(n, p)| (n.clone(), p.clone()))

@@ -163,6 +163,11 @@ pub fn assess_coverage(root: &Path, config: &Config) -> CoverageReport {
         }
     }
 
+    // Multi-host staging from `signet ship --collect`
+    for path in crate::ship::staging_release_paths(root) {
+        present.merge_kind(ArtifactKind::classify_explicit(&path));
+    }
+
     // SHA256SUMS names (basename or relative).
     let sums = root.join("SHA256SUMS");
     if sums.is_file() {

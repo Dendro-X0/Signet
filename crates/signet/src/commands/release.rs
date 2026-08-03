@@ -31,6 +31,10 @@ pub struct Args {
     #[arg(long)]
     pub dry_run: bool,
 
+    /// Allow publish when declared [platforms] are missing on-disk artifacts
+    #[arg(long)]
+    pub allow_partial: bool,
+
     /// Create the GitHub Release as a draft
     #[arg(long)]
     pub draft: bool,
@@ -94,8 +98,32 @@ pub fn run(args: Args) -> anyhow::Result<()> {
 
     if files.is_empty() {
         anyhow::bail!(
-            "no release assets found — run `signet build` first or pass --artifact <path>"
+            "no release assets found — run `signet build` / `signet ship --collect` first or pass --artifact <path>"
         );
+    }
+
+    let coverage = crate::ship::assess_coverage(&ctx.root, &ctx.config);
+    if coverage.has_gap() {
+        let gap = coverage.gap.join(", ");
+        if args.dry_run {
+            eprintln!(
+                "warning: ship coverage gap [{}] — {}",
+                gap,
+                coverage.summary_line()
+            );
+            eprintln!("warning: live release will fail without --allow-partial until gap is filled");
+        } else if !args.allow_partial {
+            anyhow::bail!(
+                "ship coverage gap [{gap}] — declared [platforms] missing artifacts.\n\
+                 Collect with `signet ship --collect DIR` or pass --allow-partial.\n\
+                 {}",
+                coverage.summary_line()
+            );
+        } else {
+            eprintln!(
+                "warning: --allow-partial: publishing with coverage gap [{gap}]"
+            );
+        }
     }
 
     crate::release::verify_checksums_cover_opts(&files, args.dry_run)?;
