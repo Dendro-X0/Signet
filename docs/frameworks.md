@@ -12,6 +12,8 @@ tauri_root = "."        # app root (legacy field name)
 build_command = "flutter build apk"   # REQUIRED for `signet build` (no target guess)
 ```
 
+If `framework` is **omitted**, Signet resolves it via `signet scan` (same preference as Init). Prefer an explicit value in committed configs.
+
 ```bash
 signet build --skip-build          # discover + sums (+ host sign desktop artifacts)
 signet android sign --apk path.apk # APK crypto sign

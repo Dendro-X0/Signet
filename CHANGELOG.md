@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.4 — 2026-08-02
+
+### Fixed
+
+- Omitted `[project].framework` no longer defaults to Tauri — resolved via scan (same preference as Init)
+- This repo’s `signet.toml` sets `framework = "cli"` explicitly
+
+### Added
+
+- Version-aware release tag defaults from Cargo / package.json / Expo / git
+
 ## 0.5.3 — 2026-08-01
 
 ### Fixed

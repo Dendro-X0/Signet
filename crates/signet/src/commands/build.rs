@@ -59,7 +59,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         anyhow::anyhow!("{e}\nhint: run `signet init` in your app directory first")
     })?;
 
-    let adapter = select_adapter(&ctx.config)?;
+    let adapter = select_adapter(&ctx.root, &ctx.config)?;
     let label = adapter.label_root(&ctx);
     println!("{} root: {}", adapter.id(), label.display());
 

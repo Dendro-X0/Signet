@@ -46,10 +46,13 @@ pub trait FrameworkAdapter {
     fn empty_hint(&self, ctx: &ProjectCtx, profile: &str) -> String;
 }
 
-/// Select adapter from `[project].framework` (default tauri).
-pub fn select_adapter(config: &Config) -> anyhow::Result<Box<dyn FrameworkAdapter>> {
-    let fw = config.project.framework.trim();
-    let fw = if fw.is_empty() { "tauri" } else { fw };
+/// Select adapter from effective framework (explicit config, else scan, else tauri).
+pub fn select_adapter(
+    root: &std::path::Path,
+    config: &Config,
+) -> anyhow::Result<Box<dyn FrameworkAdapter>> {
+    let resolved = crate::project::resolve_framework(root, config);
+    let fw = resolved.as_str();
     match fw {
         "tauri" => Ok(Box::new(TauriAdapter)),
         "electron" => Ok(Box::new(ElectronAdapter)),
@@ -71,11 +74,16 @@ pub fn select_adapter(config: &Config) -> anyhow::Result<Box<dyn FrameworkAdapte
 mod tests {
     use super::*;
     use crate::config::Config;
+    use std::path::Path;
+
+    fn root() -> &'static Path {
+        Path::new(".")
+    }
 
     #[test]
     fn default_selects_tauri() {
         let cfg = Config::example("app", ".");
-        let adapter = select_adapter(&cfg).unwrap();
+        let adapter = select_adapter(root(), &cfg).unwrap();
         assert_eq!(adapter.id(), "tauri");
     }
 
@@ -83,7 +91,7 @@ mod tests {
     fn selects_electron() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "electron".into();
-        let adapter = select_adapter(&cfg).unwrap();
+        let adapter = select_adapter(root(), &cfg).unwrap();
         assert_eq!(adapter.id(), "electron");
     }
 
@@ -91,7 +99,7 @@ mod tests {
     fn selects_android() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "android".into();
-        let adapter = select_adapter(&cfg).unwrap();
+        let adapter = select_adapter(root(), &cfg).unwrap();
         assert_eq!(adapter.id(), "android");
     }
 
@@ -99,7 +107,7 @@ mod tests {
     fn selects_ios() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "ios".into();
-        let adapter = select_adapter(&cfg).unwrap();
+        let adapter = select_adapter(root(), &cfg).unwrap();
         assert_eq!(adapter.id(), "ios");
     }
 
@@ -107,39 +115,39 @@ mod tests {
     fn selects_flutter() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "flutter".into();
-        assert_eq!(select_adapter(&cfg).unwrap().id(), "flutter");
+        assert_eq!(select_adapter(root(), &cfg).unwrap().id(), "flutter");
     }
 
     #[test]
     fn selects_rn_alias() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "rn".into();
-        assert_eq!(select_adapter(&cfg).unwrap().id(), "react-native");
+        assert_eq!(select_adapter(root(), &cfg).unwrap().id(), "react-native");
     }
 
     #[test]
     fn selects_expo_and_capacitor() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "expo".into();
-        assert_eq!(select_adapter(&cfg).unwrap().id(), "expo");
+        assert_eq!(select_adapter(root(), &cfg).unwrap().id(), "expo");
         cfg.project.framework = "capacitor".into();
-        assert_eq!(select_adapter(&cfg).unwrap().id(), "capacitor");
+        assert_eq!(select_adapter(root(), &cfg).unwrap().id(), "capacitor");
     }
 
     #[test]
     fn selects_cli() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "cli".into();
-        assert_eq!(select_adapter(&cfg).unwrap().id(), "cli");
+        assert_eq!(select_adapter(root(), &cfg).unwrap().id(), "cli");
         cfg.project.framework = "rust-cli".into();
-        assert_eq!(select_adapter(&cfg).unwrap().id(), "cli");
+        assert_eq!(select_adapter(root(), &cfg).unwrap().id(), "cli");
     }
 
     #[test]
     fn unknown_framework_errors() {
         let mut cfg = Config::example("app", ".");
         cfg.project.framework = "dotnet".into();
-        let err = match select_adapter(&cfg) {
+        let err = match select_adapter(root(), &cfg) {
             Ok(_) => panic!("expected error"),
             Err(e) => e.to_string(),
         };

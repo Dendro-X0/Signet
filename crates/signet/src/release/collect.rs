@@ -40,7 +40,7 @@ pub fn collect_release_files_with_opts(
             root: project_root.to_path_buf(),
             config: config.clone(),
         };
-        let adapter = select_adapter(config)?;
+        let adapter = select_adapter(project_root, config)?;
         for art in adapter.discover(&ctx, profile)? {
             if art.path.is_file() {
                 let sig = sibling_sig(&art.path);

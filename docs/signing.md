@@ -12,7 +12,7 @@
 
 **Rust CLI:** set `framework = "cli"` (auto-detected for Cargo workspaces / binary crates). Default build is `cargo build --release`; Signet signs the host binary under `target/<profile>/`.
 
-**Release tags:** Guided release and `signet release` (when `--tag` is omitted) default to a tag from the project version — `Cargo.toml` / `package.json` / Expo `app.json` / latest git tag — e.g. workspace `0.5.3` → `v0.5.3`. See [`specs/backend/version-aware-defaults-design.md`](../specs/backend/version-aware-defaults-design.md).
+**Release tags:** Guided release and `signet release` (when `--tag` is omitted) default to a tag from the project version — `Cargo.toml` / `package.json` / Expo `app.json` / latest git tag — e.g. workspace `0.5.4` → `v0.5.4`. See [`specs/backend/version-aware-defaults-design.md`](../specs/backend/version-aware-defaults-design.md).
 
 **Graduation (OV / Azure / notarize):** explicit helpers — not part of default `signet build`. See [graduation.md](graduation.md) and `signet graduate notes`.
 

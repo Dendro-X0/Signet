@@ -108,8 +108,9 @@ pub struct Project {
     pub name: String,
     /// Path to the Tauri app root (directory containing `src-tauri`), relative to config
     pub tauri_root: String,
-    /// Framework adapter id (`tauri` / `electron`). Default: tauri.
-    #[serde(default = "default_framework")]
+    /// Framework adapter id (`tauri` / `electron` / `cli` / …).
+    /// Empty when omitted from TOML — resolved via scan at use time (see `resolve_framework`).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub framework: String,
     /// Optional build argv override (Electron: default `npm run dist` when empty).
     #[serde(default, skip_serializing_if = "String::is_empty")]
@@ -118,6 +119,11 @@ pub struct Project {
 
 fn default_framework() -> String {
     "tauri".into()
+}
+
+/// True when the config file (or in-memory value) named a framework explicitly.
+pub fn framework_is_explicit(config: &Config) -> bool {
+    !config.project.framework.trim().is_empty()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -276,5 +282,29 @@ mod tests {
         let text = toml::to_string_pretty(&cfg).unwrap();
         let parsed: Config = toml::from_str(&text).unwrap();
         assert_eq!(cfg, parsed);
+    }
+
+    #[test]
+    fn omitted_framework_deserializes_empty() {
+        let mut base = Config::example("App", ".");
+        base.project.framework.clear();
+        let text = toml::to_string_pretty(&base).unwrap();
+        assert!(
+            !text.contains("framework"),
+            "empty framework should be omitted from TOML; got:\n{text}"
+        );
+        let cfg: Config = toml::from_str(&text).unwrap();
+        assert!(cfg.project.framework.is_empty());
+        assert!(!framework_is_explicit(&cfg));
+    }
+
+    #[test]
+    fn explicit_framework_deserializes() {
+        let mut base = Config::example("App", ".");
+        base.project.framework = "cli".into();
+        let text = toml::to_string_pretty(&base).unwrap();
+        let cfg: Config = toml::from_str(&text).unwrap();
+        assert_eq!(cfg.project.framework, "cli");
+        assert!(framework_is_explicit(&cfg));
     }
 }

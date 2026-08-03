@@ -5,6 +5,7 @@ secrets_dir = ".signet"
 
 [project]
 name = "Signet"
+framework = "cli"
 tauri_root = "."
 
 [platforms]

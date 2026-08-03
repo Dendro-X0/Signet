@@ -83,7 +83,7 @@ fn render_trust_md_with_hints(
     });
     let minisign_block = minisign_trust_section(minisign_pub.as_deref());
     let android_block = android_trust_section(project_root.map(|r| config.secrets_path(r)).as_deref());
-    let ios_block = ios_trust_section(config);
+    let ios_block = ios_trust_section(project_root, config);
     let graduation_block = graduation_trust_section(config);
 
     format!(
@@ -192,8 +192,18 @@ Private material stays under the project's gitignored `.signet/` directory.
     )
 }
 
-fn ios_trust_section(config: &Config) -> String {
-    if !config.project.framework.eq_ignore_ascii_case("ios") {
+fn ios_trust_section(project_root: Option<&Path>, config: &Config) -> String {
+    let fw = match project_root {
+        Some(root) => crate::project::resolve_framework(root, config),
+        None => {
+            let t = config.project.framework.trim();
+            if t.is_empty() {
+                return String::new();
+            }
+            t.to_string()
+        }
+    };
+    if !fw.eq_ignore_ascii_case("ios") {
         return String::new();
     }
     r#"

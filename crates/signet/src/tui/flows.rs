@@ -308,9 +308,9 @@ pub fn guided_build() -> anyhow::Result<()> {
 
     if !skip_build {
         if let Ok(ctx) = ProjectCtx::load(None) {
-            let fw = ctx.config.project.framework.as_str();
-            if requires_build_command(fw) && ctx.config.project.build_command.trim().is_empty() {
-                console::note(build_command_hint(fw));
+            let fw = ctx.framework();
+            if requires_build_command(&fw) && ctx.config.project.build_command.trim().is_empty() {
+                console::note(build_command_hint(&fw));
                 anyhow::bail!(
                     "[{fw}] build_command is empty — set it in signet.toml or choose Sign only (--skip-build)"
                 );
@@ -456,10 +456,16 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
         console::ok_line("signet.toml present");
         if confirm("change framework / build_command now?", false)? {
             update_framework_in_config(suggested_fw.as_deref())?;
-        } else if let Ok(cfg) = Config::load("signet.toml") {
+        } else if let Ok(ctx) = ProjectCtx::load(None) {
+            let fw = ctx.framework();
+            let src = if crate::config::framework_is_explicit(&ctx.config) {
+                "config"
+            } else {
+                "scan"
+            };
             console::note(&format!(
-                "framework={} build_command={:?}",
-                cfg.project.framework, cfg.project.build_command
+                "framework={fw} (from {src}) build_command={:?}",
+                ctx.config.project.build_command
             ));
         }
     }
@@ -598,11 +604,14 @@ fn update_framework_in_config(suggested: Option<&str>) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Warn when signet.toml framework disagrees with scan (does not rewrite config).
+/// Warn when an *explicit* signet.toml framework disagrees with scan (does not rewrite).
 fn note_framework_mismatch(root: &str) -> anyhow::Result<()> {
     let Ok(ctx) = ProjectCtx::load(None) else {
         return Ok(());
     };
+    if !crate::config::framework_is_explicit(&ctx.config) {
+        return Ok(());
+    }
     let Ok(report) = scan_repository(std::path::Path::new(root)) else {
         return Ok(());
     };
@@ -627,7 +636,7 @@ fn sample_artifact_paths() -> anyhow::Result<Vec<PathBuf>> {
         Ok(c) => c,
         Err(_) => return Ok(vec![]),
     };
-    let adapter = match select_adapter(&ctx.config) {
+    let adapter = match select_adapter(&ctx.root, &ctx.config) {
         Ok(a) => a,
         Err(_) => return Ok(vec![]),
     };

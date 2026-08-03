@@ -147,12 +147,15 @@ fn gather_checks() -> Vec<Check> {
     checks
 }
 
-fn ios_tool_checks(has_config: bool) -> Vec<Check> {
-    use crate::config::{resolve_config_path, Config};
+fn effective_framework() -> Option<String> {
+    use crate::project::ProjectCtx;
+    ProjectCtx::load(None).ok().map(|ctx| ctx.framework())
+}
 
+fn ios_tool_checks(has_config: bool) -> Vec<Check> {
     let is_ios = has_config
-        && Config::load(resolve_config_path(None))
-            .map(|c| c.project.framework.trim().eq_ignore_ascii_case("ios"))
+        && effective_framework()
+            .map(|fw| fw.eq_ignore_ascii_case("ios"))
             .unwrap_or(false);
 
     let mut checks = Vec::new();
@@ -196,8 +199,8 @@ fn android_tool_checks(has_config: bool) -> Vec<Check> {
     use crate::config::{resolve_config_path, Config};
 
     let is_android = has_config
-        && Config::load(resolve_config_path(None))
-            .map(|c| c.project.framework.trim().eq_ignore_ascii_case("android"))
+        && effective_framework()
+            .map(|fw| fw.eq_ignore_ascii_case("android"))
             .unwrap_or(false);
 
     let mut checks = Vec::new();
@@ -256,11 +259,9 @@ fn android_tool_checks(has_config: bool) -> Vec<Check> {
 }
 
 fn electron_npm_check(has_config: bool) -> Check {
-    use crate::config::{resolve_config_path, Config};
-
     let is_electron = has_config
-        && Config::load(resolve_config_path(None))
-            .map(|c| c.project.framework.trim().eq_ignore_ascii_case("electron"))
+        && effective_framework()
+            .map(|fw| fw.eq_ignore_ascii_case("electron"))
             .unwrap_or(false);
 
     if !is_electron {
@@ -286,11 +287,9 @@ fn electron_npm_check(has_config: bool) -> Check {
 }
 
 fn hybrid_tool_check(has_config: bool) -> Check {
-    use crate::config::{resolve_config_path, Config};
-
     let fw = if has_config {
-        Config::load(resolve_config_path(None))
-            .map(|c| c.project.framework.trim().to_ascii_lowercase())
+        effective_framework()
+            .map(|fw| fw.to_ascii_lowercase())
             .unwrap_or_default()
     } else {
         String::new()
