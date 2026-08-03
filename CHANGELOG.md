@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.9 — 2026-08-03
+
+### Added
+
+- `signet ship --plan` — declared `[platforms]` vs on-disk artifacts coverage report
+- Build prints upfront ship-coverage / host-only capability line
+- Doctor `ship-coverage` optional check (warns on gap)
+- Guided finish surfaces multi-OS gap when declared platforms are missing
+
+### Docs
+
+- Spec: `specs/backend/ship-coverage-design.md` (multi-platform ship slice A)
+
 ## 0.5.8 — 2026-08-03
 
 ### Fixed

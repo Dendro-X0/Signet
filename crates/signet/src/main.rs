@@ -10,6 +10,7 @@ mod release;
 mod scan;
 mod self_manage;
 mod sign;
+mod ship;
 mod artifact;
 mod android;
 mod ios;
@@ -70,6 +71,10 @@ fn run() -> anyhow::Result<ExitCode> {
         }
         Some(Command::Build(args)) => {
             commands::build::run(args)?;
+            Ok(ExitCode::Success)
+        }
+        Some(Command::Ship(args)) => {
+            commands::ship::run(args)?;
             Ok(ExitCode::Success)
         }
         Some(Command::Trust(args)) => {

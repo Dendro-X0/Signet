@@ -608,7 +608,16 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
     }
 
     console::blank();
-    console::ok_line("Guided setup finished (Sign → Prove → Check).");
+    console::ok_line("Guided setup finished (Sign → Prove → Check) for this host.");
+    if let Ok(ctx) = ProjectCtx::load(None) {
+        let cov = crate::ship::assess_coverage(&ctx.root, &ctx.config);
+        console::note(&cov.summary_line());
+        if cov.has_gap() {
+            console::note(
+                "Multi-OS gap remains — guided Check on this machine ≠ full [platforms] ship. Run `signet ship --plan`.",
+            );
+        }
+    }
     console::note("Need OV / Azure / Apple notarize? → hub · Graduate notes  (or: signet graduate notes)");
     console::note("Prefer CLI flags in CI; use the hub when exploring.");
     Ok(())

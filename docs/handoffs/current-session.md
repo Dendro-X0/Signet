@@ -1,13 +1,13 @@
 # Current session handoff
 
 **Updated:** 2026-08-03  
-**Band:** **0.5.x** — v0.5.8 scan-apply hardening + basename resolve
+**Band:** **0.5.x → multi-platform ship** — slice A coverage done
 
 ## Next atomic step
 
-Optional: **tag v0.5.8** + push + `release-cli` when ready to publish.
+Fix order **#2** from [`docs/dogfood/signet-shortcomings.md`](../dogfood/signet-shortcomings.md): **soft-fail unpaid `[[targets]]`** (items 5–6) — design → implement → dogfood. Parent: [`specs/backend/multi-platform-ship-design.md`](../../specs/backend/multi-platform-ship-design.md) slice B.
 
-Then v1.0.0 gate: narrative stable / drop preview framing; optional demo recording; spot-check install+verify on release assets — per [`specs/backend/v0.5-release-roadmap.md`](../../specs/backend/v0.5-release-roadmap.md).
+Optional: **tag v0.5.9** + push when ready to publish coverage cut.
 
 **PAUSED / CANCELLED:** none  
 **Blocked for coding:** none
@@ -16,13 +16,13 @@ Then v1.0.0 gate: narrative stable / drop preview framing; optional demo recordi
 
 | Work | Owner |
 |------|--------|
-| scan --apply platforms / targets | `commands/scan.rs`, `scan/report.rs` |
-| Basename resolve / stale | `sign/checksum.rs` |
-| Dogfood | `docs/dogfood/miro-notes.md` |
-| v1.0.0 | full gate in v0.5-release-roadmap |
+| Coverage / ship plan | `ship/coverage.rs`, `commands/ship.rs` |
+| Soft-fail targets (next) | `commands/build.rs`, adapters |
+| Multi-platform ship (north star) | `specs/backend/multi-platform-ship-design.md` |
+| Dogfood | `docs/dogfood/miro-notes.md`, `signet-shortcomings.md` |
 
 ## Recently completed
 
-- **v0.5.8:** apply never shrinks platforms without `--force`; draft `[[targets]]` on existing toml; basename walk for sums; skip identity hint when present
-- **v0.5.7:** verify stale warnings + `--fail-stale`; post-sign sums log; scan `[[targets]]`/platforms notes; `identity status`
-- **v0.5.6:** inspect self-sign honesty; relative SHA256SUMS; `app_root`; `[[targets]]` + `--target`
+- **v0.5.9 / slice A:** `[platforms]` coverage report; `ship --plan`; doctor + build + guided honesty
+- **v0.5.8:** apply never shrinks platforms; draft `[[targets]]`; basename walk; skip identity hint
+- **v0.5.7:** stale-sums; post-sign log; scan clarity

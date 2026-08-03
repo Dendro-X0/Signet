@@ -143,8 +143,51 @@ fn gather_checks() -> Vec<Check> {
         },
     });
 
+    checks.push(ship_coverage_check(has_config));
+
     checks.extend(platform_checks());
     checks
+}
+
+fn ship_coverage_check(has_config: bool) -> Check {
+    if !has_config {
+        return Check {
+            name: "ship-coverage".into(),
+            ok: true,
+            severity: Severity::Optional,
+            detail: "no signet.toml — skip platform commitment check".into(),
+        };
+    }
+    match crate::project::ProjectCtx::load(None) {
+        Ok(ctx) => {
+            let report = crate::ship::assess_coverage(&ctx.root, &ctx.config);
+            if report.has_gap() {
+                Check {
+                    name: "ship-coverage".into(),
+                    ok: false,
+                    severity: Severity::Optional,
+                    detail: format!(
+                        "{} — gap [{}]; `signet ship --plan` for detail",
+                        report.summary_line(),
+                        report.gap.join(", ")
+                    ),
+                }
+            } else {
+                Check {
+                    name: "ship-coverage".into(),
+                    ok: true,
+                    severity: Severity::Optional,
+                    detail: report.summary_line(),
+                }
+            }
+        }
+        Err(e) => Check {
+            name: "ship-coverage".into(),
+            ok: true,
+            severity: Severity::Optional,
+            detail: format!("skipped ({e})"),
+        },
+    }
 }
 
 fn effective_framework() -> Option<String> {

@@ -1,88 +1,98 @@
 # Dogfood notes — Miro Desktop (+ mobile surface)
 
-**Status:** Sign → Prove → Check green on Windows for **v0.3.0** with Signet **0.5.7**; remaining apply/basename friction addressed in **0.5.8** (pending re-dogfood)  
-**App:** Miro (`E:\Web Projects\miro-workspace\miro`) — Tauri v2 desktop + Expo mobile in-repo  
-**Framework:** `tauri` · `app_root = apps/miro-desktop` · `build_command = pnpm desktop:release`  
-**Date:** 2026-08-03 (re-run after Signet 0.5.7)  
+**Status:** Windows Sign → Prove → Check green for **v0.3.0** with Signet **0.5.8**; **multi-platform product gap confirmed** (see design below)  
+**App:** Miro (`E:\Web Projects\miro-workspace\miro`) — Tauri v2 + Expo in-repo  
+**Date:** 2026-08-03  
 **Host:** Windows x86_64  
-**Signet:** 0.5.7 (notes); workspace now **0.5.8**
+**Signet:** 0.5.8  
+**North star:** [`specs/backend/multi-platform-ship-design.md`](../../specs/backend/multi-platform-ship-design.md)  
+**Shortcomings backlog:** [`signet-shortcomings.md`](signet-shortcomings.md) (fix one by one)
 
 ## Goal
 
-Re-dogfood Miro after Signet 0.5.7 (stale-sums, post-sign log, scan clarity, `identity status`).
+From the **user/business** bar: rapid signing across **all declared platforms**, self-sign **and** assisted official paths, desktop **and** mobile — not “whatever this laptop can crypto-sign.”
 
-## Commands (0.5.7 pass)
+Attempt `signet build` once with `[platforms] windows/macos/linux = true` and both `[[targets]]`, and record the gap.
+
+## One-go attempt (all platforms / all targets)
 
 ```bash
 cd /e/Web\ Projects/miro-workspace/miro
-signet --version          # 0.5.7
-signet doctor
-signet scan
-signet build --skip-build --require-sums-sign
-signet verify
-signet verify --fail-stale
-signet identity status    # alias works
-signet inspect --file "apps/miro-desktop/src-tauri/target/release/bundle/nsis/Miro Desktop_0.3.0_x64-setup.exe"
-signet release --tag v0.3.0 --dry-run
-# optional:
-# signet scan --apply     # see caveats below
+signet build --require-sums-sign
 ```
 
-## Outcome
+| Step | Result |
+|------|--------|
+| `miro-desktop` Tauri build | **Pass** (~2.5 min) — NSIS + MSI + exe on this host |
+| `miro-mobile` Expo build | **Fail** — `[project].build_command is required` (no Expo recipe) |
+| macOS / Linux installers | **Not produced** — Tauri only bundles the host OS; no DMG/deb/AppImage on disk |
+| Host crypto sign for mac/linux | **N/A** — Signet only host-signs matching OS (`codesign` / openssl detached need macOS / Linux hosts) |
 
-| Step | 0.5.6 | 0.5.7 |
-|------|-------|-------|
-| Doctor | OK (no `gh`) | Same |
-| Scan root display | `./miro` (confusing) | `.` (fixed) |
-| Multi-app next steps | Generic build | Suggests `[[targets]]` / `scan --apply` |
-| Platforms intent vs host | Unclear | Explicit one-liner note |
-| Post-sign sums log | Only minisig | `wrote SHA256SUMS (post-sign)` |
-| SHA256SUMS paths | Often basenames | **Relative monorepo paths** after this build |
-| `identity status` | Missing subcommand | Works (alias → show) |
-| `verify --fail-stale` | N/A | Passes when relative paths present |
-| Inspect honesty | signed + untrusted root | Same (good) |
-| Release dry-run | Needs `gh` to publish | Same |
+Scan today: *“other OS assets need a matching CI/host.”* That is an **engine constraint**, not the product ceiling — Signet must **own** that CI/host path (ship plan → matrix → collect → one trust kit).
 
-## What improved (matches prior Miro feedback)
+### Completed Windows path (after targeting desktop)
 
-1. Post-sign checksum rewrite is **logged** and relative paths are written — `verify` + `--fail-stale` green after `--skip-build`.
-2. Scan explains **shipping intent vs host can sign today**.
-3. Multi-installable detection (tauri + expo) pushes toward `[[targets]]`.
-4. `signet identity status` works.
+```bash
+signet build --target miro-desktop --skip-build --require-sums-sign
+signet verify
+signet trust
+signet release --tag v0.3.0 --dry-run
+```
 
-## Remaining friction
+→ 3 Authenticode-signed artifacts + minisig sums + TRUST.md; dry-run lists 6 release assets (windows only).
 
-1. ~~**`signet scan --apply` overwrote `[platforms]`**~~ — **0.5.8** never shrinks without `--force`.
-2. ~~**`scan --apply` did not draft `[[targets]]`** / identity create spam~~ — **0.5.8** drafts on empty targets; skips identity hint when present.
-3. ~~**Basename-only leftover sums**~~ — **0.5.8** bounded walk resolves basenames for verify + stale.
-4. **`github-auth` still missing** — dry-run OK; live release blocked (expected).
-5. **Expo** still not in the default build loop — intentional until Miro adds a mobile `[[targets]]` + android/ios recipe.
+### Friction found this pass
 
-## Suggested follow-ups (0.5.9+)
+1. **Naive one-go fails mid-pipeline** — desktop build succeeds, then Expo aborts the whole command (desktop artifacts exist but Signet never reaches the sign step in that invocation). Prefer `signet build --target miro-desktop` until Expo has a `build_command`, or use `--skip-build` for sign-only.
+2. **`[platforms] macos/linux=true` does not trigger remote/CI builds** — no orchestrator; maintainers need a matrix (3 hosts or GH Actions) each running `signet build` then merging assets into one release.
+3. **`signet release --dry-run` rewrote `SHA256SUMS` to basenames** — verify still resolves via tree walk, but dry-run mutating on-disk sums is surprising (should be no-op for files).
 
-| Priority | Item |
-|----------|------|
-| P2 | Optional `signet build` phase timings (framework vs sign) |
-| P3 | Doctor: link `gh` install one-liner when `release.repo` set |
+## Outcome vs prior asks (0.5.7 → 0.5.8)
 
-## Config kept on Miro
+| Prior ask | 0.5.8 |
+|-----------|--------|
+| Don’t shrink `[platforms]` without `--force` | **Pass** |
+| Draft `[[targets]]` for tauri+expo | **Pass** |
+| Skip “identity create” when identity exists | **Pass** |
+| Basename-only sums resolve | **Pass** |
+| All-OS facilitation as a product | **Fail today** — host limits explain *how*, not *whether* Signet must own the job |
+
+## Product verdict (maintainer)
+
+Windows-only local success is **insufficient**. If Signet cannot facilitate the declared multi-platform release (orchestrate matching runners, collect, one trust kit, dual-path graduate), it does not earn a dedicated tool. Track work in **multi-platform-ship-design** — not as a footnote on `doctor`.
+
+## Suggested Signet follow-ups (map to design slices)
+
+| Priority | Item | Slice |
+|----------|------|-------|
+| P0 | Ship plan: declared platforms = coverage commitment; doctor/ship report gaps | A |
+| P0 | CI template + collect + release coverage gate | D–E |
+| P1 | Soft-fail targets missing `build_command`; don’t abort sibling desktop sign | B |
+| P1 | Graduate profile on same ship plan (Azure / notarize) | F |
+| P2 | `release --dry-run` read-only | C |
+| P2 | Mobile rows in ship plan | G |
+
+## Config (shipping intent)
 
 ```toml
-[project]
-name = "Miro Desktop"
-app_root = "apps/miro-desktop"
-framework = "tauri"
-build_command = "pnpm desktop:release"
-
 [platforms]
 windows = true
-macos = true   # shipping intent (restored after scan --apply)
+macos = true
 linux = true
 
-[release]
-repo = "Dendro-X0/Miro"
+[[targets]]
+id = "miro-desktop"
+framework = "tauri"
+app_root = "apps/miro-desktop"
+build_command = "pnpm desktop:release"
+
+[[targets]]
+id = "miro-mobile"
+framework = "expo"
+app_root = "apps/miro-mobile"
+# build_command TBD
 ```
 
 ## Time
 
-`--skip-build` re-sign + verify: ~10s. Full `pnpm desktop:release` via Signet still ~5 min when needed.
+Full desktop build+sign on Windows: ~3 min. All-OS one-shot: not achievable on this machine alone.

@@ -63,13 +63,15 @@ Deferred until the public-cut CLI/TUI contract is stable ([roadmap](roadmap.md) 
 
 ## Platforms & frameworks
 
+**Product bar:** declaring platforms/targets is a **shipping commitment**. Signet must facilitate **rapid completion** of that commitment (local slice + CI/matrix orchestration + collect/release + dual-path graduate), not only sign whatever happens to exist on the current host. Host crypto limits are implementation constraints; they do not shrink the job. See [`specs/backend/multi-platform-ship-design.md`](../specs/backend/multi-platform-ship-design.md).
+
 ### Desktop
 
-Windows, macOS, Linux — sign installers/bundles; document SmartScreen / Gatekeeper reality.
+Windows, macOS, Linux — sign installers/bundles; document SmartScreen / Gatekeeper reality; **ship plan** covers all declared desktop OSes via matching runners/collect, not Windows-only local success.
 
 ### Mobile
 
-Android keystore + APK sign; iOS IPA packaging + free-provisioning honesty. Store programs stay gated.
+Android keystore + APK sign; iOS IPA packaging + free-provisioning honesty. Store programs stay gated. Mobile targets participate in the same ship plan when configured.
 
 ### Framework adapters
 

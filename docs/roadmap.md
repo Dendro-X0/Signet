@@ -177,7 +177,8 @@ Public-release Phases **13 → 14 → 15** are done (order was frozen; only Phas
 | Band | Focus | Exit |
 |------|--------|------|
 | **0.5.x** | Complete dogfood; friction fixes from notes; publish demo recording; unmanaged-cargo install honesty if needed | Successful Sign→Prove→Check on ≥1 real app documented |
-| **v1.0.0** | Phase 16 acceptance fully checked; narrative stable; no “preview” framing | Tag per full gate in cut specs |
+| **Multi-platform ship** (blocking product gap) | Declared platforms = coverage commitment: ship plan, CI matrix, collect, release gate, dual-path graduate — [multi-platform-ship-design.md](../specs/backend/multi-platform-ship-design.md) | Miro (or equivalent) can ship Win+Mac+Linux (+ mobile when configured) without bespoke scripts |
+| **v1.0.0** | Phase 16 acceptance fully checked; narrative stable; no “preview” framing; **multi-platform facilitation real, not Windows-host-only** | Tag per full gate in cut specs |
 
 ## Beyond v1.0
 

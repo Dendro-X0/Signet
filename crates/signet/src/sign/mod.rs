@@ -18,8 +18,8 @@ use crate::artifact::Artifact;
 use crate::identity::IdentityRecord;
 
 pub use checksum::{
-    assess_sums_freshness, verify_sha256sums, write_sha256sums, write_sha256sums_named,
-    ChecksumResult, SumsFreshness,
+    assess_sums_freshness, parse_sha256sums, verify_sha256sums, write_sha256sums,
+    write_sha256sums_named, ChecksumResult, SumsFreshness,
 };
 pub use discover::{discover_artifacts, resolve_src_tauri};
 pub use sums_sig::{

@@ -64,6 +64,16 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         anyhow::anyhow!("{e}\nhint: run `signet init` in your app directory first")
     })?;
 
+    let coverage = crate::ship::assess_coverage(&ctx.root, &ctx.config);
+    println!("{}", coverage.summary_line());
+    if coverage.has_gap() {
+        println!(
+            "note: ship gap = {} — this host signs {} only; see `signet ship --plan`",
+            coverage.gap.join(", "),
+            coverage.host_can_sign
+        );
+    }
+
     let all = ctx.targets();
     let selected = select_targets(&all, args.target.as_deref())?;
 

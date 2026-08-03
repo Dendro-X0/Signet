@@ -9,6 +9,7 @@ pub mod ios;
 pub mod release;
 pub mod scan;
 pub mod self_cmd;
+pub mod ship;
 pub mod sums_key;
 pub mod trust;
 pub mod verify;

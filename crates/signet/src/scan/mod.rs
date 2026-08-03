@@ -5,7 +5,7 @@ mod walk;
 
 pub use report::{
     draft_targets, framework_id_for_kind, merge_platforms, preferred_project, print_human,
-    DetectedProject, ProjectKind, ScanReport,
+    DetectedProject, Platform, ProjectKind, ScanReport,
 };
 pub use walk::scan_repository;
 

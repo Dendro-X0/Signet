@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::commands::{
-    android, build, doctor, graduate, identity, init, inspect, ios, release, scan, self_cmd,
+    android, build, doctor, graduate, identity, init, inspect, ios, release, scan, self_cmd, ship,
     sums_key, trust, verify,
 };
 
@@ -32,6 +32,8 @@ pub enum Command {
     Graduate(graduate::Args),
     /// Build and sign platform artifacts (Tauri / Electron / Android / iOS)
     Build(build::Args),
+    /// Multi-platform ship plan / coverage (CI + collect later)
+    Ship(ship::Args),
     /// Emit trust / install documentation
     Trust(trust::Args),
     /// Checksums and publish release artifacts
