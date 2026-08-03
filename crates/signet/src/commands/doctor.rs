@@ -125,22 +125,12 @@ fn gather_checks() -> Vec<Check> {
     checks.extend(android_tool_checks(has_config));
     checks.extend(ios_tool_checks(has_config));
 
-    let gh = which("gh").is_ok();
-    let token = std::env::var("GH_TOKEN")
-        .or_else(|_| std::env::var("GITHUB_TOKEN"))
-        .map(|v| !v.trim().is_empty())
-        .unwrap_or(false);
+    let auth = crate::release::assess_github_auth();
     checks.push(Check {
         name: "github-auth".into(),
-        ok: gh || token,
+        ok: auth.ready(),
         severity: Severity::Optional,
-        detail: if gh {
-            "gh CLI found".into()
-        } else if token {
-            "GH_TOKEN/GITHUB_TOKEN set".into()
-        } else {
-            "missing — install `gh` or set GH_TOKEN for `signet release`".into()
-        },
+        detail: auth.doctor_detail(),
     });
 
     checks.push(ship_coverage_check(has_config));
@@ -663,7 +653,14 @@ fn print_human(checks: &[Check]) {
         console::status(14, &c.name, ok, &format!("({sev}) {}", c.detail));
     }
     console::blank();
-    console::note("`signet release --dry-run` lists assets; publish needs gh or GH_TOKEN.");
+    if let Some(_auth) = checks.iter().find(|c| c.name == "github-auth" && !c.ok) {
+        console::section("github release auth");
+        for line in crate::release::assess_github_auth().setup_guide().lines() {
+            console::note(line);
+        }
+        console::blank();
+    }
+    console::note("`signet release --dry-run` lists assets; live publish needs ready github-auth.");
     console::blank();
 }
 

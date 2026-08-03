@@ -18,9 +18,28 @@ signet release --tag v1.0.0 --no-clobber
 
 ## Auth
 
-Prefer `gh` logged in, or set `GH_TOKEN` / `GITHUB_TOKEN`.
+Live publish needs **ready** GitHub auth. `signet doctor` reports `github-auth`; dry-run prints `auth: …` without failing.
 
-`signet doctor` reports `github-auth`.
+### Preferred: GitHub CLI
+
+1. Install [GitHub CLI](https://cli.github.com/) (`winget install GitHub.cli`, `brew install gh`, …).
+2. `gh auth login` (browser or device flow).
+3. Confirm with `gh auth status`.
+
+Having `gh` on `PATH` without a login is **not** enough — Signet treats that as not ready and prints setup steps.
+
+### Alternative: token
+
+Set `GH_TOKEN` or `GITHUB_TOKEN` to a classic PAT with **`repo`** scope (or a fine-grained token with Contents + Metadata write on the target repo). Prefer env / CI secrets — never commit tokens into `signet.toml`.
+
+### Surfaces
+
+| Command | Behavior |
+|---------|----------|
+| `signet doctor` | Status + setup guide when not ready |
+| `signet release --dry-run` | Shows `auth:` line |
+| `signet release` (live) | PrefLights; refuses with the same guide if not ready |
+| Guided Release | Blocks publish until auth is ready |
 
 ## Repo resolution
 

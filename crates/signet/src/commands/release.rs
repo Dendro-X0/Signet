@@ -5,7 +5,7 @@ use clap::Args as ClapArgs;
 use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::release::{
-    build_release_notes, collect_release_files_with_opts, detect_github_repo,
+    assess_github_auth, build_release_notes, collect_release_files_with_opts, detect_github_repo,
     publish_github_release, CollectOpts, GitHubPublishOpts,
 };
 
@@ -153,8 +153,13 @@ pub fn run(args: Args) -> anyhow::Result<()> {
             &ctx.root,
         )
         .unwrap_or_else(|_| "(undetected — set --repo or [release].repo)".into());
+        let auth = assess_github_auth();
         println!("\ndry-run: would publish tag '{tag}' to {repo}");
         println!("title: {title}");
+        println!("auth: {}", auth.summary_line());
+        if !auth.ready() {
+            println!("{}", auth.setup_guide());
+        }
         println!(
             "note: dry-run is read-only — SHA256SUMS not rewritten (live release flattens to asset basenames)"
         );
@@ -169,8 +174,13 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    let auth = assess_github_auth();
+    if !auth.ready() {
+        anyhow::bail!("{}", auth.preflight_error());
+    }
+
     let repo = detect_github_repo(args.repo.as_deref(), &ctx.config.release.repo, &ctx.root)?;
-    println!("publishing {tag} → {repo}");
+    println!("publishing {tag} → {repo} ({})", auth.summary_line());
 
     let result = publish_github_release(
         &GitHubPublishOpts {

@@ -176,7 +176,8 @@ fn github_token() -> anyhow::Result<String> {
         }
     }
     anyhow::bail!(
-        "no GitHub credentials — install GitHub CLI (`gh auth login`) or set GH_TOKEN / GITHUB_TOKEN"
+        "{}",
+        crate::release::assess_github_auth().preflight_error()
     )
 }
 

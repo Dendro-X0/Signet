@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.15 — 2026-08-03
+
+### Added
+
+- Shared GitHub auth assessor: `gh auth status` or `GH_TOKEN`/`GITHUB_TOKEN` (installed `gh` alone is not enough)
+- `signet doctor` prints a numbered setup guide when `github-auth` is not ready
+- `signet release --dry-run` reports `auth:`; live release preflights with the same guide
+- Guided Release / setup blocks publish until auth is ready
+
+### Docs
+
+- Spec: `specs/backend/release-auth-guided-design.md`; expanded `docs/release.md` Auth
+
 ## 0.5.14 — 2026-08-03
 
 ### Added

@@ -34,7 +34,7 @@
 
 9. **No collect/merge step for multi-host artifacts** — Cannot ingest Win + Mac + Linux outputs into one sums + minisig + TRUST set as a first-class command.
 
-10. **Live `signet release` still needs GitHub auth** — Doctor reports missing `gh` / `GH_TOKEN`; fine as a prerequisite, but the publish path is incomplete without clear guided setup for that gate.
+10. **Live `signet release` still needs GitHub auth** — ~~Doctor reports missing `gh` / `GH_TOKEN`; fine as a prerequisite, but the publish path is incomplete without clear guided setup for that gate.~~ **Addressed in 0.5.15** (assessor + doctor guide + release preflight).
 
 ---
 
@@ -66,4 +66,4 @@ These do **not** excuse missing orchestration, collect, coverage gates, or dual-
 | 4 | CI template + collect + release coverage gate (1, 9) | **Done in 0.5.12** |
 | 5 | Graduate on same ship plan (3) | **Done in 0.5.14** |
 | 6 | Mobile through full loop (4) | **Done in 0.5.13** — coverage/CI/collect/release classify |
-| 7 | Release auth guided path (10) | next |
+| 7 | Release auth guided path (10) | **Done in 0.5.15** |

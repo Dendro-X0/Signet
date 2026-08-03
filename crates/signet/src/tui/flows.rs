@@ -369,6 +369,18 @@ pub fn guided_release() -> anyhow::Result<()> {
         0,
     )?;
     let dry_run = mode == 0;
+    if !dry_run {
+        let auth = crate::release::assess_github_auth();
+        console::note(&format!("auth: {}", auth.summary_line()));
+        if !auth.ready() {
+            for line in auth.setup_guide().lines() {
+                console::note(line);
+            }
+            anyhow::bail!(
+                "publish blocked until GitHub auth is ready — fix above, then retry Release from the hub"
+            );
+        }
+    }
     let draft = if dry_run {
         false
     } else {
@@ -578,8 +590,16 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
             title: None,
             artifacts: vec![],
         })?;
-        if confirm("publish for real now? (needs gh or GH_TOKEN)", false)? {
-            guided_release()?;
+        if confirm("publish for real now? (needs ready GitHub auth)", false)? {
+            let auth = crate::release::assess_github_auth();
+            if !auth.ready() {
+                for line in auth.setup_guide().lines() {
+                    console::note(line);
+                }
+                skip_line("publish skipped — fix github-auth first");
+            } else {
+                guided_release()?;
+            }
         }
     } else {
         skip_line("skipped release");
