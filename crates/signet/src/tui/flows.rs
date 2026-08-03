@@ -64,6 +64,7 @@ pub fn guided_verify() -> anyhow::Result<()> {
         minisign_pub: None,
         json: false,
         fingerprint: None,
+        fail_stale: false,
     });
     if code != ExitCode::Success {
         anyhow::bail!("verify exited with code {}", code as i32);

@@ -238,6 +238,162 @@ fn check_one(name: &str, path: PathBuf, expected: &str) -> ChecksumResult {
     }
 }
 
+/// Freshness of a SHA256SUMS file vs on-disk artifacts and project version.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SumsFreshness {
+    pub listed: usize,
+    pub found: usize,
+    pub missing: Vec<String>,
+    pub sums_versions: Vec<String>,
+    pub project_version: Option<String>,
+    /// `listed > 0 && found == 0`
+    pub empty_disk: bool,
+    /// Project version known, sums carry version(s), none match project.
+    pub version_mismatch: bool,
+}
+
+impl SumsFreshness {
+    pub fn is_stale(&self) -> bool {
+        self.empty_disk || self.version_mismatch
+    }
+
+    /// Human warnings suitable for `signet verify` notes.
+    pub fn warnings(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.empty_disk {
+            out.push(format!(
+                "stale SHA256SUMS: listed {} file(s) but none found on disk — rebuild (`signet build`) or prune SHA256SUMS",
+                self.listed
+            ));
+        } else if self.found < self.listed && self.listed > 0 {
+            out.push(format!(
+                "SHA256SUMS: {}/{} listed file(s) found on disk ({} missing) — rebuild or prune stale entries",
+                self.found,
+                self.listed,
+                self.listed - self.found
+            ));
+        }
+        if self.version_mismatch {
+            let proj = self.project_version.as_deref().unwrap_or("?");
+            let sums = if self.sums_versions.is_empty() {
+                "(none)".into()
+            } else {
+                self.sums_versions.join(", ")
+            };
+            out.push(format!(
+                "stale SHA256SUMS: artifact version(s) [{sums}] ≠ project version {proj} — rebuild or prune sums"
+            ));
+        }
+        out
+    }
+}
+
+/// Assess whether SHA256SUMS looks stale relative to disk and optional project version.
+pub fn assess_sums_freshness(
+    sums_path: &Path,
+    search_roots: &[&Path],
+    project_version: Option<&str>,
+) -> anyhow::Result<SumsFreshness> {
+    let text = fs::read_to_string(sums_path)?;
+    let entries = parse_sha256sums(&text)?;
+    let sums_dir = sums_path.parent().unwrap_or_else(|| Path::new("."));
+
+    let mut missing = Vec::new();
+    let mut found = 0usize;
+    let mut version_set = std::collections::BTreeSet::new();
+
+    for (_, name) in &entries {
+        let path = resolve_artifact_path(name, name, sums_dir, search_roots);
+        if path.is_file() {
+            found += 1;
+        } else {
+            missing.push(name.clone());
+        }
+        let base = Path::new(name)
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or(name.as_str());
+        for v in extract_semver_tokens(base) {
+            version_set.insert(v);
+        }
+    }
+
+    let listed = entries.len();
+    let sums_versions: Vec<String> = version_set.into_iter().collect();
+    let project_norm = project_version.map(normalize_version);
+    let version_mismatch = match (&project_norm, sums_versions.is_empty()) {
+        (Some(proj), false) => !sums_versions.iter().any(|v| normalize_version(v) == *proj),
+        _ => false,
+    };
+
+    Ok(SumsFreshness {
+        listed,
+        found,
+        missing,
+        sums_versions,
+        project_version: project_norm,
+        empty_disk: listed > 0 && found == 0,
+        version_mismatch,
+    })
+}
+
+fn normalize_version(v: &str) -> String {
+    v.trim()
+        .trim_start_matches(['v', 'V'])
+        .trim()
+        .to_string()
+}
+
+/// Extract `X.Y.Z` (optional pre-release suffix ignored) tokens from a filename.
+pub fn extract_semver_tokens(name: &str) -> Vec<String> {
+    let bytes = name.as_bytes();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i].is_ascii_digit() {
+            let start = i;
+            let mut dots = 0u8;
+            let mut j = i;
+            while j < bytes.len() {
+                let b = bytes[j];
+                if b.is_ascii_digit() {
+                    j += 1;
+                } else if b == b'.' && dots < 2 && j + 1 < bytes.len() && bytes[j + 1].is_ascii_digit()
+                {
+                    dots += 1;
+                    j += 1;
+                } else {
+                    break;
+                }
+            }
+            if dots == 2 {
+                let token = &name[start..j];
+                // Avoid matching lone IP-ish or year.month.day when surrounded oddly —
+                // require token boundaries that look like version separators.
+                let before_ok = start == 0
+                    || matches!(
+                        bytes[start - 1],
+                        b'_' | b'-' | b'/' | b' ' | b'(' | b'[' | b'v' | b'V'
+                    );
+                let after_ok = j >= bytes.len()
+                    || matches!(
+                        bytes[j],
+                        b'_' | b'-' | b'/' | b' ' | b')' | b']' | b'.'
+                    );
+                if before_ok && after_ok {
+                    out.push(token.to_string());
+                }
+                i = j;
+                continue;
+            }
+            i = j.max(i + 1);
+        } else {
+            i += 1;
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -310,5 +466,50 @@ mod tests {
     #[test]
     fn parse_rejects_bad_hash() {
         assert!(parse_sha256sums("notahash  file.bin").is_err());
+    }
+
+    #[test]
+    fn extract_semver_from_installer_names() {
+        assert_eq!(
+            extract_semver_tokens("Miro Desktop_0.2.0_x64-setup.exe"),
+            vec!["0.2.0".to_string()]
+        );
+        assert_eq!(
+            extract_semver_tokens("app-1.0.0.dmg"),
+            vec!["1.0.0".to_string()]
+        );
+        assert!(extract_semver_tokens("plain-setup.exe").is_empty());
+    }
+
+    #[test]
+    fn freshness_empty_disk_and_version_mismatch() {
+        let dir = tempdir().unwrap();
+        let sums = dir.path().join("SHA256SUMS");
+        fs::write(
+            &sums,
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Miro_0.2.0_setup.exe\n",
+        )
+        .unwrap();
+        let f = assess_sums_freshness(&sums, &[dir.path()], Some("0.3.0")).unwrap();
+        assert!(f.empty_disk);
+        assert!(f.version_mismatch);
+        assert!(f.is_stale());
+        let warns = f.warnings();
+        assert!(warns.iter().any(|w| w.contains("none found on disk")));
+        assert!(warns.iter().any(|w| w.contains("0.2.0")));
+    }
+
+    #[test]
+    fn freshness_ok_when_file_and_version_match() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("App_1.0.0.exe");
+        fs::write(&file, b"mz").unwrap();
+        let sums = dir.path().join("SHA256SUMS");
+        write_sha256sums(&sums, &[file]).unwrap();
+        let f = assess_sums_freshness(&sums, &[dir.path()], Some("v1.0.0")).unwrap();
+        assert!(!f.empty_disk);
+        assert!(!f.version_mismatch);
+        assert!(!f.is_stale());
+        assert_eq!(f.found, 1);
     }
 }

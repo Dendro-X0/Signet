@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.7 — 2026-08-03
+
+### Added
+
+- `signet verify` stale-sums detection: warn when listed files are missing or filename versions ≠ project version; `--fail-stale` for hard fail
+- Scan notes/next-steps for multi-installable apps (`[[targets]]` / `scan --apply`); platforms intent vs host capability one-liner
+- `signet identity status` alias for `identity show`
+
+### Fixed
+
+- Always log `wrote …SHA256SUMS (post-sign)` after Authenticode/APK resign rewrite
+
+### Docs
+
+- Spec: `specs/backend/fault-tolerance-design.md`
+- Clarify build relative paths vs release flat basenames in `docs/signing.md` / `docs/verify.md`
+
 ## 0.5.6 — 2026-08-03
 
 ### Fixed

@@ -214,6 +214,15 @@ pub fn print_human(report: &ScanReport) {
 }
 
 fn short_root(root: &Path) -> String {
+    if let Ok(cwd) = std::env::current_dir() {
+        let same = match (cwd.canonicalize(), root.canonicalize()) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => cwd == root,
+        };
+        if same {
+            return ".".into();
+        }
+    }
     root.file_name()
         .and_then(|n| n.to_str())
         .map(|n| format!("./{n}"))
@@ -343,6 +352,18 @@ pub fn finalize_report(
     }
 
     let mut notes = Vec::new();
+    let host_os = std::env::consts::OS;
+    let host_can_sign = match host_os {
+        "windows" => "windows Authenticode",
+        "macos" => "macOS codesign",
+        "linux" => "Linux openssl detached + checksums",
+        other => other,
+    };
+    notes.push(format!(
+        "[platforms] in signet.toml is shipping intent; suggested platforms above reflect \
+         detected artifacts / defaults. This host ({host_os}) can sign {host_can_sign} today — \
+         other OS assets need a matching CI/host."
+    ));
     if framework == "cli" {
         notes.push(
             "Detected a Rust CLI / workspace (not an installable desktop/mobile app). \
@@ -369,6 +390,28 @@ pub fn finalize_report(
              `signet android sign --apk …` after keystore create."
                 .into(),
         );
+    }
+    let installable_apps: Vec<&DetectedProject> = projects
+        .iter()
+        .filter(|p| p.kind.is_installable_app())
+        .collect();
+    let multi_target = installable_apps.len() >= 2;
+    if multi_target {
+        let ids: Vec<String> = installable_apps
+            .iter()
+            .map(|p| {
+                format!(
+                    "{} ({})",
+                    framework_id_for_kind(p.kind),
+                    relativize(&root, &p.path)
+                )
+            })
+            .collect();
+        notes.push(format!(
+            "Multiple installable apps detected: {}. Prefer [[targets]] in signet.toml \
+             (or `signet scan --apply`) so `signet build [--target id]` covers each surface.",
+            ids.join(", ")
+        ));
     }
     if framework == "electron" {
         notes.push(
@@ -409,6 +452,12 @@ pub fn finalize_report(
                 shell_quote(&framework)
             ),
             why: "create signet.toml from this suggestion".into(),
+        });
+    }
+    if multi_target {
+        next_steps.push(NextStep {
+            command: "signet scan --apply".into(),
+            why: "draft [[targets]] for each installable app (edit ids/build_command)".into(),
         });
     }
     if !has_identity {

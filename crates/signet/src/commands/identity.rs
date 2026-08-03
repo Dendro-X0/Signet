@@ -27,6 +27,7 @@ pub enum Action {
     /// List identities for this project
     List,
     /// Show fingerprint for the active (or named) identity
+    #[command(visible_alias = "status")]
     Show(ShowArgs),
     /// Mark an identity as active
     Use(UseArgs),

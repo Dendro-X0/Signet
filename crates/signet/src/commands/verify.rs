@@ -8,9 +8,10 @@ use clap::Args as ClapArgs;
 use crate::config::{resolve_config_path, Config};
 use crate::error::ExitCode;
 use crate::sign::{
-    parse_minisign_pub_from_trust, verify_sha256sums, verify_sums_gpg, verify_sums_minisign,
-    ChecksumResult, SumsKeyPaths,
+    assess_sums_freshness, parse_minisign_pub_from_trust, verify_sha256sums, verify_sums_gpg,
+    verify_sums_minisign, ChecksumResult, SumsFreshness, SumsKeyPaths,
 };
+use crate::version_detect::detect_project_version;
 use crate::trust_kit::{normalize_fingerprint, parse_fingerprint, parse_tier_id};
 use crate::trust_tier::{resolve_primary_tier, TierHints};
 use crate::ui::console;
@@ -48,6 +49,10 @@ pub struct Args {
     /// Expected SHA-256 fingerprint (overrides TRUST.md)
     #[arg(long)]
     pub fingerprint: Option<String>,
+
+    /// Exit non-zero when SHA256SUMS looks stale (no files on disk, or version mismatch)
+    #[arg(long)]
+    pub fail_stale: bool,
 }
 
 #[derive(Debug)]
@@ -151,6 +156,7 @@ fn run_inner(args: Args) -> anyhow::Result<ExitCode> {
     let asc = sibling_ext(&sums_path, "asc");
 
     let mut checksums = Vec::new();
+    let mut freshness: Option<SumsFreshness> = None;
     if sums_exists {
         let only = if args.artifacts.is_empty() {
             None
@@ -163,8 +169,18 @@ fn run_inner(args: Args) -> anyhow::Result<ExitCode> {
             )
         };
         checksums = verify_sha256sums(&sums_path, &[&root], only.as_deref())?;
-        if checksums.is_empty() && args.artifacts.is_empty() {
-            warnings.push("SHA256SUMS present but no listed files found on disk".into());
+        // Full-file verify: assess stale tree (leftover sums after clean / version bump).
+        if args.artifacts.is_empty() {
+            let project_ver = detect_project_version(&root);
+            match assess_sums_freshness(&sums_path, &[&root], project_ver.as_deref()) {
+                Ok(f) => {
+                    for w in f.warnings() {
+                        warnings.push(w);
+                    }
+                    freshness = Some(f);
+                }
+                Err(e) => warnings.push(format!("could not assess SHA256SUMS freshness: {e}")),
+            }
         }
     } else if !args.artifacts.is_empty() {
         anyhow::bail!(
@@ -211,6 +227,15 @@ fn run_inner(args: Args) -> anyhow::Result<ExitCode> {
 
     if report.checksums.iter().any(|c| !c.ok) || report.fingerprint_ok == Some(false) {
         return Ok(ExitCode::Failure);
+    }
+
+    if args.fail_stale {
+        if let Some(f) = &freshness {
+            if f.is_stale() {
+                eprintln!("error: SHA256SUMS looks stale (pass without --fail-stale to warn only)");
+                return Ok(ExitCode::Failure);
+            }
+        }
     }
 
     if args.require_sig {

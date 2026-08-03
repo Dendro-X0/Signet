@@ -17,7 +17,10 @@ use std::path::PathBuf;
 use crate::artifact::Artifact;
 use crate::identity::IdentityRecord;
 
-pub use checksum::{verify_sha256sums, write_sha256sums, write_sha256sums_named, ChecksumResult};
+pub use checksum::{
+    assess_sums_freshness, verify_sha256sums, write_sha256sums, write_sha256sums_named,
+    ChecksumResult, SumsFreshness,
+};
 pub use discover::{discover_artifacts, resolve_src_tauri};
 pub use sums_sig::{
     create_sums_key, maybe_sign_sums, parse_minisign_pub_from_trust, read_public_key_text,

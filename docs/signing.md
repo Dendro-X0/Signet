@@ -35,6 +35,9 @@ signet build --tauri-arg=--debug   # forwarded to `tauri build` (repeatable)
 ```
 
 With a sums key present, build/release also write `SHA256SUMS.minisig` (and optional `SHA256SUMS.asc` when `[trust.checksum_signing].gpg = true`).
+
+**Paths in `SHA256SUMS`:** `signet build` writes paths **relative to the project `SHA256SUMS`** (monorepo-friendly). `signet release` rewrites entries as **flat asset basenames** so GitHub Release downloads verify with `sha256sum -c` in one directory. After host/android signing, build always rewrites sums and logs `wrote … (post-sign)`.
+
 ## Host backends
 
 | OS | Tooling |

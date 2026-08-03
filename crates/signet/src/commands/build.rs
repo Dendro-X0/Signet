@@ -216,6 +216,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
     if !refresh.is_empty() {
         write_sha256sums(&sums_path, &refresh)?;
+        println!("wrote {} (post-sign)", sums_path.display());
         emit_sums_sign(&ctx, &sums_path, &args)?;
     }
 
@@ -264,6 +265,7 @@ fn sign_android_flow(
     }
     if !refresh.is_empty() {
         write_sha256sums(sums_path, &refresh)?;
+        println!("wrote {} (post-sign)", sums_path.display());
         emit_sums_sign(ctx, sums_path, args)?;
     }
     println!("done — compare Android cert digest via `signet android keystore show` / TRUST.md");
