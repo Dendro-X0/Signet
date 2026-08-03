@@ -3,8 +3,10 @@ use std::path::PathBuf;
 use clap::Args as ClapArgs;
 
 use crate::android::{keystore_paths, sign_apks};
-use crate::artifact::{select_adapter, Artifact, ArtifactKind, BuildOpts};
-use crate::config::select_targets;
+use crate::artifact::{
+    requires_explicit_build_command, select_adapter, Artifact, ArtifactKind, BuildOpts,
+};
+use crate::config::{select_targets, Target};
 use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::sign::{
@@ -21,6 +23,10 @@ pub struct Args {
     /// Build only this `[[targets]].id` (default: all targets)
     #[arg(long)]
     pub target: Option<String>,
+
+    /// Fail the run if any target was skipped or errored (still signs successful siblings first)
+    #[arg(long)]
+    pub strict_targets: bool,
 
     /// Skip framework build; only discover + sign existing artifacts
     #[arg(long)]
@@ -59,6 +65,13 @@ pub struct Args {
     pub artifacts: Vec<PathBuf>,
 }
 
+#[derive(Debug, Clone)]
+struct TargetDebt {
+    id: String,
+    framework: String,
+    reason: String,
+}
+
 pub fn run(args: Args) -> anyhow::Result<()> {
     let ctx = ProjectCtx::load(args.config.as_deref()).map_err(|e| {
         anyhow::anyhow!("{e}\nhint: run `signet init` in your app directory first")
@@ -76,38 +89,29 @@ pub fn run(args: Args) -> anyhow::Result<()> {
 
     let all = ctx.targets();
     let selected = select_targets(&all, args.target.as_deref())?;
+    let soft = args.target.is_none();
 
     let mut discovered: Vec<Artifact> = Vec::new();
     let mut saw_ios = false;
+    let mut debt: Vec<TargetDebt> = Vec::new();
 
     if args.artifacts.is_empty() {
         for target in &selected {
-            println!("── target {} ({}) ──", target.id, target.framework);
-            let tctx = ctx.with_target(target);
-            let adapter = select_adapter(&tctx.root, &tctx.config)?;
-            let label = adapter.label_root(&tctx);
-            println!("{} root: {}", adapter.id(), label.display());
-
-            if !args.skip_build {
-                adapter.build(
-                    &tctx,
-                    &BuildOpts {
-                        profile: args.profile.clone(),
-                        extra_args: args.tauri_args.clone(),
-                    },
-                )?;
-            } else {
-                println!("skipping {} build (--skip-build)", adapter.id());
-            }
-
-            if adapter.id() == "ios" {
-                saw_ios = true;
-            }
-
-            for art in adapter.discover(&tctx, &args.profile)? {
-                if !discovered.iter().any(|a| a.path == art.path) {
-                    discovered.push(art);
+            match process_target(&ctx, target, &args, soft, &mut saw_ios, &mut discovered) {
+                Ok(()) => {}
+                Err(e) if soft => {
+                    let reason = format!("{e:#}");
+                    println!(
+                        "warning: target {} ({}) skipped — {reason}",
+                        target.id, target.framework
+                    );
+                    debt.push(TargetDebt {
+                        id: target.id.clone(),
+                        framework: target.framework.clone(),
+                        reason,
+                    });
                 }
+                Err(e) => return Err(e),
             }
         }
     } else {
@@ -116,21 +120,30 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
 
     if discovered.is_empty() {
-        let hints: Vec<String> = selected
+        let mut parts: Vec<String> = debt
             .iter()
-            .map(|t| {
-                let tctx = ctx.with_target(t);
-                select_adapter(&tctx.root, &tctx.config)
-                    .map(|a| a.empty_hint(&tctx, &args.profile))
-                    .unwrap_or_else(|e| e.to_string())
-            })
+            .map(|d| format!("target {} ({}): {}", d.id, d.framework, d.reason))
             .collect();
-        anyhow::bail!("{}", hints.join("\n"));
+        for t in &selected {
+            let tctx = ctx.with_target(t);
+            let hint = select_adapter(&tctx.root, &tctx.config)
+                .map(|a| a.empty_hint(&tctx, &args.profile))
+                .unwrap_or_else(|e| e.to_string());
+            parts.push(hint);
+        }
+        anyhow::bail!("{}", parts.join("\n"));
     }
 
     println!("discovered {} artifact(s):", discovered.len());
     for a in &discovered {
         println!("  [{}] {}", a.kind.as_str(), a.path.display());
+    }
+    if !debt.is_empty() {
+        println!("note: {} target(s) unpaid/failed — continuing with discovered artifacts", debt.len());
+        for d in &debt {
+            println!("  debt: {} ({}) — {}", d.id, d.framework, d.reason);
+        }
+        println!("hint: set [[targets]].build_command, pass --target <id>, or --skip-build");
     }
 
     let checksum_paths: Vec<PathBuf> = discovered
@@ -150,7 +163,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         println!(
             "note: OS warnings (SmartScreen / Gatekeeper) are unchanged by checksums alone"
         );
-        return Ok(());
+        return finish_with_debt(&debt, args.strict_targets);
     }
 
     let apks: Vec<Artifact> = discovered
@@ -174,14 +187,14 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     if host.is_empty() && apks.is_empty() {
         if saw_ios || discovered.iter().any(|a| a.kind == ArtifactKind::Ipa) {
             println!("done — see docs/ios.md");
-            return Ok(());
+            return finish_with_debt(&debt, args.strict_targets);
         }
         println!("nothing to host-sign (no host-matching or APK artifacts)");
-        return Ok(());
+        return finish_with_debt(&debt, args.strict_targets);
     }
 
     if host.is_empty() {
-        return Ok(());
+        return finish_with_debt(&debt, args.strict_targets);
     }
 
     let identity = load_active(&ctx.identity_root()).map_err(|e| {
@@ -231,6 +244,85 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     }
 
     println!("done — compare fingerprints via `signet identity show` / TRUST.md");
+    finish_with_debt(&debt, args.strict_targets)
+}
+
+fn finish_with_debt(debt: &[TargetDebt], strict: bool) -> anyhow::Result<()> {
+    if strict && !debt.is_empty() {
+        let summary = debt
+            .iter()
+            .map(|d| format!("{} ({})", d.id, d.framework))
+            .collect::<Vec<_>>()
+            .join(", ");
+        anyhow::bail!(
+            "--strict-targets: unpaid/failed targets remain: {summary}"
+        );
+    }
+    Ok(())
+}
+
+fn process_target(
+    ctx: &ProjectCtx,
+    target: &Target,
+    args: &Args,
+    soft: bool,
+    saw_ios: &mut bool,
+    discovered: &mut Vec<Artifact>,
+) -> anyhow::Result<()> {
+    println!("── target {} ({}) ──", target.id, target.framework);
+    let tctx = ctx.with_target(target);
+    let adapter = select_adapter(&tctx.root, &tctx.config)?;
+    let label = adapter.label_root(&tctx);
+    println!("{} root: {}", adapter.id(), label.display());
+
+    let unpaid = !args.skip_build
+        && requires_explicit_build_command(&target.framework)
+        && target.build_command.trim().is_empty()
+        && tctx.config.project.build_command.trim().is_empty();
+
+    if unpaid {
+        let reason = format!(
+            "unpaid recipe: set build_command for target `{}` (framework {}), or --skip-build / --target",
+            target.id, target.framework
+        );
+        if soft {
+            // Still try discover in case artifacts already exist.
+            match adapter.discover(&tctx, &args.profile) {
+                Ok(arts) => {
+                    for art in arts {
+                        if !discovered.iter().any(|a| a.path == art.path) {
+                            discovered.push(art);
+                        }
+                    }
+                }
+                Err(e) => println!("note: discover after unpaid skip failed: {e}"),
+            }
+            return Err(anyhow::anyhow!("{reason}"));
+        }
+        anyhow::bail!("{reason}");
+    }
+
+    if !args.skip_build {
+        adapter.build(
+            &tctx,
+            &BuildOpts {
+                profile: args.profile.clone(),
+                extra_args: args.tauri_args.clone(),
+            },
+        )?;
+    } else {
+        println!("skipping {} build (--skip-build)", adapter.id());
+    }
+
+    if adapter.id() == "ios" {
+        *saw_ios = true;
+    }
+
+    for art in adapter.discover(&tctx, &args.profile)? {
+        if !discovered.iter().any(|a| a.path == art.path) {
+            discovered.push(art);
+        }
+    }
     Ok(())
 }
 
@@ -305,4 +397,29 @@ fn emit_sums_sign(
         println!("wrote {}", p.display());
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unpaid_expo_is_soft_debt_reason() {
+        assert!(requires_explicit_build_command("expo"));
+        assert!(requires_explicit_build_command("flutter"));
+        assert!(!requires_explicit_build_command("tauri"));
+        assert!(!requires_explicit_build_command("electron"));
+    }
+
+    #[test]
+    fn strict_finish_fails_on_debt() {
+        let debt = vec![TargetDebt {
+            id: "mobile".into(),
+            framework: "expo".into(),
+            reason: "unpaid".into(),
+        }];
+        assert!(finish_with_debt(&debt, true).is_err());
+        assert!(finish_with_debt(&debt, false).is_ok());
+        assert!(finish_with_debt(&[], true).is_ok());
+    }
 }

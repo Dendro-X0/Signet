@@ -46,6 +46,14 @@ pub trait FrameworkAdapter {
     fn empty_hint(&self, ctx: &ProjectCtx, profile: &str) -> String;
 }
 
+/// Frameworks that refuse to invent a default build (empty `build_command` is unpaid debt).
+pub fn requires_explicit_build_command(framework: &str) -> bool {
+    matches!(
+        framework.trim().to_ascii_lowercase().as_str(),
+        "flutter" | "react-native" | "rn" | "expo" | "capacitor" | "ios"
+    )
+}
+
 /// Select adapter from effective framework (explicit config, else scan, else tauri).
 pub fn select_adapter(
     root: &std::path::Path,

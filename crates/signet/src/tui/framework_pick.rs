@@ -50,10 +50,7 @@ fn preferred_framework_from_kinds(kinds: &[crate::scan::ProjectKind]) -> Option<
 
 /// Adapters that refuse empty `build_command` on build (no safe default target).
 pub fn requires_build_command(framework: &str) -> bool {
-    matches!(
-        framework.trim().to_ascii_lowercase().as_str(),
-        "flutter" | "react-native" | "rn" | "expo" | "capacitor" | "ios"
-    )
+    crate::artifact::requires_explicit_build_command(framework)
 }
 
 pub fn build_command_hint(framework: &str) -> &'static str {

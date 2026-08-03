@@ -342,6 +342,7 @@ pub fn guided_build() -> anyhow::Result<()> {
     commands::build::run(commands::build::Args {
         config: None,
         target: None,
+        strict_targets: false,
         skip_build,
         no_sign,
         no_sums_sign: false,

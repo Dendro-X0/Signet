@@ -14,7 +14,9 @@ mod tauri;
 mod types;
 mod walk_outputs;
 
-pub use adapter::{select_adapter, BuildOpts, FrameworkAdapter};
+pub use adapter::{
+    requires_explicit_build_command, select_adapter, BuildOpts, FrameworkAdapter,
+};
 pub use android::AndroidAdapter;
 pub use capacitor::CapacitorAdapter;
 pub use cli::CliAdapter;

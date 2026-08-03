@@ -4,7 +4,7 @@
 
 **Tauri:** default build is `tauri build` from the resolved `src-tauri`. For monorepos, set `build_command` (e.g. `pnpm desktop:release`) — Signet runs it from the directory containing `signet.toml`. App root field is `app_root` (legacy alias: `tauri_root`).
 
-**Multi-target (monorepo):** optional `[[targets]]` entries (`id`, `framework`, `app_root`, `build_command`). `signet build` runs all; `signet build --target <id>` runs one. Shared identity / `SHA256SUMS` / `TRUST.md`.
+**Multi-target (monorepo):** optional `[[targets]]` entries (`id`, `framework`, `app_root`, `build_command`). `signet build` runs all; `signet build --target <id>` runs one. Shared identity / `SHA256SUMS` / `TRUST.md`. Unpaid siblings (e.g. Expo without `build_command`) soft-skip with a **debt** report and do not abort successful targets; `--strict-targets` fails after signing; `--target` hard-fails that one surface.
 
 **Electron:** set `framework = "electron"`, optional `build_command` (default `npm run dist`). Discover looks under `dist/`, `out/`, and `release/`. Signet signs **post-bundle** installers (does not inject `win.certificateFile`).
 

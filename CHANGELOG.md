@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.10 — 2026-08-03
+
+### Fixed
+
+- Multi-target `signet build` soft-skips unpaid/failed siblings (e.g. Expo without `build_command`) and still signs discovered desktop artifacts
+- Clear target **debt** report; `--strict-targets` fails after signing successful siblings; `--target id` remains hard-fail
+
+### Docs
+
+- Spec: `specs/backend/soft-fail-targets-design.md` (multi-platform ship slice B)
+
 ## 0.5.9 — 2026-08-03
 
 ### Added
