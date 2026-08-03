@@ -2,6 +2,8 @@
 
 `signet release` gathers signed (or built) artifacts, refreshes `SHA256SUMS`, optionally attaches `TRUST.md`, and publishes a GitHub Release for a tag.
 
+`--dry-run` lists assets and notes only — it does **not** rewrite or create `SHA256SUMS` / signatures. Live release still flattens sums to asset basenames for GitHub.
+
 ## Usage
 
 ```bash

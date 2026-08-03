@@ -20,6 +20,8 @@ pub struct CollectOpts {
     pub no_sums_sign: bool,
     pub require_sums_sign: bool,
     pub require_gpg: bool,
+    /// When true (release `--dry-run`), never rewrite or sign `SHA256SUMS` on disk.
+    pub read_only: bool,
 }
 
 /// Gather uploadable files: discovered bundles, sidecar .sig, SHA256SUMS, optional TRUST.md.
@@ -83,26 +85,33 @@ pub fn collect_release_files_with_opts(
         .collect();
     let sums_path = project_root.join("SHA256SUMS");
     if !named.is_empty() {
-        write_sha256sums_named(&sums_path, &named)?;
-        by_name.insert("SHA256SUMS".into(), sums_path.clone());
+        if opts.read_only {
+            if sums_path.is_file() {
+                by_name.insert("SHA256SUMS".into(), sums_path.clone());
+            }
+            // Do not create/rewrite sums or signatures in dry-run.
+        } else {
+            write_sha256sums_named(&sums_path, &named)?;
+            by_name.insert("SHA256SUMS".into(), sums_path.clone());
 
-        let secrets = config.secrets_path(project_root);
-        let sign_report = maybe_sign_sums(
-            &sums_path,
-            &secrets,
-            &config.trust.checksum_signing,
-            opts.no_sums_sign,
-            opts.require_sums_sign,
-            opts.require_gpg,
-        )?;
-        for w in &sign_report.warnings {
-            eprintln!("warning: {w}");
-        }
-        if let Some(p) = sign_report.minisig {
-            by_name.insert("SHA256SUMS.minisig".into(), p);
-        }
-        if let Some(p) = sign_report.asc {
-            by_name.insert("SHA256SUMS.asc".into(), p);
+            let secrets = config.secrets_path(project_root);
+            let sign_report = maybe_sign_sums(
+                &sums_path,
+                &secrets,
+                &config.trust.checksum_signing,
+                opts.no_sums_sign,
+                opts.require_sums_sign,
+                opts.require_gpg,
+            )?;
+            for w in &sign_report.warnings {
+                eprintln!("warning: {w}");
+            }
+            if let Some(p) = sign_report.minisig {
+                by_name.insert("SHA256SUMS.minisig".into(), p);
+            }
+            if let Some(p) = sign_report.asc {
+                by_name.insert("SHA256SUMS.asc".into(), p);
+            }
         }
     }
 
@@ -186,8 +195,15 @@ fn classify_kind(name: &str) -> &'static str {
 }
 
 /// Ensure SHA256SUMS lists every file that will be uploaded (except itself, TRUST, and sum sigs).
-pub fn verify_checksums_cover(files: &[ReleaseFile]) -> anyhow::Result<()> {
+/// When `lenient` (dry-run), missing sums or missing basename entries become warnings, not errors.
+pub fn verify_checksums_cover_opts(files: &[ReleaseFile], lenient: bool) -> anyhow::Result<()> {
     let Some(sums) = files.iter().find(|f| f.asset_name == "SHA256SUMS") else {
+        if lenient {
+            eprintln!(
+                "warning: no SHA256SUMS on disk — dry-run will not create one; live `signet release` rewrites flat basenames"
+            );
+            return Ok(());
+        }
         return Ok(());
     };
     let text = fs::read_to_string(&sums.path)?;
@@ -196,10 +212,17 @@ pub fn verify_checksums_cover(files: &[ReleaseFile]) -> anyhow::Result<()> {
             continue;
         }
         if !text.contains(&f.asset_name) {
-            anyhow::bail!(
+            let msg = format!(
                 "SHA256SUMS missing entry for {} — re-run collect or `signet build`",
                 f.asset_name
             );
+            if lenient {
+                eprintln!(
+                    "warning: {msg} (dry-run keeps existing sums; live release rewrites to asset basenames)"
+                );
+            } else {
+                anyhow::bail!("{msg}");
+            }
         }
     }
     Ok(())
@@ -235,6 +258,47 @@ mod tests {
         assert!(names.contains(&"app-setup.exe"));
         assert!(names.contains(&"SHA256SUMS"));
         assert!(names.contains(&"TRUST.md"));
-        verify_checksums_cover(&files).unwrap();
+        verify_checksums_cover_opts(&files, false).unwrap();
+    }
+
+    #[test]
+    fn read_only_does_not_rewrite_or_create_sums() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        let bundle = root.join("src-tauri/target/release/bundle/nsis");
+        fs::create_dir_all(&bundle).unwrap();
+        fs::write(bundle.join("app-setup.exe"), b"MZ").unwrap();
+
+        let sums = root.join("SHA256SUMS");
+        let original = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  apps/nested/app-setup.exe\n";
+        fs::write(&sums, original).unwrap();
+
+        let cfg = Config::example("app", ".");
+        let opts = CollectOpts {
+            read_only: true,
+            ..CollectOpts::default()
+        };
+        let files =
+            collect_release_files_with_opts(root, &cfg, "release", &[], false, opts).unwrap();
+        assert!(files.iter().any(|f| f.asset_name == "app-setup.exe"));
+        assert_eq!(fs::read_to_string(&sums).unwrap(), original);
+
+        // No sums file case: must not create one.
+        fs::remove_file(&sums).unwrap();
+        let files2 = collect_release_files_with_opts(
+            root,
+            &cfg,
+            "release",
+            &[],
+            false,
+            CollectOpts {
+                read_only: true,
+                ..CollectOpts::default()
+            },
+        )
+        .unwrap();
+        assert!(!sums.is_file(), "dry-run must not create SHA256SUMS");
+        assert!(!files2.iter().any(|f| f.asset_name == "SHA256SUMS"));
+        verify_checksums_cover_opts(&files2, true).unwrap();
     }
 }

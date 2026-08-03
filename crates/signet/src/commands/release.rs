@@ -6,7 +6,7 @@ use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::release::{
     build_release_notes, collect_release_files_with_opts, detect_github_repo,
-    publish_github_release, verify_checksums_cover, CollectOpts, GitHubPublishOpts,
+    publish_github_release, CollectOpts, GitHubPublishOpts,
 };
 
 #[derive(Debug, ClapArgs)]
@@ -88,6 +88,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
             no_sums_sign: args.no_sums_sign,
             require_sums_sign: args.require_sums_sign,
             require_gpg: args.require_gpg,
+            read_only: args.dry_run,
         },
     )?;
 
@@ -97,7 +98,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         );
     }
 
-    verify_checksums_cover(&files)?;
+    crate::release::verify_checksums_cover_opts(&files, args.dry_run)?;
 
     println!("release assets ({}):", files.len());
     for f in &files {
@@ -126,6 +127,9 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         .unwrap_or_else(|_| "(undetected — set --repo or [release].repo)".into());
         println!("\ndry-run: would publish tag '{tag}' to {repo}");
         println!("title: {title}");
+        println!(
+            "note: dry-run is read-only — SHA256SUMS not rewritten (live release flattens to asset basenames)"
+        );
         let arts: Vec<_> = files
             .iter()
             .filter(|f| !matches!(f.kind, "checksums" | "checksums-sig" | "trust"))

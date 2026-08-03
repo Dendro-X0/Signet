@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.11 — 2026-08-03
+
+### Fixed
+
+- `signet release --dry-run` is read-only: no longer rewrites or creates `SHA256SUMS` / signatures on disk
+
+### Docs
+
+- Spec: `specs/backend/release-dry-run-readonly-design.md` (multi-platform ship slice C)
+
 ## 0.5.10 — 2026-08-03
 
 ### Fixed
