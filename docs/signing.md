@@ -2,6 +2,8 @@
 
 `signet build` selects a [`FrameworkAdapter`](../specs/backend/artifact-contract-design.md) (`project.framework`: `tauri`, `electron`, `android`, or `ios`), runs the framework build (unless `--skip-build`), discovers artifacts, writes `SHA256SUMS`, and signs where applicable.
 
+**Tauri:** default build is `tauri build` from the resolved `src-tauri`. For monorepos, set `build_command` (e.g. `pnpm desktop:release`) — Signet runs it from the directory containing `signet.toml`.
+
 **Electron:** set `framework = "electron"`, optional `build_command` (default `npm run dist`). Discover looks under `dist/`, `out/`, and `release/`. Signet signs **post-bundle** installers (does not inject `win.certificateFile`).
 
 **Android:** set `framework = "android"` or use `signet android keystore|sign`. See [android.md](android.md) — local keystore ≠ Play App Signing key.

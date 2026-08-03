@@ -2,7 +2,6 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use which::which;
 
@@ -41,10 +40,7 @@ impl FrameworkAdapter for CliAdapter {
             app_root.display()
         );
 
-        let status = Command::new(&program)
-            .current_dir(&app_root)
-            .args(&args)
-            .status()?;
+        let status = super::walk_outputs::spawn_build_command(&program, &args, &app_root)?;
         if !status.success() {
             anyhow::bail!("cli build failed with status {status}");
         }

@@ -95,8 +95,6 @@ pub fn run_required_build_command(
     framework_id: &str,
     examples: &str,
 ) -> anyhow::Result<()> {
-    use std::process::Command;
-
     let trimmed = build_command.trim();
     if trimmed.is_empty() {
         anyhow::bail!(
@@ -120,14 +118,38 @@ pub fn run_required_build_command(
         app_root.display()
     );
 
-    let status = Command::new(program)
-        .current_dir(app_root)
-        .args(&args)
-        .status()?;
+    let status = spawn_build_command(program, &args, app_root)?;
     if !status.success() {
         anyhow::bail!("{framework_id} build failed with status {status}");
     }
     Ok(())
+}
+
+/// Spawn a build program. On Windows, route through `cmd /C` so `pnpm`/`npm` `.cmd` shims work
+/// (CreateProcess cannot run the extensionless POSIX npm shims).
+pub fn spawn_build_command(
+    program: &str,
+    args: &[String],
+    cwd: &Path,
+) -> anyhow::Result<std::process::ExitStatus> {
+    use std::process::Command;
+
+    #[cfg(windows)]
+    {
+        let mut cmd = Command::new("cmd");
+        cmd.current_dir(cwd).args(["/D", "/C"]).arg(program);
+        for a in args {
+            cmd.arg(a);
+        }
+        Ok(cmd.status()?)
+    }
+
+    #[cfg(not(windows))]
+    {
+        use which::which;
+        let resolved = which(program).unwrap_or_else(|_| std::path::PathBuf::from(program));
+        Ok(Command::new(resolved).current_dir(cwd).args(args).status()?)
+    }
 }
 
 #[cfg(test)]

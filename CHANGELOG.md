@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.5 — 2026-08-03
+
+### Fixed
+
+- Windows: run `build_command` via `cmd /C` so `pnpm` / `npm` shims resolve (fixes `program not found` on monorepo Tauri builds)
+
+### Changed
+
+- Tauri adapter: non-empty `[project].build_command` runs from the project root (monorepo scripts like `pnpm desktop:release`); empty still uses `tauri build`
+
+### Docs
+
+- Miro dogfood notes: `docs/dogfood/miro-notes.md` (Sign→Prove→Check on real Tauri app)
+
 ## 0.5.4 — 2026-08-02
 
 ### Fixed

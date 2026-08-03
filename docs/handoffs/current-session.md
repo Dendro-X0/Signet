@@ -1,26 +1,25 @@
 # Current session handoff
 
-**Updated:** 2026-08-02  
-**Band:** **0.5.x** — v0.5.4 cut (omit-framework resolve + version-aware defaults)
+**Updated:** 2026-08-03  
+**Band:** **0.5.x** — Miro dogfood green; v0.5.5 cut (Tauri build_command + Windows pnpm)
 
 ## Next atomic step
 
-Dogfood on ≥1 **real installable app** (Miro Tauri / other) with successful Sign→Prove→Check notes → then v1.0.0 gate per [`specs/backend/v0.5-release-roadmap.md`](../../specs/backend/v0.5-release-roadmap.md).
+v1.0.0 gate: narrative stable / drop preview framing; optional demo recording; spot-check install+verify on release assets — per [`specs/backend/v0.5-release-roadmap.md`](../../specs/backend/v0.5-release-roadmap.md).
 
 **PAUSED / CANCELLED:** none  
-**Blocked for coding:** none (dogfood needs a real app)
+**Blocked for coding:** none
 
 ## Canonical owners
 
 | Work | Owner |
 |------|--------|
-| Omit-framework resolve | `project.rs` (`resolve_framework`), `config.rs`, `artifact/adapter.rs` |
-| Version / tag defaults | `version_detect.rs`, `tui/flows.rs`, `commands/release.rs` |
-| 0.5.x dogfood | `docs/dogfood/` |
+| Tauri monorepo build | `artifact/tauri.rs`, `walk_outputs.rs` (`spawn_build_command`) |
+| Miro dogfood | `docs/dogfood/miro-notes.md` (+ Miro `frontendDist` fix outside this repo) |
 | v1.0.0 | full gate in v0.5-release-roadmap |
 
 ## Recently completed
 
-- **v0.5.4:** omit-framework scan resolve; version-aware release tags; `framework = "cli"` in this repo
-- v0.5.3: install.ps1 curl retries
-- v0.5.2: `~/bin` mirror for Git Bash/Cursor
+- **v0.5.5:** Tauri `build_command` from project root; Windows `cmd /C` for pnpm/npm; Miro Sign→Prove→Check dogfood
+- Miro: `frontendDist` → `../../miro-web/out`
+- **v0.5.4:** omit-framework scan resolve; version-aware release tags
