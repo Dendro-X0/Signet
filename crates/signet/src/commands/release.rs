@@ -6,7 +6,7 @@ use crate::identity::load_active;
 use crate::project::ProjectCtx;
 use crate::release::{
     assess_github_auth, build_release_notes, collect_release_files_with_opts, detect_github_repo,
-    publish_github_release, CollectOpts, GitHubPublishOpts,
+    offer_open_auth_setup, publish_github_release, CollectOpts, GitHubPublishOpts,
 };
 
 #[derive(Debug, ClapArgs)]
@@ -159,6 +159,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         println!("auth: {}", auth.summary_line());
         if !auth.ready() {
             println!("{}", auth.setup_guide());
+            let _ = offer_open_auth_setup(&auth);
         }
         println!(
             "note: dry-run is read-only — SHA256SUMS not rewritten (live release flattens to asset basenames)"
@@ -176,6 +177,8 @@ pub fn run(args: Args) -> anyhow::Result<()> {
 
     let auth = assess_github_auth();
     if !auth.ready() {
+        eprintln!("{}", auth.setup_guide());
+        let _ = offer_open_auth_setup(&auth);
         anyhow::bail!("{}", auth.preflight_error());
     }
 

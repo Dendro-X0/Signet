@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.16 — 2026-08-04
+
+### Added
+
+- Confirmed browser-open step for GitHub auth setup (TTY only): doctor, `release --dry-run`, live preflight, and guided release
+- Opens `https://cli.github.com/` when `gh` is missing, or the classic PAT create page (`repo` scope) when `gh` is installed but not logged in
+
+### Docs
+
+- Spec: `specs/backend/release-auth-browser-open-design.md`; `docs/release.md` Auth
+
 ## 0.5.15 — 2026-08-03
 
 ### Added

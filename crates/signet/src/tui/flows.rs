@@ -376,6 +376,7 @@ pub fn guided_release() -> anyhow::Result<()> {
             for line in auth.setup_guide().lines() {
                 console::note(line);
             }
+            let _ = crate::release::offer_open_auth_setup(&auth);
             anyhow::bail!(
                 "publish blocked until GitHub auth is ready — fix above, then retry Release from the hub"
             );
@@ -596,6 +597,7 @@ pub fn guided_setup_with(opts: GuidedOpts) -> anyhow::Result<()> {
                 for line in auth.setup_guide().lines() {
                     console::note(line);
                 }
+                let _ = crate::release::offer_open_auth_setup(&auth);
                 skip_line("publish skipped — fix github-auth first");
             } else {
                 guided_release()?;

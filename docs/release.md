@@ -36,10 +36,12 @@ Set `GH_TOKEN` or `GITHUB_TOKEN` to a classic PAT with **`repo`** scope (or a fi
 
 | Command | Behavior |
 |---------|----------|
-| `signet doctor` | Status + setup guide when not ready |
-| `signet release --dry-run` | Shows `auth:` line |
-| `signet release` (live) | PrefLights; refuses with the same guide if not ready |
-| Guided Release | Blocks publish until auth is ready |
+| `signet doctor` | Status + setup guide when not ready; **optional confirm** to open install/token URL in the browser (TTY only) |
+| `signet release --dry-run` | Shows `auth:` line; same confirm-to-open offer when not ready |
+| `signet release` (live) | PrefLights; offers browser open then refuses with the same guide if not ready |
+| Guided Release | Blocks publish until auth is ready; offers browser open |
+
+Never opens a browser without confirmation. Skipped in non-interactive / CI (stdin not a TTY).
 
 ## Repo resolution
 

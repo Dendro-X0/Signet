@@ -653,12 +653,14 @@ fn print_human(checks: &[Check]) {
         console::status(14, &c.name, ok, &format!("({sev}) {}", c.detail));
     }
     console::blank();
-    if let Some(_auth) = checks.iter().find(|c| c.name == "github-auth" && !c.ok) {
+    if let Some(_auth_check) = checks.iter().find(|c| c.name == "github-auth" && !c.ok) {
         console::section("github release auth");
-        for line in crate::release::assess_github_auth().setup_guide().lines() {
+        let auth = crate::release::assess_github_auth();
+        for line in auth.setup_guide().lines() {
             console::note(line);
         }
         console::blank();
+        let _ = crate::release::offer_open_auth_setup(&auth);
     }
     console::note("`signet release --dry-run` lists assets; live publish needs ready github-auth.");
     console::blank();

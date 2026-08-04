@@ -1,8 +1,13 @@
 //! GitHub release authentication readiness (doctor / release / guided).
 
+use std::io::{self, IsTerminal, Write};
 use std::process::Command;
 
 use which::which;
+
+const URL_GH_CLI_INSTALL: &str = "https://cli.github.com/";
+const URL_PAT_NEW_REPO: &str =
+    "https://github.com/settings/tokens/new?scopes=repo&description=signet-release";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GithubAuthKind {
@@ -46,8 +51,18 @@ impl GithubAuthReport {
             }
             GithubAuthKind::TokenEnv { var } => format!("{var} set"),
             GithubAuthKind::Missing => {
-                "missing — install `gh` + `gh auth login`, or set GH_TOKEN (see docs/release.md)".into()
+                "missing — install `gh` + `gh auth login`, or set GH_TOKEN (see docs/release.md)"
+                    .into()
             }
+        }
+    }
+
+    /// Primary URL to open for quick credential / install setup (if any).
+    pub fn setup_browser_url(&self) -> Option<&'static str> {
+        match self.kind {
+            GithubAuthKind::Missing => Some(URL_GH_CLI_INSTALL),
+            GithubAuthKind::GhInstalledNotLoggedIn => Some(URL_PAT_NEW_REPO),
+            GithubAuthKind::GhLoggedIn | GithubAuthKind::TokenEnv { .. } => None,
         }
     }
 
@@ -61,7 +76,7 @@ impl GithubAuthReport {
                 "GitHub auth setup:\n\
                    1. Run `gh auth login` and complete the browser/device flow\n\
                    2. Confirm with `gh auth status`\n\
-                   3. Or set GH_TOKEN / GITHUB_TOKEN (classic PAT with `repo` scope)\n\
+                   3. Or create a classic PAT (`repo` scope) and set GH_TOKEN / GITHUB_TOKEN\n\
                  See docs/release.md#auth"
                     .into()
             }
@@ -107,6 +122,79 @@ pub fn assess_github_auth() -> GithubAuthReport {
         GithubAuthReport {
             kind: GithubAuthKind::Missing,
         }
+    }
+}
+
+/// After printing the setup guide: optionally open the setup URL (TTY + confirm only).
+pub fn offer_open_auth_setup(auth: &GithubAuthReport) -> io::Result<()> {
+    let Some(url) = auth.setup_browser_url() else {
+        return Ok(());
+    };
+    if !io::stdin().is_terminal() {
+        return Ok(());
+    }
+
+    let label = match auth.kind {
+        GithubAuthKind::Missing => "Open GitHub CLI install page in your browser?",
+        GithubAuthKind::GhInstalledNotLoggedIn => {
+            "Open GitHub token settings (repo scope) in your browser?"
+        }
+        _ => "Open GitHub auth setup in your browser?",
+    };
+    if !confirm_yn(label, false)? {
+        return Ok(());
+    }
+
+    match open_url_in_browser(url) {
+        Ok(()) => {
+            eprintln!("opened {url}");
+            eprintln!(
+                "note: after installing/logging in, re-run `signet doctor` or set GH_TOKEN in this shell"
+            );
+        }
+        Err(e) => {
+            eprintln!("warning: could not open browser ({e}) — visit: {url}");
+        }
+    }
+    Ok(())
+}
+
+fn confirm_yn(label: &str, default_yes: bool) -> io::Result<bool> {
+    let hint = if default_yes { "Y/n" } else { "y/N" };
+    eprint!("{label} [{hint}]: ");
+    io::stderr().flush()?;
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf)?;
+    let t = buf.trim().to_ascii_lowercase();
+    if t.is_empty() {
+        return Ok(default_yes);
+    }
+    Ok(matches!(t.as_str(), "y" | "yes"))
+}
+
+/// Open an https URL with the platform default browser (no shell interpolation of the URL).
+pub fn open_url_in_browser(url: &str) -> io::Result<()> {
+    if !(url.starts_with("https://") || url.starts_with("http://")) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "refusing to open non-http(s) URL",
+        ));
+    }
+    let status = if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .args(["/C", "start", "", url])
+            .status()?
+    } else if cfg!(target_os = "macos") {
+        Command::new("open").arg(url).status()?
+    } else {
+        Command::new("xdg-open").arg(url).status()?
+    };
+    if status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other(format!(
+            "browser helper exited with {status}"
+        )))
     }
 }
 
@@ -185,5 +273,39 @@ mod tests {
         let e = r.preflight_error();
         assert!(e.contains("NOT READY"), "{e}");
         assert!(e.contains("1."), "{e}");
+    }
+
+    #[test]
+    fn setup_browser_url_by_kind() {
+        assert_eq!(
+            GithubAuthReport {
+                kind: GithubAuthKind::Missing
+            }
+            .setup_browser_url(),
+            Some(URL_GH_CLI_INSTALL)
+        );
+        assert_eq!(
+            GithubAuthReport {
+                kind: GithubAuthKind::GhInstalledNotLoggedIn
+            }
+            .setup_browser_url(),
+            Some(URL_PAT_NEW_REPO)
+        );
+        assert!(GithubAuthReport {
+            kind: GithubAuthKind::GhLoggedIn
+        }
+        .setup_browser_url()
+        .is_none());
+        assert!(GithubAuthReport {
+            kind: GithubAuthKind::TokenEnv { var: "GH_TOKEN" }
+        }
+        .setup_browser_url()
+        .is_none());
+    }
+
+    #[test]
+    fn open_url_rejects_non_http() {
+        let err = open_url_in_browser("file:///etc/passwd").unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
     }
 }
