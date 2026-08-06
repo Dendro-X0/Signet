@@ -7,13 +7,30 @@
 ## Commands
 
 ```bash
-signet ship --plan                 # coverage gap + Sign path (self|graduate)
-signet ship --ci                   # write .github/workflows/signet-ship.yml
+signet ship --plan                 # coverage + Sign path + CI secrets readiness
+signet ship secrets                # assess required GitHub Actions secrets (local)
+signet ship secrets --push         # print gh secret set recipe (dry-run)
+signet ship secrets --push --apply # push via `gh secret set` (stdin; needs gh auth)
+signet ship --ci                   # write .github/workflows/signet-ship.yml (+ preflight)
 signet ship --ci --force           # overwrite workflow
 signet ship --collect ./artifacts  # merge CI downloads → dist/signet-ship/ + SHA256SUMS
 signet release --tag vX.Y.Z        # fails if coverage gap (unless --allow-partial)
 signet graduate apply              # when path=graduate: discover host installers + official Sign
 ```
+
+### CI secrets
+
+Push local `.signet/` material before expecting green Actions (never commit secrets):
+
+| Secret | Material |
+|--------|----------|
+| `SIGNET_IDENTITY_BUNDLE_BASE64` | zip of `.signet/identity/` |
+| `SIGNET_SUMS_KEY_BASE64` | `.signet/sums/minisign.key` (if minisign on) |
+| `SIGNET_ANDROID_KEYSTORE_BASE64` | `.signet/android/release.jks` |
+| `SIGNET_ANDROID_META_BASE64` | `.signet/android/meta.toml` |
+| `SIGNET_ANDROID_STORE_PASS` | from env (never `signet.toml`) |
+
+Workflow preflight fails fast with `::error::… signet ship secrets --push --apply` when secrets are missing.
 
 ## Flow
 

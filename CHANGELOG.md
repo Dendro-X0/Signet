@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.17 — 2026-08-06
+
+### Added
+
+- `signet ship secrets` — assess / dry-run `--push` / `--push --apply` for GitHub Actions secrets from local `.signet/`
+- CI readiness on `signet doctor` + `ship --plan` with stable gap IDs (`gap.android.ci_secrets`, …)
+- `ship --ci` template: `ship-preflight` job, identity/keystore restore steps, `::error::` pointing at `ship secrets --push --apply`
+
+### Docs
+
+- Spec: `specs/backend/ship-secrets-ci-design.md`; `docs/ship.md` secrets section
+
 ## 0.5.16 — 2026-08-04
 
 ### Added

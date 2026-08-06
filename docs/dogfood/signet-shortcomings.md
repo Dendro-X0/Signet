@@ -22,15 +22,17 @@
 
 ## Remaining / residual
 
-1. **CI template is generic, not app-ready** — Emitted workflow installs Signet via `cargo install` and calls `signet build`, but Miro still needs Node/pnpm/Tauri (and mobile) steps. Maintainer must hand-edit before matrix is useful.
+1. **CI template is generic, not app-ready** — Emitted workflow installs Signet via `cargo install` and calls `signet build`, but Miro/Clavis still need Node/pnpm/Tauri (and mobile) steps. Maintainer must hand-edit build steps (secrets path addressed in 0.5.17).
 
-2. **Identity restore in CI is documented, not automated** — Self-sign on runners still requires wiring `.signet/identity` (and graduate secrets) via Actions secrets; no helper to emit the secret-upload recipe.
+2. ~~**Identity restore in CI is documented, not automated**~~ — **Done in 0.5.17** (`signet ship secrets` + CI restore / preflight).
 
 3. **Expo unpaid recipe is debt by choice** — Soft-fail works; closing android/ios coverage still needs a real `build_command` / EAS-or-local export path.
 
 4. **End-to-end multi-OS release not dogfooded live** — Collect smoke used placeholder `.dmg`/`.AppImage`. Real macOS/Linux runners + live `signet release` (with auth) still pending as an ops proof, not a missing command.
 
 5. **`--target` unpaid-only fails hard** — `signet build --target miro-mobile` exits error (nothing to produce). Soft-fail applies when siblings discover artifacts. Acceptable; could be clearer messaging.
+
+6. **Apple team / provisioning** — Still external; CI reports `gap.ios.codesign` honesty only.
 
 ---
 
@@ -46,7 +48,7 @@
 
 | Priority | Item |
 |----------|------|
-| P2 | Framework-aware CI snippets (Tauri/pnpm) in `ship --ci` or docs recipe for Miro |
-| P2 | Optional `ship --ci` comments/checklist for identity + graduate secret names |
-| P3 | Live Miro matrix → collect → release dogfood when `gh` auth available |
-| P3 | Softer copy when `--target` alone is unpaid |
+| P1 | Clavis/Miro dogfood: `ship secrets --push --apply` → green Android job |
+| P2 | Framework-aware CI snippets (Tauri/pnpm) in `ship --ci` |
+| P2 | Band T: rapid `ship --self`, TUI dual path, graduate wizards |
+| P3 | Live multi-OS collect → release dogfood |

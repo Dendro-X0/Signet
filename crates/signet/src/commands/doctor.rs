@@ -134,9 +134,57 @@ fn gather_checks() -> Vec<Check> {
     });
 
     checks.push(ship_coverage_check(has_config));
+    checks.push(ci_secrets_check(has_config));
 
     checks.extend(platform_checks());
     checks
+}
+
+fn ci_secrets_check(has_config: bool) -> Check {
+    if !has_config {
+        return Check {
+            name: "ci-secrets".into(),
+            ok: true,
+            severity: Severity::Optional,
+            detail: "no signet.toml — skip CI secrets check".into(),
+        };
+    }
+    match crate::project::ProjectCtx::load(None) {
+        Ok(ctx) => {
+            let report = crate::ship::assess_ci_readiness(&ctx.root, &ctx.config);
+            // iOS codesign honesty alone should not fail the check
+            let blocking: Vec<_> = report
+                .gaps
+                .iter()
+                .filter(|g| g.id != "gap.ios.codesign")
+                .collect();
+            if blocking.is_empty() {
+                Check {
+                    name: "ci-secrets".into(),
+                    ok: true,
+                    severity: Severity::Optional,
+                    detail: report.summary_line(),
+                }
+            } else {
+                let ids: Vec<&str> = blocking.iter().map(|g| g.id).collect();
+                Check {
+                    name: "ci-secrets".into(),
+                    ok: false,
+                    severity: Severity::Optional,
+                    detail: format!(
+                        "{} — next: `signet ship secrets --push`",
+                        ids.join(", ")
+                    ),
+                }
+            }
+        }
+        Err(_) => Check {
+            name: "ci-secrets".into(),
+            ok: true,
+            severity: Severity::Optional,
+            detail: "could not load config for CI secrets check".into(),
+        },
+    }
 }
 
 fn ship_coverage_check(has_config: bool) -> Check {
@@ -661,6 +709,12 @@ fn print_human(checks: &[Check]) {
         }
         console::blank();
         let _ = crate::release::offer_open_auth_setup(&auth);
+    }
+    if let Some(c) = checks.iter().find(|c| c.name == "ci-secrets" && !c.ok) {
+        console::section("CI secrets");
+        console::note(&c.detail);
+        console::note("Push local `.signet/` material: `signet ship secrets --push --apply`");
+        console::blank();
     }
     console::note("`signet release --dry-run` lists assets; live publish needs ready github-auth.");
     console::blank();

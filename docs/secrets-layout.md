@@ -47,7 +47,7 @@ Android passwords: `SIGNET_ANDROID_STORE_PASS` / optional `SIGNET_ANDROID_KEY_PA
 
 1. Never write private keys into `signet.toml`, `TRUST.md`, or release notes.
 2. Public fingerprints, minisign public keys, and cert subjects may appear in trust docs and commits.
-3. CI should inject secrets via the runner’s secret store / env, not the git tree.
+3. CI should inject secrets via the runner’s secret store / env, not the git tree. Prefer `signet ship secrets --push --apply` (see [ship.md](ship.md)).
 4. `signet doctor` may report a missing identity or sums key; it must not print key contents.
 5. Optional: `SIGNET_MINISIGN_PASSWORD` / `SIGNET_GPG_PASSPHRASE` for encrypted keys — never in config files.
 
