@@ -174,12 +174,7 @@ fn format_flags(f: &DesktopFlags) -> String {
 }
 
 pub fn host_can_sign_platform() -> &'static str {
-    match std::env::consts::OS {
-        "windows" => "windows",
-        "macos" => "macos",
-        "linux" => "linux",
-        other => other,
-    }
+    std::env::consts::OS
 }
 
 fn compute_gap(declared: &DesktopFlags, present: &DesktopFlags) -> Vec<&'static str> {
