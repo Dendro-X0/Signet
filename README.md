@@ -8,6 +8,8 @@
 
 Self-signing is **not** paid Apple / Microsoft / Google trust. Signet optimizes for indie and OSS: repeatable local signing, honest install docs, agent-friendly automation.
 
+**Phase 1 launch (Install Trust pack):** [docs/launch/START-HERE.md](docs/launch/START-HERE.md) — free demo/CLI; optional paid one-OS ritual pack. Not a security bypass product.
+
 **Repo:** [github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)
 
 ## Install

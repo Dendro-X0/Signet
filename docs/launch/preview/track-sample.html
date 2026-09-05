@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Signet — free sample (private preview)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:opsz,ital,wght@8..60,0,400;8..60,0,600;8..60,1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .sample-main { max-width: 42rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .sample-main h1 { font-family: var(--font-display); color: #fff; letter-spacing: -0.02em; }
+    .sample-main h2 { font-family: var(--font-display); color: var(--brass-hot); margin-top: 2.5rem; }
+    .sample-main ul { padding-left: 1.2rem; }
+    .back { font-family: var(--font-display); margin-bottom: 1.5rem; display: inline-block; }
+    .trust-shape {
+      padding: 1rem 1.1rem;
+      background: var(--ink-2);
+      border: 1px solid var(--line);
+      white-space: pre-wrap;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <p class="preview-banner">Private preview · TRACK sample · ≤20% of pack</p>
+  <main class="sample-main">
+    <a class="back" href="./index.html">← Signet HOOK</a>
+    <h1>Free sample</h1>
+    <p>Windows checklist slice + demo <code>TRUST.md</code> shape. Not a full trial.</p>
+
+    <h2>Pre-release checklist (slice)</h2>
+    <p>Run before you tag or upload a Windows installer.</p>
+    <h3 style="font-family: var(--font-display); color: #fff; font-size: 1.05rem;">Identity &amp; secrets</h3>
+    <ul>
+      <li>Signet identity created (<code>signet identity create</code>) — fingerprint known</li>
+      <li>Identity / PFX / keystore <strong>not</strong> in git</li>
+      <li>No passwords or private keys in <code>TRUST.md</code></li>
+    </ul>
+    <h3 style="font-family: var(--font-display); color: #fff; font-size: 1.05rem;">Check before publish</h3>
+    <ul>
+      <li><code>signet verify</code> passes on the release tree</li>
+      <li><code>signet inspect --file path\to\setup.exe</code> reviewed</li>
+      <li>Release notes do <strong>not</strong> promise SmartScreen silence</li>
+    </ul>
+
+    <h2>Demo TRUST.md shape</h2>
+    <p>Illustrative only — fingerprints differ on your machine.</p>
+    <pre class="trust-shape"># TRUST.md
+
+## Publisher
+- App: HelloSignet Demo
+- Declared tier: self_signed_host
+
+## Honesty
+Self-signed Windows builds may show SmartScreen.
+Matching checksums proves integrity, not Microsoft reputation.
+We never ask users to install certificates into Trusted Root.</pre>
+
+    <p style="margin-top: 2rem;">
+      <a class="btn primary" href="https://github.com/Dendro-X0/Signet/blob/main/docs/demo.md" rel="noopener">Try the free demo</a>
+    </p>
+  </main>
+</body>
+</html>

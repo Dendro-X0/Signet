@@ -14,11 +14,17 @@ A developer/agent-friendly CLI for **Sign → Prove → Check**: identity and si
 
 Self-signing is **not** a substitute for paid platform developer programs. Signet optimizes for independent and non-profit OSS: repeatable local trust, honest install guidance, and agent-friendly automation.
 
+## Launch Phase 1 (commercial micro-entry)
+
+**Install Trust:** free HOOK + paid one-OS pack · CLI stays free.  
+Boot: [docs/launch/START-HERE.md](docs/launch/START-HERE.md) · Handoff: [docs/handoffs/current-session.md](docs/handoffs/current-session.md)
+
 ## Public release (contributor queue)
 
-1. [specs/backend/v0.5-release-roadmap.md](specs/backend/v0.5-release-roadmap.md) — **v0.5.0** tagged (preview); **0.5.x → v1.0** next  
-2. Complete real-app dogfood (`docs/dogfood/`) beyond partial Signet CLI notes  
-3. Handoff: [docs/handoffs/current-session.md](docs/handoffs/current-session.md)
+1. [docs/launch/START-HERE.md](docs/launch/START-HERE.md) — Phase 1 HOOK + CONVERT (priority)  
+2. [specs/backend/v0.5-release-roadmap.md](specs/backend/v0.5-release-roadmap.md) — **v0.5.0** tagged (preview); **0.5.x → v1.0** next  
+3. Complete real-app dogfood (`docs/dogfood/`) beyond partial Signet CLI notes  
+4. Handoff: [docs/handoffs/current-session.md](docs/handoffs/current-session.md)
 
 ## Quick start
 

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Signet — Prove what buyers can verify (private preview)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:opsz,ital,wght@8..60,0,400;8..60,0,600;8..60,1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <p class="preview-banner">Private preview · localhost only · not announced</p>
+
+  <header class="topnav">
+    <a class="topnav-brand" href="#top">Signet</a>
+    <nav aria-label="Primary">
+      <a href="https://github.com/Dendro-X0/Signet/blob/main/docs/demo.md" rel="noopener">Demo</a>
+      <a href="https://github.com/Dendro-X0/Signet" rel="noopener">GitHub</a>
+      <a href="#pack" class="soft">Pack</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-label="Signet">
+      <div class="hero-visual" aria-hidden="true">
+        <div class="seal-plane"></div>
+        <pre class="terminal-plane"><span class="t-muted">$</span> signet verify
+<span class="t-ok">ok</span>  fingerprint matches TRUST.md
+<span class="t-ok">ok</span>  SHA256SUMS · 3 artifacts
+<span class="t-dim">note</span> SmartScreen not evaluated</pre>
+      </div>
+      <div class="hero-copy">
+        <p class="brand">Signet</p>
+        <h1>Prove what buyers can verify</h1>
+        <p class="lede">Self-signing proves integrity of your bits and keys. It does not buy SmartScreen silence — and we will not pretend it does.</p>
+        <div class="cta-group">
+          <a class="btn primary" href="https://github.com/Dendro-X0/Signet/blob/main/docs/demo.md" rel="noopener">Run the free demo</a>
+          <a class="btn secondary" href="https://github.com/Dendro-X0/Signet#install" rel="noopener">Install Signet (CLI)</a>
+          <a class="btn ghost" href="#pack">Get the Windows pack</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tiers">
+      <h2>Integrity is not reputation</h2>
+      <p class="section-lede">What Signet can prove about bits and keys is separate from what Windows decides to trust.</p>
+      <table class="tiers">
+        <thead>
+          <tr>
+            <th scope="col">Tier</th>
+            <th scope="col">What it proves</th>
+            <th scope="col">What it does not mean</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Checksums only</td>
+            <td><code>SHA256SUMS</code> matches the file</td>
+            <td>Host crypto signature</td>
+          </tr>
+          <tr>
+            <td>Self-signed</td>
+            <td>Signed with <em>your</em> identity</td>
+            <td>Microsoft / Store trust</td>
+          </tr>
+          <tr>
+            <td>Community-signed sums</td>
+            <td>Sums attested (minisign / GPG)</td>
+            <td>Authenticode pass</td>
+          </tr>
+          <tr>
+            <td>CA Authenticode</td>
+            <td>Signature chains to a public CA</td>
+            <td>Instant SmartScreen silence</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="more"><a href="https://github.com/Dendro-X0/Signet/blob/main/docs/trust-model.md" rel="noopener">Full trust model</a></p>
+    </section>
+
+    <section class="section" id="gift">
+      <h2>Free path</h2>
+      <p class="section-lede">The CLI stays free. Paying is optional ritual, not a license gate.</p>
+      <p class="flow" aria-label="Sign Prove Check">Sign → Prove → Check</p>
+      <ol class="steps">
+        <li>Install the free CLI</li>
+        <li>Run the <a href="https://github.com/Dendro-X0/Signet/blob/main/docs/demo.md" rel="noopener">demo kit</a> (fixed fixture — no real app required)</li>
+        <li>Read honest tiers before you ship</li>
+      </ol>
+      <pre class="cmd">pwsh ./demo/scripts/happy-path.ps1</pre>
+    </section>
+
+    <section class="section" id="sample">
+      <h2>Free sample</h2>
+      <p class="section-lede">A Windows pre-release checklist slice + a demo <code>TRUST.md</code> shape — not the full pack, not a timed trial.</p>
+      <a class="btn secondary" href="./track-sample.html">Preview a free sample</a>
+    </section>
+
+    <section class="section convert" id="pack">
+      <h2>Shipping on Windows and tired of guessing the honesty story?</h2>
+      <p class="section-lede">The Indie Install Trust Pack is a one-OS checklist + verify ritual (Windows): what to publish, what to tell users when SmartScreen warns, and what never to advise.</p>
+      <p class="price">$19 intro / $29 standard · optional · CLI remains free</p>
+      <div class="cta-group">
+        <span class="btn primary disabled" title="Checkout after unlock">Get the pack — checkout TBD</span>
+        <a class="btn ghost" href="https://github.com/Dendro-X0/Signet/blob/main/docs/demo.md" rel="noopener">Keep using the free demo</a>
+      </div>
+    </section>
+
+    <section class="section disclosure">
+      <p>Not legal advice. Not affiliated with Microsoft or Apple. Self-sign ≠ platform reputation. We never recommend installing publisher certificates into Trusted Root.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a href="https://github.com/Dendro-X0/Signet" rel="noopener">GitHub</a>
+    <a href="https://github.com/Dendro-X0/Signet/blob/main/docs/trust-model.md" rel="noopener">Trust model</a>
+    <a href="https://github.com/Dendro-X0/Signet/blob/main/docs/demo.md" rel="noopener">Demo</a>
+    <span class="muted">Pack checkout after unlock</span>
+  </footer>
+</body>
+</html>
