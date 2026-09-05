@@ -1,39 +1,31 @@
 # Current session handoff
 
 **Updated:** 2026-09-05  
-**Band:** **Launch Phase 1** — Install Trust HOOK + CONVERT (commercial micro-entry)
+**Band:** **Launch Phase 1** — Release Trust Desk (EJR) · HOOK deploying  
 
 ## Next atomic step
 
-1. Friend co-read unlock gate 3 using private preview: `http://127.0.0.1:8765/` (`docs/launch/preview/`).  
-2. Finish unlock gates 4–8 on [unlock-checklist.md](../launch/unlock-checklist.md) (kill window, authorize URLs).  
-3. Public HOOK / checkout only after unlock signed.
+1. Confirm GitHub Pages HOOK live: https://dendro-x0.github.io/Signet/  
+2. Create Gumroad SKU from [pack/export/GUMROAD-LISTING.md](../launch/pack/export/GUMROAD-LISTING.md) + `release-trust-desk-v2-windows.zip`  
+3. Paste checkout URL into cafe + unlock #6 + enable HOOK “Get the Desk” button · start kill clock  
+4. Soft traffic only — no loud announce until checkout wired  
 
-**PAUSED / CANCELLED:** none for launch band  
-**Blocked for coding:** public checkout / announce until unlock signed  
+**PAUSED / CANCELLED:** none  
+**Friend co-read:** deferred (maintainer self-attest) — invite when free  
 
 ## Parallel (optional engineering)
 
-**v0.5.17** release is live: https://github.com/Dendro-X0/Signet/releases/tag/v0.5.17  
-Clippy fix on `main` for `needless_match` in `ship/coverage.rs` (CI run 33964921459). Miro/Clavis dogfood remains optional and must not displace Phase 1 DoD.
+v0.5.17 live · Miro/Clavis dogfood optional  
 
 ## Canonical owners
 
 | Work | Owner |
 |------|--------|
-| Launch Phase 1 | `docs/launch/*`, `specs/launch/*` |
-| Pack draft | `docs/launch/pack/install-trust-pack-v0.md` |
-| HOOK draft | `docs/launch/hook-landing-draft.md` |
-| HOOK static preview | `docs/launch/preview/` (localhost) |
-| TRACK sample | `docs/launch/track-sample.md` · `preview/track-sample.html` |
-| CLI / verify / demo | existing `docs/demo.md`, `docs/trust-model.md`, crates |
-| Cafe L0 | `docs/launch/cafe-kit.md` |
+| HOOK | `docs/launch/preview/` → Pages |
+| CONVERT | `pack/release-trust-desk-v2.md` + `pack/export/` |
+| Cafe | `cafe-kit.md` |
 
 ## Recently completed
 
-- **2026-09-05:** Private static HOOK preview served at `127.0.0.1:8765` (`docs/launch/preview/`)
-- **2026-09-05:** Private HOOK draft + TRACK sample (`hook-landing-draft.md`, `track-sample.md`)
-- **2026-09-05:** Expanded Windows pack draft (sections 1–9) — `docs/launch/pack/install-trust-pack-v0.md`
-- **2026-09-05:** Phase 1 step 1 — accepted `phase1.md` + pack outline; **OS lock = Windows** (unlock gates 1–2)
-- **2026-09-04:** Launch docs + specs seeded from strategy-research-lab (S-M2 / H4)
-- **v0.5.17 / S1–S3:** `ship secrets`, CI readiness (prior band)
+- **2026-09-05:** Unlock HOOK probe signed (self-co-read) · Pages workflow · Desk zip + Gumroad stub · Trust card on HOOK  
+- Desk EJR draft · preview sync  

@@ -1,8 +1,10 @@
 # Indie Install Trust Pack (v0) — Windows
 
+> **Superseded in scope (2026-09-05):** use [release-trust-desk-v2.md](./release-trust-desk-v2.md) for EJR / Desk deliverables. This file remains a content quarry (copy reusable sections into v2).
+
 **SKU:** Indie Install Trust Pack · **OS lock:** Windows only  
 **Price (checkout):** $19 intro / $29 standard  
-**As-of:** 2026-09-05 · **Status:** Working draft (repo) — export PDF/zip after unlock  
+**As-of:** 2026-09-05 · **Status:** Legacy working draft — merge into Desk v2 before checkout  
 **Companion:** Free Signet CLI ([github.com/Dendro-X0/Signet](https://github.com/Dendro-X0/Signet)) stays OSS — this pack is the **ritual**, not a license for the tool.
 
 > Self-sign proves **integrity** of bits and publisher keys. It does **not** buy Microsoft reputation. SmartScreen warnings are expected until you graduate to OV / Azure Trusted Signing (or the Store).

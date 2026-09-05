@@ -1,20 +1,22 @@
 # Launch band — START HERE
 
 **Product:** Signet  
-**Band:** Phase 1 — Install Trust micro-entry (HOOK + CONVERT pack)  
-**Strategy origin (read-only):** `strategy-research-lab` sims S-M2 · H4 standalone CBT  
-**Rule:** CLI stays **GIFT**. Pack sells ritual. No Root / SmartScreen-bypass claims. No suite co-launch with Orbit/Assess.
+**Band:** Phase 1 — Release Trust Desk (HOOK + CONVERT kit, EJR)  
+**Scope:** [phase1.md](./phase1.md) · strategy redesign SAO v2  
+**Rule:** CLI stays **GIFT**. Kit sells evidence + judgment + ritual. No Root / SmartScreen-bypass. No suite co-launch.
 
 ## Read order
 
 1. [phase1.md](./phase1.md) — offer, DoD, won’t-list  
-2. [unlock-checklist.md](./unlock-checklist.md) — sign before public probe  
-3. [../handoffs/current-session.md](../handoffs/current-session.md) — next atomic step  
-4. [hook-landing-draft.md](./hook-landing-draft.md) — private HOOK copy  
-5. [track-sample.md](./track-sample.md) — TRACK excerpt  
-6. Specs: [../../specs/launch/](../../specs/launch/) — design before impl  
-7. [traffic.md](./traffic.md) — quality traffic after unlock  
-8. [cafe-kit.md](./cafe-kit.md) — Friend Level-0 FAQ only  
+2. [productization-readiness.md](./productization-readiness.md) — production scorecard  
+3. [unlock-checklist.md](./unlock-checklist.md) — sign before public probe  
+4. [../handoffs/current-session.md](../handoffs/current-session.md) — next atomic step  
+5. [hook-landing-draft.md](./hook-landing-draft.md) — private HOOK copy  
+6. [preview/trust-card.html](./preview/trust-card.html) — sample Trust card (Evidence)  
+7. [track-sample.md](./track-sample.md) — TRACK excerpt  
+8. Specs: [../../specs/launch/](../../specs/launch/) — design before impl  
+9. [traffic.md](./traffic.md) — quality traffic after unlock  
+10. [cafe-kit.md](./cafe-kit.md) — Friend Level-0 FAQ only  
 
 ## Engineering vs launch
 

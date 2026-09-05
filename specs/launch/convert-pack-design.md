@@ -1,47 +1,44 @@
-# Design — Indie Install Trust Pack (CONVERT)
+# Design — Release Trust Desk kit (CONVERT v2)
 
-**Status:** Design · draft pack file before public checkout  
-**SKU:** one · format PDF **or** Markdown zip  
-**Price:** $19 intro / $29 standard  
-**OS lock:** **Windows** (accepted 2026-09-05; SmartScreen honesty path). macOS deferred.  
+**Status:** Design · replaces thin Install Trust Pack outline  
+**Upstream:** `functional-scope-redesign-sao-v2.md`  
+**SKU:** Release Trust Desk (Windows) · PDF and/or Markdown zip + templates  
+**Price:** $29–49 standard  
 
-## Contents map
+## Deliverables
 
-| # | Section | Source in repo |
-|---|---------|----------------|
-| 1 | Integrity vs reputation | [docs/trust-model.md](../../docs/trust-model.md) |
-| 2 | Trust tiers | trust-model |
-| 3 | Pre-release checklist | [docs/release.md](../../docs/release.md), ship docs |
-| 4 | Verify/inspect copy-paste | [docs/verify.md](../../docs/verify.md), [docs/demo.md](../../docs/demo.md) |
-| 5 | User warning scripts | New — honest language only |
-| 6 | Anti-patterns | trust-model + product won’t |
-| 7 | Graduate pointer | [docs/graduation.md](../../docs/graduation.md) |
-| 8 | Blank checklist | Template |
-| 9 | Disclaimer | Standard |
+| ID | Artifact | Layer |
+|----|----------|-------|
+| D1 | Integrity≠reputation + trust tiers (short) | J |
+| D2 | OS-warn decision trees (SmartScreen paths) | J |
+| D3 | User-message bank (honest only) | J/R |
+| D4 | Trust card template (buyer-facing) | E |
+| D5 | Verify / inspect transcript template | E |
+| D6 | Worked Windows release fixture | E/R |
+| D7 | Pre-tag → post-release ritual checklist | R |
+| D8 | Anti-patterns + cost of mistake | J |
+| D9 | Graduate pointer + as-of sheet | J |
+| D10 | Blank checklist (app/version) | R |
+| D11 | Disclaimer | — |
+
+## Soft tool (prefer GIFT)
+
+- `signet trust report` or script that emits Trust card skeleton from config  
+- Honesty-constrained message helper — **must refuse** Root/bypass tips  
 
 ## Public sample (TRACK)
 
-Publish **one** section (#3 or #5) + demo TRUST excerpt — ≤20% of pack. Not a free full download / trial.
+Trust card example **or** one OS-warn tree branch — ≤20% of kit.
 
-## Delivery
-
-| Step | Artifact |
-|------|----------|
-| Draft | `docs/launch/pack/install-trust-pack-v0.md` (working draft) |
-| Ship | Export PDF or zip · upload to checkout |
-| Errata | Changelog note in pack footer (as-of date) |
-
-## Proof plan
+## Proof
 
 | Layer | Check |
 |-------|-------|
-| L1 | Sections 1–9 present · OS locked in title |
-| L2 | Every command runs against current Signet CLI |
-| L3 | Anti-scam review (Root / bypass absent) |
-| L4 | Checkout delivers file; Cafe FAQ “is CLI free?” = Yes |
+| L1 | D1–D11 present · Windows locked in title |
+| L2 | Commands match current CLI · fixture verifies |
+| L3 | Anti-scam: no Root/bypass |
+| L4 | V-bar provisional score recorded in launch notes |
 
-## Acceptance
+## Draft path
 
-- [x] Working draft in repo (2026-09-05 · Windows · sections 1–9)
-- [ ] Checkout SKU live after unlock  
-- [ ] Sample page live  
+`docs/launch/pack/release-trust-desk-v2.md` (new) · retire install-trust-pack-v0 as legacy stub with pointer

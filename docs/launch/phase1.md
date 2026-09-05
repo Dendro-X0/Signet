@@ -1,58 +1,58 @@
-# Phase 1 — Indie Install Trust (Signet)
+# Phase 1 — Release Trust Desk (Signet)
 
-**Status:** **Accepted** (2026-09-05) · unlock still **LOCKED** until full checklist signed  
-**OS lock (v0):** **Windows** (SmartScreen honesty path)  
-**CONVERT:** M-D Indie Install Trust Pack · **HOOK:** landing + demo · **GIFT:** `signet` CLI  
+**Status:** Scope **v2 redesign** (2026-09-05) · prior pack draft superseded in intent · unlock still **LOCKED** until checklist signed  
+**Upstream:** strategy `functional-scope-redesign-sao-v2.md` · anti-vibe bar · Obscur/CodaCtrl taste  
+**OS lock (v0):** **Windows**  
+**Pattern:** **EJR** — Evidence · Judgment · Ritual  
 
 ## One-liner
 
 ```text
-FREE:  See Sign → Prove → Check (demo) + honest trust tiers
-PAID:  Indie Install Trust Pack — checklist + verify ritual for ONE OS (Windows v0)
-LATER: TRUST.md write-once (VAS) · Aff footers
-NEVER: Fake OS trust · Trusted Root install · “remove SmartScreen” claims
-NEVER: Bundle Orbit/Assess into this checkout
+FREE:  Sign → Prove → Check demo + sample Trust card (Evidence)
+PAID:  Release Trust Desk (Windows) — trust artifacts + OS-warn judgment + release ritual
+LATER: TRUST.md fill-once (VAS) · Aff footers
+NEVER: Fake OS trust · Trusted Root · “remove SmartScreen”
+NEVER: Suite with Orbit/Assess
 ```
+
+## Job (trouble)
+
+Users (and releaser) panic when SmartScreen warns — need **honest, re-runnable release trust**, not a promise the OS goes quiet.
 
 ## Roles
 
 | Role | Deliverable |
 |------|-------------|
-| **HOOK** | Thin landing: integrity≠reputation + link to [demo](../demo.md) / happy-path |
-| **TRACK sample** | ≤15–20% of pack public (one checklist section + TRUST excerpt) — not a pack trial |
-| **CONVERT** | Pack PDF or Markdown zip — **Windows only (v0)** · $19 intro / $29 standard |
-| **GIFT** | Signet CLI remains free/OSS |
-| **Cafe** | [cafe-kit.md](./cafe-kit.md) Level-0 FAQ only |
+| **HOOK** | Landing + demo + **public sample Trust card** |
+| **TRACK sample** | One decision-tree branch or Trust card — not full kit trial |
+| **CONVERT** | **Release Trust Desk** kit — $29–49 (intro optional) |
+| **GIFT** | Signet CLI core; prefer `trust report` / message helper as GIFT if cheap |
+| **Cafe** | [cafe-kit.md](./cafe-kit.md) Level-0 |
 
-## Pack contents (v0)
+## Functional scope (CONVERT kit)
 
-1. Integrity vs reputation (1 page)  
-2. Trust tiers cheat sheet  
-3. Pre-release checklist  
-4. Copy-paste `signet verify` / `inspect` for locked OS  
-5. “What to tell users” when OS warns (honest)  
-6. Anti-patterns (Root, fake silence)  
-7. When to graduate (pointer only)  
-8. Blank checklist (app + version)  
-9. Disclaimer  
+| Layer | Must include |
+|-------|----------------|
+| **E Evidence** | Trust card template · verify transcript template · worked release fixture |
+| **J Judgment** | OS-warn decision trees · user-message bank (honest) · when to graduate · cost of anti-patterns |
+| **R Ritual** | Pre-tag → sign/prove → verify → publish messages → post-release check |
+| **As-of** | What Signet can/can’t claim this month |
 
 ## Definition of done
 
 ```text
-[ ] HOOK landing live
-[ ] TRACK sample live
-[x] Pack file complete (one OS) — working draft Windows v0 in repo (export after unlock)
-[ ] Checkout live (Gumroad / Payhip / Lemon)
-[ ] Cafe Kit FAQ filled
-[ ] Kill window dated (suggest 45–60d; <N paid → PARK CONVERT marketing)
-[ ] Anti-scam copy review passed
+[ ] HOOK + sample Trust card live (public)
+[x] Kit draft complete (EJR sections) for Windows — release-trust-desk-v2.md
+[x] Sample Trust card on private HOOK — preview/trust-card.html
+[ ] Checkout live (after unlock)
+[x] Cafe Kit FAQ updated to “Desk” naming (URLs TBD)
+[x] Kill window dated — 45d · paid < 3 → PARK (confirm at sign-off)
+[ ] V-bar scored ≥8/12 (target ≥9)
+[x] Anti-scam review passed (Desk copy 2026-09-05)
 ```
 
-## Soft-no ladder
+Scorecard: [productization-readiness.md](./productization-readiness.md)  
+Private HOOK: [preview/](./preview/) · Trust card: [preview/trust-card.html](./preview/trust-card.html)
+## Soft-no
 
-`HOOK/GIFT → sample → CONVERT pack → soft-no → STOP`  
-No timed full-pack trial. Optional money-back via checkout provider only.
-
-## Sequence note
-
-Ship this leaf before Orbit/Assess marketing. Soft footer *from* Orbit→Signet is OK later; do not hard-sell siblings on Signet HOOK.
+`HOOK/GIFT → sample → CONVERT kit → soft-no → STOP`

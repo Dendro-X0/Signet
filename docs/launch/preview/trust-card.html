@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index,follow" />
+  <title>Sample Trust card — HelloSignet Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:opsz,ital,wght@8..60,0,400;8..60,0,600;8..60,1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .card-main { max-width: 42rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .card-main h1 { font-family: var(--font-display); color: #fff; letter-spacing: -0.02em; font-size: clamp(1.6rem, 3vw, 2rem); }
+    .card-main h2 { font-family: var(--font-display); color: var(--brass-hot); margin-top: 2rem; font-size: 1.15rem; }
+    .back { font-family: var(--font-display); margin-bottom: 1.5rem; display: inline-block; }
+    .card-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.98rem; }
+    .card-table th, .card-table td {
+      text-align: left; vertical-align: top;
+      padding: 0.65rem 0.5rem 0.65rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .card-table th {
+      font-family: var(--font-display); font-weight: 600; font-size: 0.78rem;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--brass); width: 40%;
+    }
+    .card-table td { color: var(--fog); word-break: break-word; }
+    .note { color: var(--fog-dim); font-size: 0.95rem; }
+    .cmd-block {
+      margin: 0.75rem 0 0; padding: 1rem 1.1rem; overflow-x: auto;
+      background: var(--ink-2); border: 1px solid var(--line);
+      color: var(--fog); font-size: 0.88rem; line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <p class="preview-banner">Sample Trust card · Evidence · Release Trust Desk</p>
+  <main class="card-main">
+    <a class="back" href="./index.html">← Signet HOOK</a>
+    <h1>Trust card — HelloSignet Demo</h1>
+    <p class="note">Illustrative Evidence sample for HOOK. Fingerprints and hashes differ on your machine after <code>pwsh ./demo/scripts/happy-path.ps1</code>.</p>
+
+    <table class="card-table">
+      <tr><th scope="row">Publisher</th><td>HelloSignet Demo (fixture)</td></tr>
+      <tr><th scope="row">Integrity tier</th><td><code>self_signed_host</code> (must be true for your app)</td></tr>
+      <tr><th scope="row">Artifact</th><td><code>HelloSignet.exe</code></td></tr>
+      <tr><th scope="row">SHA-256</th><td><em>Fill from</em> <code>SHA256SUMS</code> <em>after demo run</em></td></tr>
+      <tr><th scope="row">Fingerprint</th><td><em>From</em> <code>signet identity show</code></td></tr>
+      <tr><th scope="row">OS reputation</th><td><strong>Not claimed</strong> — SmartScreen may warn</td></tr>
+    </table>
+
+    <h2>Verify (Windows)</h2>
+    <pre class="cmd-block">certutil -hashfile .\HelloSignet.exe SHA256
+# Compare to SHA-256 above / SHA256SUMS
+
+signet verify --sums .\SHA256SUMS --trust .\TRUST.md
+signet inspect --file .\HelloSignet.exe</pre>
+
+    <h2>Honesty</h2>
+    <p>Matching checksums prove <strong>integrity</strong>, not Microsoft reputation. We never ask you to install certificates into Trusted Root.</p>
+
+    <p style="margin-top: 2rem;" class="cta-group">
+      <a class="btn secondary" href="./track-sample.html">Judgment branch sample</a>
+      <a class="btn ghost" href="./index.html#desk">Soft CTA: Release Trust Desk</a>
+    </p>
+  </main>
+</body>
+</html>

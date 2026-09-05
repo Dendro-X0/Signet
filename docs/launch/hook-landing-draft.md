@@ -1,9 +1,9 @@
-# HOOK landing — private draft (Phase 1)
+# HOOK landing — private draft (Phase 1 · Desk)
 
 **Status:** Private draft · **not** announced · no public URL yet  
-**Host:** private static preview at `docs/launch/preview/` (localhost) · public host TBD after unlock  
+**Host:** `docs/launch/preview/` (localhost) · public host TBD after unlock  
 **Design:** [specs/launch/hook-landing-design.md](../../specs/launch/hook-landing-design.md)  
-**OS pack CTA:** Windows Install Trust Pack  
+**CONVERT CTA:** Windows **Release Trust Desk** ([pack/release-trust-desk-v2.md](./pack/release-trust-desk-v2.md))  
 **As-of:** 2026-09-05  
 
 > Paste into static host after unlock. Until then: copy review + friend co-read only.
@@ -15,14 +15,14 @@
 | Slot | Copy |
 |------|------|
 | Brand | **Signet** |
-| Nav (minimal) | Demo · GitHub · Pack *(soft)* |
+| Nav (minimal) | Demo · GitHub · Desk *(soft)* |
 | Title tag | Signet — Prove what buyers can verify |
 
 ---
 
-## Viewport 1 — hero (one composition)
+## Viewport 1 — hero
 
-**Brand (hero-level):** Signet  
+**Brand:** Signet  
 
 **H1:** Prove what buyers can verify  
 
@@ -32,53 +32,34 @@
 
 | Priority | Label | Target |
 |----------|-------|--------|
-| Primary | Run the free demo | [docs/demo.md](../demo.md) · `./demo/scripts/happy-path.ps1` |
-| Primary alt | Install Signet (CLI) | [README install](../../README.md#install) · GitHub Releases |
-| Secondary (soft) | Get the Windows Install Trust Pack | Checkout URL *(TBD — after unlock)* |
+| Primary | Run the free demo | [docs/demo.md](../demo.md) |
+| Primary alt | Sample Trust card | [preview/trust-card.html](./preview/trust-card.html) |
+| Secondary (soft) | Release Trust Desk | Checkout *(TBD after unlock)* |
 
-**Won’t appear above the fold:** Aff · Orbit/Assess · “remove SmartScreen” · Trusted Root tips · stats strips · multi-product suite.
+**Won’t appear above the fold:** Aff · Orbit/Assess · “remove SmartScreen” · Trusted Root tips · suite CTAs.
 
 ---
 
 ## Scroll — trust table
 
-Integrity (Signet) does not imply reputation (Windows / stores).
-
-| Tier | What it proves | What it does **not** mean |
-|------|----------------|---------------------------|
-| Checksums only | `SHA256SUMS` matches the file | Host crypto signature |
-| Self-signed | Signed with *your* identity | Microsoft / Store trust |
-| Community-signed sums | Sums attested (minisign / GPG) | Authenticode pass |
-| CA Authenticode | Signature chains to a public CA | Instant SmartScreen silence |
-
-Full model: [docs/trust-model.md](../trust-model.md).
+(Same integrity ≠ reputation tiers — see preview / trust-model.)
 
 ---
 
 ## Scroll — free path (GIFT)
 
-```text
-Sign → Prove → Check
-identity / build → TRUST.md + sums → signet verify + inspect
-```
-
-1. Install the free CLI  
-2. Run the [demo kit](../demo.md) (fixed fixture — no real app required)  
-3. Read honest tiers before you ship  
-
-The CLI stays free. Paying is optional ritual, not a license gate.
+Sign → Prove → Check · CLI free · demo kit · publish a Trust card buyers can re-check.
 
 ---
 
-## Scroll — TRACK sample (≤20% of pack)
+## Scroll — TRACK sample
 
-**Public sample (when live):** [track-sample.md](./track-sample.md)
+| Sample | Link |
+|--------|------|
+| Trust card (Evidence) | [preview/trust-card.html](./preview/trust-card.html) · [track-sample.md](./track-sample.md) |
+| Judgment branch | [preview/track-sample.html](./preview/track-sample.html) |
 
-Excerpt promise on the page:
-
-> Free sample: a Windows pre-release checklist slice + a demo `TRUST.md` shape — not the full pack, not a timed trial.
-
-Link label: **Preview a free sample** → `track-sample.md` (or hosted mirror after unlock).
+> Free sample: one Trust card + one SmartScreen judgment branch — not the full Desk, not a timed trial.
 
 ---
 
@@ -86,48 +67,22 @@ Link label: **Preview a free sample** → `track-sample.md` (or hosted mirror af
 
 **Headline:** Shipping on Windows and tired of guessing the honesty story?
 
-**Body:** The Indie Install Trust Pack is a one-OS checklist + verify ritual (Windows): what to publish, what to tell users when SmartScreen warns, and what never to advise.  
+**Body:** Release Trust Desk (Windows) = Evidence · Judgment · Ritual — trust artifacts, OS-warn trees, re-runnable release checklist. No SmartScreen silence promise.
 
-**Price line (after checkout live):** $19 intro / $29 standard · optional · CLI remains free  
+**Price:** $29–49 · optional · CLI free  
 
-**CTA:** Get the pack *(soft)* · or keep using the free demo  
-
-Soft-no: if they decline → stop. No full-pack trial timer.
+**CTA:** Get the Desk *(soft)* · or keep the free demo  
 
 ---
 
 ## Disclosure
 
-Not legal advice. Not affiliated with Microsoft or Apple.  
-Self-sign ≠ platform reputation. We never recommend installing publisher certificates into Trusted Root.
+Not legal advice. Not affiliated with Microsoft or Apple. Self-sign ≠ platform reputation. Never recommend Trusted Root installs.
 
 ---
 
-## Footer
-
-| Link | URL |
-|------|-----|
-| GitHub | https://github.com/Dendro-X0/Signet |
-| Docs (trust) | `docs/trust-model.md` |
-| Demo | `docs/demo.md` |
-| Pack (checkout) | *TBD after unlock* |
-
-No hard CTAs for Orbit, Assess, or other suite products.
-
----
-
-## Implementation notes (private)
-
-| Item | Choice |
-|------|--------|
-| Format | Static preview: `docs/launch/preview/` (localhost) · public host TBD |
-| Primary OS message | Windows SmartScreen honesty (pack lock) |
-| Checkout | Placeholder until unlock gate 6 |
-| L1 copy review | Won’t-list checked in this draft |
-| Friend co-read | Unlock gate 3 — use one-liner + won’t-list below |
-
-### Friend co-read card
+## Friend co-read card
 
 **One-liner:** Prove what buyers can verify — without lying about SmartScreen.  
 
-**Won’t-list:** No Trusted Root · no “remove SmartScreen” · no guaranteed trust · no Orbit/Assess hard-sell on this page.
+**Won’t-list:** No Trusted Root · no “remove SmartScreen” · no guaranteed trust · no Orbit/Assess hard-sell.
