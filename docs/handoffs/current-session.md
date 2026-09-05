@@ -14,7 +14,8 @@
 
 ## Parallel (optional engineering)
 
-Prior band **0.5.17** — commit/tag + Miro/Clavis dogfood — remains optional and must not displace Phase 1 DoD (landing + pack + checkout).
+**v0.5.17** release is live: https://github.com/Dendro-X0/Signet/releases/tag/v0.5.17  
+Clippy fix on `main` for `needless_match` in `ship/coverage.rs` (CI run 33964921459). Miro/Clavis dogfood remains optional and must not displace Phase 1 DoD.
 
 ## Canonical owners
 
